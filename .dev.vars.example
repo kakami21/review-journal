@@ -1,1 +1,3 @@
 TABELOG_USERNAME="pakoirileo"
+BASIC_AUTH_USERNAME="admin"
+BASIC_AUTH_PASSWORD="ローカル更新API用のパスワード"

@@ -1,20 +1,21 @@
 import { Hono } from "hono";
+import { basicAuth } from "hono/basic-auth";
 import { D1ReviewRepository } from "../infrastructure/d1-review-repository";
 import { createReviewRefresh } from "./review-refresh-factory";
-import { basicAuth } from 'hono/basic-auth'
 
 // Honoアプリケーションの作成
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
-app.use("/api/get", async (c, next) => {
+app.use("/api/reviews/refresh", async (c, next) => {
   return basicAuth({
     username: c.env.BASIC_AUTH_USERNAME,
     password: c.env.BASIC_AUTH_PASSWORD,
   })(c, next);
 });
 
-app.get("/api/get", (c) => {
-  return c.json({ message: "Hello from Hono!" });
+// 口コミ手動更新API
+app.post("/api/reviews/refresh", async (c) => {
+  return c.json(await createReviewRefresh(c.env).execute());
 });
 
 // ヘルスチェックAPI

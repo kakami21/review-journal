@@ -12,7 +12,8 @@
   },
 
   "vars": {
-    "TABELOG_USERNAME": "pakoirileo"
+    "TABELOG_USERNAME": "pakoirileo",
+    "BASIC_AUTH_USERNAME": "admin"
   },
 
 

@@ -29,7 +29,7 @@
 
 ```mermaid
 flowchart LR
-    C["手動実行"] --> B["CloudflareBrowserProvider"]
+    C["認証付き更新API / Scheduled Handler"] --> B["CloudflareBrowserProvider"]
     B --> S["TabelogReviewScraper"]
     S --> R["RefreshReviews"]
     R --> D["D1ReviewRepository"]
@@ -49,6 +49,8 @@ npm install
 
 ```text
 TABELOG_USERNAME="食べログのユーザー名"
+BASIC_AUTH_USERNAME="更新APIのユーザー名"
+BASIC_AUTH_PASSWORD="更新APIのパスワード"
 ```
 
 `TABELOG_USERNAME`には、口コミを取得する食べログユーザーのURL上の名前を設定します。本番では`wrangler.jsonc`の値が使用されます。
@@ -79,19 +81,40 @@ curl -i "http://localhost:5173/api/health"
 
 ## 本番D1の手動更新
 
-本番D1を更新する場合は、Wranglerの開発サーバーを使用して手動で実行します。
+初回は、更新API用のパスワードを生成します。
 
 ```bash
-npm run dev:worker
+openssl rand -base64 32
 ```
 
-別のターミナルからScheduled Handlerを呼び出します。
+表示されたパスワードをパスワード管理アプリへ保存し、Wrangler Secretとして登録します。入力内容は画面に表示されません。
 
 ```bash
-curl "http://localhost:8787/cdn-cgi/handler/scheduled"
+npx wrangler secret put BASIC_AUTH_PASSWORD
 ```
 
-起動時のバインディング一覧で`env.DB`が`remote`になっていることを確認してください。`local`の場合は本番D1に反映されません。
+更新APIを含むWorkerを本番へデプロイします。デプロイ前にAPIを呼ぶと、`404`と`APIが見つかりません。`が返ります。
+
+```bash
+npm run deploy
+```
+
+デプロイ後、認証付き更新APIを呼び出します。`--user`にパスワードを書かないことで、コマンド履歴へパスワードを残さず、実行後の入力欄で指定できます。
+
+```bash
+curl --fail-with-body \
+  --user "admin" \
+  --request POST \
+  "https://pakoirileo.nokishita.app/api/reviews/refresh"
+```
+
+コマンド内のURLは上記の文字列をそのまま使用します。`[URL](URL)`というMarkdownリンク形式では入力しません。
+
+更新処理はデプロイ済みWorker内で実行されるため、手元でWranglerの開発サーバーを起動する必要はありません。成功時は取得件数と更新日時を返します。
+
+```json
+{"count":128,"scrapedAt":"2026-10-03T06:30:00.000Z"}
+```
 
 この処理は次の順序で動作します。
 
@@ -112,7 +135,7 @@ npm run build
 npm run deploy
 ```
 
-デプロイ後も口コミは自動取得されません。リモートD1を更新する場合は、前述の手動更新を実行します。
+デプロイ後も口コミは自動取得されません。リモートD1を更新する場合は、前述の認証付き更新APIを実行します。Scheduled Handlerは将来Cron Triggerを設定する場合にも同じ更新処理を利用できます。
 
 ## 主なファイル
 
