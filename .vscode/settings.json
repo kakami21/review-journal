@@ -21,6 +21,7 @@
   "files.insertFinalNewline": true,
 
   "explorer.compactFolders": false,
+  "githubPullRequests.defaultMergeMethod": "squash",
 
   "github.copilot.enable": {
     "*": true,
