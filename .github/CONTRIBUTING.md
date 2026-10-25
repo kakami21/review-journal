@@ -29,6 +29,7 @@
 
 ## Pull Request
 
+- PRは原則として作成者自身にアサインする。担当者を明示された場合はその人を指定する。`gh pr create` では `--assignee @me` を使い、作成後にアサインを確認する。VS Codeでは `githubPullRequests.assignCreated` に `${user}` を設定する
 - ブランチは [命名規則](instructions/branch-naming.instructions.md) に従って最新の `main` から作成し、PRの取り込み先も `main` とする。長期運用ブランチは `main` の1つとする
 - 1つのPRは1つの目的に絞る。無関係な変更は別のPRに分ける
 - タイトルはIssueと同じ形式とし、最終的な変更内容を日本語で具体的に示す
