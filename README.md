@@ -221,4 +221,6 @@ npm run deploy
 
 ## 移行設計
 
+Astro基盤の起動・検証手順は [Astro開発・検証環境](docs/astro-development.md) を参照。
+
 Astro・EmDashへの移行後の構成は [移行設計](docs/emdash-migration.md) を参照。現在の実装仕様と区別して管理する。
