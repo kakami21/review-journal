@@ -1,0 +1,8 @@
+name: production
+variables:
+  - name: baseUrl
+    value: https://pakoirileo.nokishita.app
+  - name: basicAuthUsername
+    value: "{{process.env.BRUNO_PRODUCTION_USERNAME}}"
+  - name: basicAuthPassword
+    value: "{{process.env.BRUNO_PRODUCTION_PASSWORD}}"
