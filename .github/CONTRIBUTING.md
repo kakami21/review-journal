@@ -29,17 +29,22 @@
 
 ## Pull Request
 
-- ブランチは [命名規則](instructions/branch-naming.instructions.md) に従い、通常のPRは `develop` を取り込み先とする。`main` への取り込みはリリースとして別途扱う
+- ブランチは [命名規則](instructions/branch-naming.instructions.md) に従って最新の `main` から作成し、PRの取り込み先も `main` とする。長期運用ブランチは `main` の1つとする
 - 1つのPRは1つの目的に絞る。無関係な変更は別のPRに分ける
 - タイトルはIssueと同じ形式とし、最終的な変更内容を日本語で具体的に示す
 - タイトル・本文の作成と自動生成は [PR生成規則](instructions/pull-request.instructions.md) に従い、日本語で記載する
 - 本文は [PRテンプレート](pull_request_template.md) に従う。CLIから作成する場合も、変更内容・検証結果・関連Issueを記載する
 - 検証結果には実行した確認と結果を記載する。未実施・失敗・残る制約は明記し、実施済みと混同しない
-- 関連Issueの参照・自動完了の記法は [PR生成規則](instructions/pull-request.instructions.md) に従う。デフォルトブランチ向けPRで完了条件を満たすIssueは、PR本文に `Closes #番号` を記載する。`develop` 向けや参照だけの場合は `Refs #番号` とする
+- 関連Issueの記法は [PR生成規則](instructions/pull-request.instructions.md) に従う。このPRで完了するIssueは `Closes #番号`、参照だけの場合は `Refs #番号` をPR本文に記載する
 - 作成後に取り込み先・差分・本文を確認し、URLを報告する。作成できなかった場合は本文を保存し、未作成と明記する
 - マージ前に差分をレビューし、必要な検証の成功と指摘の解消を確認する。PR作成の依頼だけでマージせず、マージの依頼または事前の合意に従う
-- `develop` へのマージ後、Issueの完了条件を確認し、検証結果とPRリンクをIssueに残して閉じる。本番反映が完了条件なら、その確認後に閉じる
-- デフォルトブランチへのマージで自動完了するIssueも、マージ前に完了条件を確認し、検証結果とPRリンクをIssueに残す。リリースPRでは取り込み済みPRから未完了の関連Issueを確認する
+- マージ前にIssueの完了条件を確認し、検証結果とPRリンクをIssueへ記録する。`Closes` を記載したIssueはmainへのマージ時にGitHub標準機能で自動完了する。本番確認が必要なIssueは、その確認まで `Refs` として残す
 - マージ後は作業ブランチを削除する
 
 参考：[GitHubのIssueとPRの関連付け](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue)、[PRテンプレート](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/creating-a-pull-request-template-for-your-repository)。テンプレートの自動表示にはデフォルトブランチへの反映が必要。
+
+## リリース
+
+- mainへのマージは開発完了、リリースタグの作成・pushは本番公開の契機として分ける
+- バージョンは `vMAJOR.MINOR.PATCH`（例：`v1.0.0`）のタグで管理する。タグはmain上のコミットに付け、公開済みタグは付け替えない
+- タグを起点とするGitHub Actions、本番公開の確認、GitHub Releases、復旧手順の実装・整備は [Issue #23](https://github.com/kakami21/table-notes/issues/23) で行う。自動デプロイはこの規則変更だけでは有効にならない

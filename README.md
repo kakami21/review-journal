@@ -224,3 +224,9 @@ npm run deploy
 Astro基盤の起動・検証手順は [Astro開発・検証環境](docs/astro-development.md) を参照。
 
 Astro・EmDashへの移行後の構成は [移行設計](docs/emdash-migration.md) を参照。現在の実装仕様と区別して管理する。
+
+## 開発とリリースの運用
+
+最新の `main` から作業ブランチを作成し、検証後に `main` 向けPRを作成する。完了するIssueはPR本文の `Closes #番号` で関連付ける。開発用Worker・D1は引き続き本番と分離する。
+
+リリースはmain上の `vMAJOR.MINOR.PATCH` タグで管理する。タグpushによるGitHub Actionsの本番デプロイは [Issue #23](https://github.com/kakami21/table-notes/issues/23) で実装する。詳細は [運用規則](.github/CONTRIBUTING.md) を参照。
