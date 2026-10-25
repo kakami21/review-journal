@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* Astroの開発ルートから離れた既存React画面とAstroページも検出対象にする。 */
+@source "../";
 @plugin "daisyui";
 
 .brutal .btn-primary,

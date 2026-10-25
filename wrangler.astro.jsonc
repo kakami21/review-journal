@@ -2,10 +2,15 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "account_id": "981a5c317da0eac85b328bc8dbcd9f6a",
   "name": "table-notes-astro-development",
-  "main": "@astrojs/cloudflare/entrypoints/server",
+  "main": "./src/worker/astro.ts",
   "compatibility_date": "2026-07-18",
   "compatibility_flags": ["nodejs_compat"],
   "routes": [],
+  "browser": { "binding": "BROWSER", "remote": true },
+  "vars": {
+    "TABELOG_USERNAME": "pakoirileo",
+    "BASIC_AUTH_USERNAME": "admin"
+  },
   "assets": { "binding": "ASSETS", "directory": "./dist/astro/client" },
   "d1_databases": [
     {
