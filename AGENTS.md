@@ -11,3 +11,7 @@
 | 親Issue（テーマ）の本文の作成・更新 | [.github/ISSUE_TEMPLATE/parent.yml](.github/ISSUE_TEMPLATE/parent.yml) |
 
 複数の作業に該当する場合は、対応する参照先をすべて確認してください。IssueをCLI・APIから登録する場合も、運用規則と該当するフォームのYAMLを読んでください。
+
+## GitHubの操作
+
+GitHubの参照・作成・更新には、GitHub連携ツールではなく `gh CLI` を使用する。
