@@ -1,109 +1,37 @@
-name: "親Issue（テーマ）"
-description: "目的・対象範囲・受入条件を定め、Sub-issueで作業をまとめます。"
+name: 親Issue（テーマ）
+description: 複数の作業に分けて進めるテーマ
 body:
   - type: markdown
     attributes:
-      value: |
-        リポジトリの `.github/CONTRIBUTING.md`（Issue運用規則）を確認してください。
-        タイトルは `feat` / `fix` / `refactor` / `docs` / `test` / `chore` のいずれかで始め、`feat: 日本語の要約` または `test(integration): 日本語の要約` の形式にしてください。
-        通常は優先度ラベルなし。必要な場合のみ `priority:urgent` または `priority:next` を最大1つ付け、理由を本文に記載してください。親子に分ける場合、優先度は子Issueに付けます。
-        本番のサービス提供に支障が出た場合だけ `incident` ラベルを追加してください。
-  - type: checkboxes
-    id: preflight
-    attributes:
-      label: 登録前の確認
-      options:
-        - label: 未完了のIssueを検索し、同じ目的のIssueがないことを確認した
-          required: true
-        - label: 秘密情報・認証ヘッダー・顧客情報を含めていない
-          required: true
-        - label: 未確認の原因を断定していない
-          required: true
+      value: リポジトリの `.github/CONTRIBUTING.md` に従って登録する。
   - type: textarea
     id: purpose
     attributes:
-      label: "目的"
-      description: "解決する課題と、実現したい状態を記載してください。"
-      placeholder: "誰の何を改善するか"
+      label: 目的
+      description: このテーマで実現することと、その理由。
+      placeholder: …を実現するため、…を整える
     validations:
       required: true
   - type: textarea
     id: scope
     attributes:
-      label: "対象範囲"
-      description: "対象と対象外を明記し、完了を判断できる有限のテーマにしてください。"
+      label: 対象範囲
+      description: 対象を明確にし、必要に応じて対象外も記載する。
       placeholder: "対象：…\n対象外：…"
     validations:
       required: true
   - type: textarea
-    id: environment
-    attributes:
-      label: "対象環境"
-      description: "本番・検証・ローカルの区別と、関係するバージョンや設定を記載してください。秘密情報は含めないでください。"
-      placeholder: "環境、対象URL、バージョンなど。未確認の項目は「未確認」"
-    validations:
-      required: true
-  - type: textarea
-    id: reproduction
-    attributes:
-      label: "再現手順または再現コマンド"
-      description: "不具合は再現方法、機能追加・改善は現状の確認方法を記載してください。該当しない場合は理由を記載してください。"
-      placeholder: "1. 対象環境で…\n2. …を実行する"
-    validations:
-      required: true
-  - type: textarea
-    id: expected
-    attributes:
-      label: "期待結果"
-      description: "本来期待する動作や、作業後に実現する状態を記載してください。"
-      placeholder: "…できること"
-    validations:
-      required: true
-  - type: textarea
-    id: actual
-    attributes:
-      label: "実際の結果"
-      description: "現在の動作、制約、エラーを記載してください。未実行の場合はその旨を記載してください。"
-      placeholder: "現在は…となる"
-    validations:
-      required: true
-  - type: textarea
-    id: confirmed
-    attributes:
-      label: "原因として確認できたこと"
-      description: "事実と推測を分け、ログやコードなどの根拠を示してください。原因が不明な場合は「未確認」と記載してください。"
-      placeholder: "確認済みの事実：…\n未確認：…"
-    validations:
-      required: true
-  - type: textarea
-    id: impact
-    attributes:
-      label: "影響範囲・回避手段"
-      description: "不具合・障害の場合は必須です。影響する機能・利用者と回避手段の有無を記載し、不明な点は「未確認」としてください。"
-      placeholder: "影響する機能・利用者：…\n回避手段：あり／なし／未確認"
-    validations:
-      required: false
-  - type: textarea
     id: acceptance
     attributes:
-      label: "受入条件"
-      description: "完了を判断できる条件をチェックリストで記載してください。 子Issueの完了に加え、テーマ全体の条件を記載してください。"
-      placeholder: "- [ ] …\n- [ ] …"
+      label: 完了条件
+      description: テーマ全体の完了を判断できる条件をチェックリストで記載する。
+      placeholder: "- [ ] …が利用できる\n- [ ] …を検証する"
     validations:
       required: true
   - type: textarea
-    id: children
+    id: context
     attributes:
-      label: "子Issue・関連Issue"
-      description: "既存Issueを優先して利用します。登録後にGitHubのSub-issue機能で紐付け、親→子の2段階までにしてください。本文リンクだけでは紐付け完了になりません。"
-      placeholder: "既存Issue：#…\n分割する作業：…"
-    validations:
-      required: false
-  - type: textarea
-    id: priority
-    attributes:
-      label: "優先度の理由"
-      description: "優先度ラベルを付ける場合は必須です。利用者への影響、期限、他の作業を妨げる事情などを1行で記載してください。種類だけで優先度を決めません。"
-      placeholder: "…のため、次に着手する"
+      label: 補足
+      description: 分割する作業、関連Issue、未決定事項など。不要なら省略可。
     validations:
       required: false
