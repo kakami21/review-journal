@@ -22,7 +22,7 @@
 
   "explorer.compactFolders": false,
   "githubPullRequests.defaultMergeMethod": "squash",
-  "githubPullRequests.overrideDefaultBranch": "develop",
+  "githubPullRequests.overrideDefaultBranch": "main",
   "githubPullRequests.createDefaultBaseBranch": "repositoryDefault",
 
   "github.copilot.enable": {

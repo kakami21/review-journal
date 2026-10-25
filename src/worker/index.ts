@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { basicAuth } from "hono/basic-auth";
+import { HTTPException } from "hono/http-exception";
 import { D1ReviewRepository } from "../infrastructure/d1-review-repository";
 import { createReviewRefresh } from "./review-refresh-factory";
 
@@ -34,8 +35,12 @@ app.all("/api/*", (c) => {
   return c.json({ error: "APIが見つかりません。" }, 404);
 });
 
-// エラーハンドリング
+// 認証拒否などのHTTP例外はステータスとヘッダーを保持し、予期しない障害だけ共通500へ変換する。
 app.onError((error, c) => {
+  if (error instanceof HTTPException) {
+    return error.getResponse();
+  }
+
   console.error("Request failed", error);
   return c.json({ error: "処理に失敗しました。時間をおいて再度お試しください。" }, 500);
 });

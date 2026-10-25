@@ -1,0 +1,20 @@
+info:
+  name: 認証なしの更新を拒否
+  type: http
+  seq: 3
+http:
+  method: POST
+  url: "{{baseUrl}}/api/reviews/refresh"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("認証なしの更新はHTTP 401で拒否する", function () {
+          expect(res.getStatus()).to.equal(401);
+          expect(res.getHeader("www-authenticate")).to.match(/^Basic /);
+        });
+settings:
+  followRedirects: false
+  timeout: 30000
+docs: |-
+  authを省略して認証なしとし、親の認証設定を継承しない。成功応答が返る場合は認証設定の不具合として扱う。

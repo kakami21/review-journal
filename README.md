@@ -94,6 +94,12 @@ curl -i "http://localhost:5173/api/health"
 {"status":"ok"}
 ```
 
+## BrunoでAPIを確認する
+
+Bruno拡張またはデスクトップアプリで `bruno/` を開きます。通常の一括確認は `checks` フォルダーだけを実行し、認証付き更新は `manual/refresh.yml` を個別送信します。
+
+初回設定、ローカル・本番の切り替え、認証情報の設定、手動更新、検証結果は [Brunoの利用手順](docs/bruno.md) を参照してください。
+
 ## 本番D1の手動更新
 
 初回は、更新API用のパスワードを生成します。
@@ -215,4 +221,12 @@ npm run deploy
 
 ## 移行設計
 
+Astro基盤の起動・検証手順は [Astro開発・検証環境](docs/astro-development.md) を参照。
+
 Astro・EmDashへの移行後の構成は [移行設計](docs/emdash-migration.md) を参照。現在の実装仕様と区別して管理する。
+
+## 開発とリリースの運用
+
+最新の `main` から作業ブランチを作成し、検証後に `main` 向けPRを作成する。完了するIssueはPR本文の `Closes #番号` で関連付ける。開発用Worker・D1は引き続き本番と分離する。
+
+リリースはmain上の `vMAJOR.MINOR.PATCH` タグで管理する。タグpushによるGitHub Actionsの本番デプロイは [Issue #23](https://github.com/kakami21/table-notes/issues/23) で実装する。詳細は [運用規則](.github/CONTRIBUTING.md) を参照。
