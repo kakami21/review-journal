@@ -27,7 +27,7 @@ npm run preview:astro
 
 APIの参照確認は `/api/health` と `/api/reviews` を使う。`POST /api/reviews/refresh` はBasic認証が必要で、収集成功後に開発用D1を全件置換する。CMSへの追加のみの取り込みは #9 で実装する。
 
-ローカル認証は `.dev.vars` を使う。公開環境のユーザー名は `wrangler.astro.jsonc` の `BASIC_AUTH_USERNAME`、パスワードはWorkerの `BASIC_AUTH_PASSWORD` シークレットで管理する。認証情報をコードやコマンド引数に書かない。Brunoの環境と設定方法は [API確認手順](bruno.md) を参照。
+ローカルのパスワードは `.dev.vars` を使う。ユーザー名はローカル・公開ともに `wrangler.astro.jsonc` の `vars.BASIC_AUTH_USERNAME` を使い、公開パスワードはWorkerの `BASIC_AUTH_PASSWORD` シークレットで管理する。必須シークレット名を設定へ宣言しているため、CIの型生成にローカルの秘密ファイルは不要。認証情報をコードやコマンド引数に書かない。Brunoの環境と設定方法は [API確認手順](bruno.md) を参照。
 
 `build:astro` は `dist/astro/` に出力する。既存の `npm run build` は `dist/` を作り直すため、Astroのプレビュー・公開前は必ず `build:astro` を実行する。
 

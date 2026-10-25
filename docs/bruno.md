@@ -26,7 +26,7 @@
 
 設定は `bruno/environments/` で管理する。ポートが変わった場合も環境の `baseUrl` だけを変更する。`npm run dev:worker` は `http://localhost:8787` を使う。Astro移行時も実際のAPI接続先へ合わせる。
 
-`astro-local` は `.dev.vars` と同じローカル認証情報を使う。`development` は `BRUNO_DEVELOPMENT_USERNAME`・`BRUNO_DEVELOPMENT_PASSWORD` を使い、ユーザー名は `wrangler.astro.jsonc` の `BASIC_AUTH_USERNAME`（現在は `admin`）に合わせる。ローカルのユーザー名で上書きされるとは限らない。どちらも更新時は開発用D1を書き換える。
+ローカル環境のパスワードは `.dev.vars`、ユーザー名は選択したWrangler設定の `vars.BASIC_AUTH_USERNAME`（現在は `admin`）に合わせる。`development` は公開環境用の `BRUNO_DEVELOPMENT_USERNAME`・`BRUNO_DEVELOPMENT_PASSWORD` を使う。どちらも更新時は開発用D1を書き換える。
 
 ## 確認するリクエスト
 
@@ -44,7 +44,7 @@
 **現行更新は収集結果で接続先D1の口コミを全件置換する。** ローカルでも開発用リモートD1を書き換え、Browser Runの利用が発生する。
 
 1. `bruno/.env.example` を同じフォルダーの `.env` へコピーする。
-2. プロジェクト直下の `.dev.vars` の `BASIC_AUTH_USERNAME` の値を `.env` の `BRUNO_LOCAL_USERNAME` へ、`BASIC_AUTH_PASSWORD` の値を `BRUNO_LOCAL_PASSWORD` へ転記する。
+2. 選択したWrangler設定の `vars.BASIC_AUTH_USERNAME` を `.env` の `BRUNO_LOCAL_USERNAME` へ、`.dev.vars` の `BASIC_AUTH_PASSWORD` を `BRUNO_LOCAL_PASSWORD` へ転記する。
 3. 環境を `local` にし、接続先URLを確認する。
 4. `manual/refresh.yml` を開き、URL欄右端の「→」で個別送信する。
 5. 200とTestsの成功を確認し、口コミ一覧を再取得する。
