@@ -9,6 +9,7 @@
 | 言語を問わず、コードの編集、コードコメントの作成・修正 | [.github/instructions/code-comments.instructions.md](.github/instructions/code-comments.instructions.md) |
 | GitHub Issueの作成・更新・完了、親子関係やラベルの設定 | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) |
 | PRの作成・更新・レビュー・マージ | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)、[.github/pull_request_template.md](.github/pull_request_template.md) |
+| PRタイトル・本文の作成・修正・自動生成 | [.github/instructions/pull-request.instructions.md](.github/instructions/pull-request.instructions.md) |
 | 作業Issue（単独・子Issue）の本文の作成・更新 | [.github/ISSUE_TEMPLATE/task.yml](.github/ISSUE_TEMPLATE/task.yml) |
 | 親Issue（テーマ）の本文の作成・更新 | [.github/ISSUE_TEMPLATE/parent.yml](.github/ISSUE_TEMPLATE/parent.yml) |
 

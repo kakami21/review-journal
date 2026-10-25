@@ -32,6 +32,7 @@
 - ブランチは [命名規則](instructions/branch-naming.instructions.md) に従い、通常のPRは `develop` を取り込み先とする。`main` への取り込みはリリースとして別途扱う
 - 1つのPRは1つの目的に絞る。無関係な変更は別のPRに分ける
 - タイトルはIssueと同じ形式とし、最終的な変更内容を日本語で具体的に示す
+- タイトル・本文の作成と自動生成は [PR生成規則](instructions/pull-request.instructions.md) に従い、日本語で記載する
 - 本文は [PRテンプレート](pull_request_template.md) に従う。CLIから作成する場合も、変更内容・検証結果・関連Issueを記載する
 - 検証結果には実行した確認と結果を記載する。未実施・失敗・残る制約は明記し、実施済みと混同しない
 - 関連Issueは `Refs #番号` で記載する。`develop` 向けPRでは `Closes` による自動完了を前提にしない。自動完了はデフォルトブランチへのマージ時に限られる
