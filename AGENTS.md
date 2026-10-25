@@ -4,9 +4,11 @@
 
 | 作業 | 参照先 |
 | --- | --- |
+| ブランチの作成・命名・改名 | [.github/instructions/branch-naming.instructions.md](.github/instructions/branch-naming.instructions.md) |
 | コミットメッセージの作成・修正 | [.github/instructions/commit-message.instructions.md](.github/instructions/commit-message.instructions.md) |
 | 言語を問わず、コードの編集、コードコメントの作成・修正 | [.github/instructions/code-comments.instructions.md](.github/instructions/code-comments.instructions.md) |
 | GitHub Issueの作成・更新・完了、親子関係やラベルの設定 | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) |
+| PRの作成・更新・レビュー・マージ | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)、[.github/pull_request_template.md](.github/pull_request_template.md) |
 | 作業Issue（単独・子Issue）の本文の作成・更新 | [.github/ISSUE_TEMPLATE/task.yml](.github/ISSUE_TEMPLATE/task.yml) |
 | 親Issue（テーマ）の本文の作成・更新 | [.github/ISSUE_TEMPLATE/parent.yml](.github/ISSUE_TEMPLATE/parent.yml) |
 
