@@ -67,7 +67,7 @@ export function ReviewListPage() {
       <div className="mx-auto max-w-3xl">
         <header className="mb-2">
           <div>
-            <h1 className="text-4xl font-bold">口コミ一覧</h1>
+            <h1 className="text-4xl font-bold">箱入レオのルーザー日記</h1>
             <p className="mt-2 opacity-70">{sortedReviews.length}件の口コミ</p>
             <p className="mt-1 text-sm opacity-60">
               最終取得：

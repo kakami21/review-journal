@@ -1,0 +1,37 @@
+name: 作業Issue（単独・子Issue）
+description: 単独で実装・検証・完了できる作業
+body:
+  - type: markdown
+    attributes:
+      value: リポジトリの `.github/CONTRIBUTING.md` に従って登録する。
+  - type: textarea
+    id: purpose
+    attributes:
+      label: 背景・目的
+      description: 現在の課題と、この作業で改善したいこと。
+      placeholder: 現在は…のため、…を改善する
+    validations:
+      required: true
+  - type: textarea
+    id: work
+    attributes:
+      label: 対応内容
+      description: 実施する作業。実装方法が未定なら、調査・判断する内容を記載する。
+      placeholder: "- …を実装する\n- …を確認する"
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 完了条件
+      description: 完了を判断できる条件と、必要な検証をチェックリストで記載する。
+      placeholder: "- [ ] …できる\n- [ ] …で動作を確認する"
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: 補足
+      description: 不具合の場合は、判断に必要な環境・再現手順・期待と実際の結果・影響・回避手段を記載する。原因は確認できた事実と推測を分ける。関連Issueや優先度の理由もこの欄を使用する。不要なら省略可。
+    validations:
+      required: false

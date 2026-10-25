@@ -4,8 +4,8 @@
 
 - 画面：React、Vite、Tailwind CSS、daisyUI
 - API：TypeScript、Hono、Cloudflare Workers
-- 口コミ収集：Playwright、Cloudflare Browser Run
-- 保存：ローカルJSON、Cloudflare D1
+- 口コミ収集：Cloudflare Browser Run
+- 保存：Cloudflare D1
 
 ## 口コミの取得項目
 
@@ -25,32 +25,26 @@
 
 ## スクレイピング構成
 
-食べログの巡回・抽出処理は、ローカルとCloudflareで共通です。ブラウザーの起動方法と保存先だけをコンストラクタインジェクションで切り替えます。
+食べログの巡回・抽出処理はCloudflare上で実行し、取得結果をD1へ保存します。
 
 ```mermaid
 flowchart LR
-    L["ローカルコマンド"] --> LB["LocalBrowserProvider"]
-    C["手動実行"] --> CB["CloudflareBrowserProvider"]
-    LB --> S["TabelogReviewScraper"]
-    CB --> S
+    C["認証付き更新API / Scheduled Handler"] --> B["CloudflareBrowserProvider"]
+    B --> S["TabelogReviewScraper"]
     S --> R["RefreshReviews"]
-    R --> J["JsonReviewRepository"]
     R --> D["D1ReviewRepository"]
+    D --> V["review_list"]
+    V --> A["口コミ一覧API"]
 ```
 
-| 実行環境 | ブラウザー | 保存先 | 口コミ一覧の参照先 |
-| --- | --- | --- | --- |
-| ローカル | ローカルChrome | `data/reviews.json` | `data/reviews.json` |
-| 本番 | Browser Run | D1 | D1 |
+ローカル開発と本番のどちらでも、口コミ一覧APIはD1の`review_list`ビューを参照する。D1は環境ごとに分離し、どちらもリモート接続を使用する。
 
-口コミ一覧APIは、`REVIEW_SOURCE`で参照先を切り替えます。
-
-| `REVIEW_SOURCE` | 口コミ一覧の参照先 |
+| 実行方法 | 接続先D1 |
 | --- | --- |
-| `json` | `data/reviews.json`と`data/reviews-meta.json` |
-| `d1` | Cloudflare D1 |
+| `npm run dev` / `npm run dev:worker` / `npm run preview` | 開発用 `table-notes-development` |
+| `npm run build` → `npm run deploy` | 本番用 `dining-archive-db` |
 
-`json`と`d1`以外を指定した場合は、設定ミスとしてエラーになります。
+開発用は `wrangler.jsonc` の `env.development` で定義し、起動・ビルド時の `CLOUDFLARE_ENV=development` で選択する。
 
 ## セットアップ
 
@@ -61,44 +55,30 @@ npm install
 `.dev.vars`を作成し、ローカル実行用の値を設定します。
 
 ```text
-REVIEW_SOURCE="json"
 TABELOG_USERNAME="食べログのユーザー名"
+BASIC_AUTH_USERNAME="更新APIのユーザー名"
+BASIC_AUTH_PASSWORD="更新APIのパスワード"
 ```
 
-`TABELOG_USERNAME`には、口コミを取得する食べログユーザーのURL上の名前を設定します。本番では`wrangler.jsonc`の`TABELOG_USERNAME`と`REVIEW_SOURCE="d1"`が使用されます。
+`TABELOG_USERNAME`には、口コミを取得する食べログユーザーのURL上の名前を設定します。本番では`wrangler.jsonc`の値が使用されます。
 
-Browser Runは`wrangler.jsonc`でリモートバインディングとして設定されています。ローカルからBrowser Runを実行した場合もCloudflare側の利用量に加算されます。
-
-## ローカルChromeで口コミを取得
-
-```bash
-npm run scrape
-```
-
-通常のChromeを起動して口コミを取得し、次のファイルへ保存します。
-
-```text
-data/reviews.json
-data/reviews-meta.json
-```
-
-このコマンドはD1や本番環境を更新しません。
+Browser RunとD1は`wrangler.jsonc`でリモートバインディングとして設定されています。ローカルから利用した場合もCloudflare側の利用量に加算されます。
 
 ## アプリのローカル起動
-
-先に口コミJSONを更新します。
-
-```bash
-npm run scrape
-```
-
-続けてアプリを起動します。
 
 ```bash
 npm run dev
 ```
 
-表示されたURLを開きます。口コミ一覧は`data/reviews.json`から読み取るため、ローカルD1は使用しません。
+表示されたURLを開く。口コミ一覧は開発用リモートD1から読み取る。初回は空の一覧となる。
+
+開発用D1のスキーマを更新する場合：
+
+```bash
+npx wrangler d1 migrations apply table-notes-development --env development --remote
+```
+
+ローカルの認証付き `POST /api/reviews/refresh` は開発用D1だけを更新する。本番データは自動コピーしない。
 
 ## ヘルスチェック
 
@@ -116,19 +96,40 @@ curl -i "http://localhost:5173/api/health"
 
 ## 本番D1の手動更新
 
-本番D1を更新する場合は、Wranglerの開発サーバーを使用して手動で実行します。
+初回は、更新API用のパスワードを生成します。
 
 ```bash
-npm run dev:worker
+openssl rand -base64 32
 ```
 
-別のターミナルからScheduled Handlerを呼び出します。
+表示されたパスワードをパスワード管理アプリへ保存し、Wrangler Secretとして登録します。入力内容は画面に表示されません。
 
 ```bash
-curl "http://localhost:8787/cdn-cgi/handler/scheduled"
+npx wrangler secret put BASIC_AUTH_PASSWORD
 ```
 
-起動時のバインディング一覧で`env.DB`が`remote`になっていることを確認してください。`local`の場合は本番D1に反映されません。
+更新APIを含むWorkerを本番へデプロイします。デプロイ前にAPIを呼ぶと、`404`と`APIが見つかりません。`が返ります。
+
+```bash
+npm run deploy
+```
+
+デプロイ後、認証付き更新APIを呼び出します。`--user`にパスワードを書かないことで、コマンド履歴へパスワードを残さず、実行後の入力欄で指定できます。
+
+```bash
+curl --fail-with-body \
+  --user "admin" \
+  --request POST \
+  "https://pakoirileo.nokishita.app/api/reviews/refresh"
+```
+
+コマンド内のURLは上記の文字列をそのまま使用します。`[URL](URL)`というMarkdownリンク形式では入力しません。
+
+更新処理はデプロイ済みWorker内で実行されるため、手元でWranglerの開発サーバーを起動する必要はありません。成功時は取得件数と更新日時を返します。
+
+```json
+{"count":128,"scrapedAt":"2026-10-03T06:30:00.000Z"}
+```
 
 この処理は次の順序で動作します。
 
@@ -144,12 +145,12 @@ curl "http://localhost:8787/cdn-cgi/handler/scheduled"
 初回またはマイグレーション追加時は、Workerより先にリモートD1へ適用します。
 
 ```bash
-npx wrangler d1 migrations apply tabelog-writer-db --remote
+npx wrangler d1 migrations apply dining-archive-db --remote
 npm run build
 npm run deploy
 ```
 
-デプロイ後も口コミは自動取得されません。リモートD1を更新する場合は、前述の手動更新を実行します。
+デプロイ後も口コミは自動取得されません。リモートD1を更新する場合は、前述の認証付き更新APIを実行します。Scheduled Handlerは将来Cron Triggerを設定する場合にも同じ更新処理を利用できます。
 
 ## 主なファイル
 
@@ -157,27 +158,42 @@ npm run deploy
 .
 ├── migrations/
 │   ├── 0001_initial_schema.sql
-│   └── 0002_scraped_reviews.sql
-├── scripts/
-│   └── scrape-tabelog.ts
+│   └── 0002_add_review_list_view.sql
 ├── src/
-│   ├── local/
-│   │   ├── local-browser-provider.ts
-│   │   └── json-review-repository.ts
-│   ├── scraping/
-│   │   ├── browser-provider.ts
-│   │   ├── review-repository.ts
-│   │   ├── tabelog-review-scraper.ts
-│   │   └── refresh-reviews.ts
+│   ├── reviews/
+│   │   ├── review.ts
+│   │   ├── refresh-reviews.ts
+│   │   └── tabelog-review-scraper.ts
+│   ├── infrastructure/
+│   │   ├── cloudflare-browser-provider.ts
+│   │   └── d1-review-repository.ts
 │   ├── react-app/
 │   └── worker/
-│       ├── cloudflare-browser-provider.ts
-│       ├── d1-review-repository.ts
-│       ├── create-refresh-reviews.ts
+│       ├── review-refresh-factory.ts
 │       └── index.ts
 ├── wrangler.jsonc
 └── package.json
 ```
+
+### ファイルごとの役割
+
+| ファイル | 役割 |
+| --- | --- |
+| `migrations/0001_initial_schema.sql` | `restaurants`と`reviews`のテーブル、制約、インデックスを作成する |
+| `migrations/0002_add_review_list_view.sql` | 口コミ一覧APIが参照する`review_list`ビューを作成する |
+| `src/reviews/review.ts` | アプリ内で共通して扱う口コミデータの型を定義する |
+| `src/reviews/refresh-reviews.ts` | 口コミの取得とD1への全件保存を順番に実行する |
+| `src/reviews/tabelog-review-scraper.ts` | 食べログの一覧・詳細ページを巡回し、口コミデータを抽出・検証する |
+| `src/infrastructure/cloudflare-browser-provider.ts` | Browser Runをスクレイパーから利用できる形に変換する |
+| `src/infrastructure/d1-review-repository.ts` | 口コミをD1へ保存し、`review_list`ビューから一覧を取得する |
+| `src/worker/review-refresh-factory.ts` | Browser Run、スクレイパー、D1を組み合わせて口コミ更新処理を作る |
+| `src/worker/index.ts` | APIルート、エラー処理、Scheduled Handlerを定義するWorkerの入口 |
+| `src/react-app/main.tsx` | Reactアプリを初期化し、ルーターを有効にする |
+| `src/react-app/App.tsx` | `/reviews`へのルーティングを定義する |
+| `src/react-app/pages/ReviewListPage.tsx` | APIから口コミを取得し、訪問年月順または評価順で一覧表示する |
+| `src/react-app/styles.css` | Tailwind CSSとdaisyUIを読み込み、画面全体のスタイルを定義する |
+| `wrangler.jsonc` | Worker、Browser Run、D1、静的ファイル配信の設定を管理する |
+| `package.json` | npmコマンドと利用パッケージを管理する |
 
 ## エラーとして停止する条件
 
@@ -196,3 +212,7 @@ npm run deploy
 - Browser RunからのアクセスはBotとして識別されます。対象サイトの判断により取得できなくなる可能性があります。
 - 実行頻度、取得データの範囲、利用方法について対象サイトの利用条件を確認してください。
 - Browser Runの利用量はCloudflareダッシュボードで確認してください。
+
+## 移行設計
+
+Astro・EmDashへの移行後の構成は [移行設計](docs/emdash-migration.md) を参照。現在の実装仕様と区別して管理する。

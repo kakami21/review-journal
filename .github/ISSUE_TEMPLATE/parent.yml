@@ -1,0 +1,37 @@
+name: 親Issue（テーマ）
+description: 複数の作業に分けて進めるテーマ
+body:
+  - type: markdown
+    attributes:
+      value: リポジトリの `.github/CONTRIBUTING.md` に従って登録する。
+  - type: textarea
+    id: purpose
+    attributes:
+      label: 目的
+      description: このテーマで実現することと、その理由。
+      placeholder: …を実現するため、…を整える
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: 対象範囲
+      description: 対象を明確にし、必要に応じて対象外も記載する。
+      placeholder: "対象：…\n対象外：…"
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: 完了条件
+      description: テーマ全体の完了を判断できる条件をチェックリストで記載する。
+      placeholder: "- [ ] …が利用できる\n- [ ] …を検証する"
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: 補足
+      description: 分割する作業、関連Issue、未決定事項など。不要なら省略可。
+    validations:
+      required: false

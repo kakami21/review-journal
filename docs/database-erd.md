@@ -39,3 +39,14 @@ erDiagram
 ## 設計方針
 
 店舗名は`restaurants`だけに保持し、口コミから外部キーで参照します。各非キー属性は、そのテーブルの候補キーだけに依存するため、第三正規形を満たします。
+
+## 読み取りビュー
+
+`review_list`は`restaurants`と`reviews`を結合し、口コミ一覧API向けの読み取り形式を提供します。データは保持せず、書き込みには使用しません。
+
+```mermaid
+flowchart LR
+    T["restaurants"] --> V["review_list"]
+    R["reviews"] --> V
+    V --> A["口コミ一覧API"]
+```

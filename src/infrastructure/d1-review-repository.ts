@@ -1,5 +1,5 @@
-import type { ReviewRepository } from "../scraping/review-repository";
-import type { Review } from "../scraping/review";
+import type { ReviewRepository } from "../reviews/refresh-reviews";
+import type { Review } from "../reviews/review";
 
 type ReviewRow = {
   id: string;
@@ -65,25 +65,23 @@ export class D1ReviewRepository implements ReviewRepository {
       this.db
         .prepare(`
           SELECT
-            reviews.id,
-            restaurants.name AS restaurant_name,
-            restaurants.url AS restaurant_url,
-            reviews.detail_url,
-            reviews.title,
-            reviews.body,
-            reviews.review_date,
-            reviews.rating,
-            reviews.like_count
-          FROM reviews
-          INNER JOIN restaurants
-            ON restaurants.url = reviews.restaurant_url
-          ORDER BY reviews.review_date DESC
+            id,
+            restaurant_name,
+            restaurant_url,
+            detail_url,
+            title,
+            body,
+            review_date,
+            rating,
+            like_count
+          FROM review_list
+          ORDER BY review_date DESC
         `)
         .all<ReviewRow>(),
       this.db
         .prepare(`
           SELECT MAX(scraped_at) AS last_updated_at
-          FROM reviews
+          FROM review_list
         `)
         .first<{ last_updated_at: string | null }>(),
     ]);
