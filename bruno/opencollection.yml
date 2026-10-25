@@ -1,6 +1,6 @@
 opencollection: 1.0.0
 info:
-  name: Table Notes API（通常確認）
+  name: Table Notes API
 bundled: false
 extensions:
   bruno:
