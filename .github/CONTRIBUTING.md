@@ -1,4 +1,4 @@
-# GitHub Issue運用規則
+# GitHub Issue・PR運用規則
 
 入力項目・記入方法・必須条件の正本は、以下のフォームのYAML。GitHubではフォームを使い、CLI・APIでも該当するYAMLを読んで同じ見出しと必須条件に従う。任意項目は必要な場合のみ記載する。
 
@@ -26,3 +26,18 @@
 - 分割時はGitHubのSub-issue機能で主な親を1つ設定し、親→子の2段階までとする。本文リンクだけで紐付け完了とは扱わない
 - 分割した作業の優先度は子Issueに付ける。親は完了を判断できる範囲に区切る
 - 完了条件を検証し、結果をIssueに残してから完了する。親は対象の子Issueとテーマ全体の完了条件が満たされたら完了する
+
+## Pull Request
+
+- ブランチは [命名規則](instructions/branch-naming.instructions.md) に従い、通常のPRは `develop` を取り込み先とする。`main` への取り込みはリリースとして別途扱う
+- 1つのPRは1つの目的に絞る。無関係な変更は別のPRに分ける
+- タイトルはIssueと同じ形式とし、最終的な変更内容を日本語で具体的に示す
+- 本文は [PRテンプレート](pull_request_template.md) に従う。CLIから作成する場合も、変更内容・検証結果・関連Issueを記載する
+- 検証結果には実行した確認と結果を記載する。未実施・失敗・残る制約は明記し、実施済みと混同しない
+- 関連Issueは `Refs #番号` で記載する。`develop` 向けPRでは `Closes` による自動完了を前提にしない。自動完了はデフォルトブランチへのマージ時に限られる
+- 作成後に取り込み先・差分・本文を確認し、URLを報告する。作成できなかった場合は本文を保存し、未作成と明記する
+- マージ前に差分をレビューし、必要な検証の成功と指摘の解消を確認する。PR作成の依頼だけでマージせず、マージの依頼または事前の合意に従う
+- `develop` へのマージ後、Issueの完了条件を確認し、検証結果とPRリンクをIssueに残して閉じる。本番反映が完了条件なら、その確認後に閉じる
+- マージ後は作業ブランチを削除する
+
+参考：[GitHubのIssueとPRの関連付け](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue)、[PRテンプレート](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/creating-a-pull-request-template-for-your-repository)。テンプレートの自動表示にはデフォルトブランチへの反映が必要。
