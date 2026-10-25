@@ -20,9 +20,13 @@
 | 環境 | baseUrl | 用途 |
 | --- | --- | --- |
 | `local` | `http://localhost:5173` | 開発用リモートD1を使う開発API |
+| `astro-local` | `http://localhost:4321` | `npm run dev:astro` で起動するAstro API |
+| `development` | `https://table-notes-astro-development.pandalize.workers.dev` | 公開したAstro検証API |
 | `production` | `https://pakoirileo.nokishita.app` | 本番API |
 
 設定は `bruno/environments/` で管理する。ポートが変わった場合も環境の `baseUrl` だけを変更する。`npm run dev:worker` は `http://localhost:8787` を使う。Astro移行時も実際のAPI接続先へ合わせる。
+
+`astro-local` は `.dev.vars` と同じローカル認証情報を使う。`development` は `BRUNO_DEVELOPMENT_USERNAME`・`BRUNO_DEVELOPMENT_PASSWORD` を使い、ユーザー名は `wrangler.astro.jsonc` の `BASIC_AUTH_USERNAME`（現在は `admin`）に合わせる。ローカルのユーザー名で上書きされるとは限らない。どちらも更新時は開発用D1を書き換える。
 
 ## 確認するリクエスト
 

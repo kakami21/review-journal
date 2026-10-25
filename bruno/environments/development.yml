@@ -1,0 +1,8 @@
+name: development
+variables:
+  - name: baseUrl
+    value: https://table-notes-astro-development.pandalize.workers.dev
+  - name: basicAuthUsername
+    value: "{{process.env.BRUNO_DEVELOPMENT_USERNAME}}"
+  - name: basicAuthPassword
+    value: "{{process.env.BRUNO_DEVELOPMENT_PASSWORD}}"
