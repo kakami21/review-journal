@@ -35,10 +35,11 @@
 - タイトル・本文の作成と自動生成は [PR生成規則](instructions/pull-request.instructions.md) に従い、日本語で記載する
 - 本文は [PRテンプレート](pull_request_template.md) に従う。CLIから作成する場合も、変更内容・検証結果・関連Issueを記載する
 - 検証結果には実行した確認と結果を記載する。未実施・失敗・残る制約は明記し、実施済みと混同しない
-- 関連Issueは `Refs #番号` で記載する。`develop` 向けPRでは `Closes` による自動完了を前提にしない。自動完了はデフォルトブランチへのマージ時に限られる
+- 関連Issueの参照・自動完了の記法は [PR生成規則](instructions/pull-request.instructions.md) に従う。デフォルトブランチ向けPRで完了条件を満たすIssueは、PR本文に `Closes #番号` を記載する。`develop` 向けや参照だけの場合は `Refs #番号` とする
 - 作成後に取り込み先・差分・本文を確認し、URLを報告する。作成できなかった場合は本文を保存し、未作成と明記する
 - マージ前に差分をレビューし、必要な検証の成功と指摘の解消を確認する。PR作成の依頼だけでマージせず、マージの依頼または事前の合意に従う
 - `develop` へのマージ後、Issueの完了条件を確認し、検証結果とPRリンクをIssueに残して閉じる。本番反映が完了条件なら、その確認後に閉じる
+- デフォルトブランチへのマージで自動完了するIssueも、マージ前に完了条件を確認し、検証結果とPRリンクをIssueに残す。リリースPRでは取り込み済みPRから未完了の関連Issueを確認する
 - マージ後は作業ブランチを削除する
 
 参考：[GitHubのIssueとPRの関連付け](https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue)、[PRテンプレート](https://docs.github.com/en/communities/using-templates-to-encourage-useful-issues-and-pull-requests/creating-a-pull-request-template-for-your-repository)。テンプレートの自動表示にはデフォルトブランチへの反映が必要。
