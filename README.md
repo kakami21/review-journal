@@ -37,7 +37,14 @@ flowchart LR
     V --> A["口コミ一覧API"]
 ```
 
-ローカル開発と本番のどちらでも、口コミ一覧APIはD1の`review_list`ビューを参照します。`wrangler.jsonc`のD1バインディングは`remote`のため、ローカル開発でもリモートD1へ接続します。
+ローカル開発と本番のどちらでも、口コミ一覧APIはD1の`review_list`ビューを参照する。D1は環境ごとに分離し、どちらもリモート接続を使用する。
+
+| 実行方法 | 接続先D1 |
+| --- | --- |
+| `npm run dev` / `npm run dev:worker` / `npm run preview` | 開発用 `table-notes-development` |
+| `npm run build` → `npm run deploy` | 本番用 `dining-archive-db` |
+
+開発用は `wrangler.jsonc` の `env.development` で定義し、起動・ビルド時の `CLOUDFLARE_ENV=development` で選択する。
 
 ## セットアップ
 
@@ -63,7 +70,15 @@ Browser RunとD1は`wrangler.jsonc`でリモートバインディングとして
 npm run dev
 ```
 
-表示されたURLを開きます。口コミ一覧はリモートD1から読み取ります。
+表示されたURLを開く。口コミ一覧は開発用リモートD1から読み取る。初回は空の一覧となる。
+
+開発用D1のスキーマを更新する場合：
+
+```bash
+npx wrangler d1 migrations apply table-notes-development --env development --remote
+```
+
+ローカルの認証付き `POST /api/reviews/refresh` は開発用D1だけを更新する。本番データは自動コピーしない。
 
 ## ヘルスチェック
 
@@ -197,3 +212,7 @@ npm run deploy
 - Browser RunからのアクセスはBotとして識別されます。対象サイトの判断により取得できなくなる可能性があります。
 - 実行頻度、取得データの範囲、利用方法について対象サイトの利用条件を確認してください。
 - Browser Runの利用量はCloudflareダッシュボードで確認してください。
+
+## 移行設計
+
+Astro・EmDashへの移行後の構成は [移行設計](docs/emdash-migration.md) を参照。現在の実装仕様と区別して管理する。
