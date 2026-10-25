@@ -1,0 +1,37 @@
+info:
+  name: 口コミ一覧
+  type: http
+  seq: 2
+http:
+  method: GET
+  url: "{{baseUrl}}/api/reviews"
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("HTTP 200で口コミ一覧と最終収集日時を返す", function () {
+          expect(res.getStatus()).to.equal(200);
+          const body = res.getBody();
+          expect(body.reviews).to.be.an("array");
+          if (body.lastUpdatedAt !== null) {
+            expect(body.lastUpdatedAt).to.be.a("string");
+            expect(Number.isNaN(Date.parse(body.lastUpdatedAt))).to.equal(false);
+          }
+          for (const review of body.reviews) {
+            for (const field of ["id", "name", "url", "detailUrl"]) {
+              expect(review[field]).to.be.a("string").and.not.equal("");
+            }
+            for (const field of ["title", "body"]) {
+              if (review[field] !== null) expect(review[field]).to.be.a("string");
+            }
+            expect(review.reviewDate).to.match(/^\d{4}-(0[1-9]|1[0-2])$/);
+            expect(review.rating).to.be.a("number");
+            expect(Number.isFinite(review.rating)).to.equal(true);
+            expect(Number.isInteger(review.likeCount)).to.equal(true);
+          }
+        });
+settings:
+  followRedirects: false
+  timeout: 30000
+docs: |-
+  空配列とlastUpdatedAt: nullは未収集時の正常応答。500はD1接続・スキーマ等を調査する。
