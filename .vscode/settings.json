@@ -21,6 +21,9 @@
   "files.insertFinalNewline": true,
 
   "explorer.compactFolders": false,
+  "githubPullRequests.defaultMergeMethod": "squash",
+  "githubPullRequests.overrideDefaultBranch": "develop",
+  "githubPullRequests.createDefaultBaseBranch": "repositoryDefault",
 
   "github.copilot.enable": {
     "*": true,
