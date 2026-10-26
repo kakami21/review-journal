@@ -1,7 +1,7 @@
 # 共有ルールの運用
 
 原本は[development-standards](https://github.com/kakami21/development-standards)で管理する。
-導入元はdevelopment-standardsのコミット`1fc6dda`。原本の設計方針は[README](https://github.com/kakami21/development-standards#設計思想)を参照する。同期コマンドは原本側にあり、このリポジトリへのコピーは不要。
+導入元はdevelopment-standardsのコミット`e8a94f8`。原本の設計方針は[README](https://github.com/kakami21/development-standards#設計思想)を参照する。同期コマンドは原本側にあり、このリポジトリへのコピーは不要。
 
 ## 導入・更新
 
@@ -25,7 +25,8 @@ node ../development-standards/scripts/sync.mjs .
 `AGENTS.md`と`.github/copilot-instructions.md`では管理マーカー内が同期対象。
 プロジェクト固有の指示は`AGENTS.md`のマーカー外に記載する。Copilot用案内は`AGENTS.md`への参照だけとする。
 エージェント向けの本文は`docs/rules/`、生成ボタン向けは`.github/instructions/`に分ける。
-生成ボタンは`.vscode/settings.json`の2項目で原本を直接参照し、他のエディター設定は保持する。
+生成ボタンの原本参照に加え、`.vscode/settings.json`の原本にある全設定（フォント・表示・保存時整形など）を同期する。
+同じキーは原本で上書きし、原本にないプロジェクト固有のキーとコメントは保持する。
 その他の配布ファイルは原本で上書きされる。移動済みの旧3ファイルは本文一致を確認して削除する。
 
 ## プロジェクト固有の規則
