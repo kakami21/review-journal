@@ -1,6 +1,6 @@
 # table-notes固有の規則
 
-リリースの準備・実行時は、[リリース手順](docs/releases.md)を読み、運用原則と検証手順に従ってください。
+リリースの準備・実行時は、[リリース手順](docs/releases.md)を読み、具体的な設定と検証手順に従ってください。
 
 共通ルールの導入・更新は[共有ルールの運用](docs/development-standards.md)を参照してください。
 
@@ -12,14 +12,14 @@
 
 | 作業 | 参照先 |
 | --- | --- |
-| ブランチの作成・命名・改名 | [.github/instructions/branch-naming.instructions.md](.github/instructions/branch-naming.instructions.md) |
+| ブランチの作成・命名・改名 | [docs/rules/branch-naming.md](docs/rules/branch-naming.md) |
 | コミットメッセージの作成・修正 | [.github/instructions/commit-message.instructions.md](.github/instructions/commit-message.instructions.md) |
-| 言語を問わず、コードの編集、コードコメントの作成・修正 | [.github/instructions/code-comments.instructions.md](.github/instructions/code-comments.instructions.md) |
+| 言語を問わず、コードの編集、コードコメントの作成・修正 | [docs/rules/code-comments.md](docs/rules/code-comments.md) |
 | GitHub Issueの作成・更新・完了、親子関係やラベルの設定 | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) |
 | PRの作成・更新・レビュー・マージ | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)、[.github/pull_request_template.md](.github/pull_request_template.md) |
 | PRタイトル・本文の作成・修正・自動生成 | [.github/instructions/pull-request.instructions.md](.github/instructions/pull-request.instructions.md) |
 | 作業Issue（単独・子Issue）の本文の作成・更新 | [.github/ISSUE_TEMPLATE/task.yml](.github/ISSUE_TEMPLATE/task.yml) |
-| リリースの準備・実行 | [共通リリース規則](.github/instructions/release.instructions.md)と導入先プロジェクトのリリース手順 |
+| リリースの準備・実行 | [共通リリース規則](docs/rules/release.md)と導入先プロジェクトのリリース手順 |
 | 親Issue（テーマ）の本文の作成・更新 | [.github/ISSUE_TEMPLATE/parent.yml](.github/ISSUE_TEMPLATE/parent.yml) |
 
 複数の作業に該当する場合は、対応する参照先をすべて確認してください。IssueをCLI・APIから登録する場合も、運用規則と該当するフォームのYAMLを読んでください。
