@@ -1,6 +1,7 @@
 {
-  "editor.fontFamily": "Menlo, monospace",
-  "terminal.integrated.fontFamily": "Menlo, monospace",
+  "editor.formatOnSave": true,
+  "editor.fontFamily": "Menlo, Cascadia Code",
+  "terminal.integrated.fontFamily": "Menlo, Cascadia Code",
   "editor.fontSize": 14,
   "editor.lineHeight": 24,
   "editor.fontLigatures": false,
