@@ -82,7 +82,8 @@
           "type": "datetime",
           "required": true
         }
-      ]
+      ],
+      "urlPattern": "/reviews#{slug}"
     }
   ]
 }

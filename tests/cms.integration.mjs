@@ -4,7 +4,9 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import ts from 'typescript';
-const base='http://127.0.0.1:4321';
+const port=Number(process.env.CMS_TEST_PORT ?? 4321);
+assert(Number.isInteger(port) && port > 0 && port < 65536, 'ローカルのポート番号を指定してください。');
+const base=`http://127.0.0.1:${port}`;
 // 公式の開発専用セットアップをローカルでだけ利用する。本番ではこのエンドポイントは403となる。
 const setup = await fetch(base+'/_emdash/api/setup/dev-bypass?content=0&token=1',{method:'POST'});
 const token = (await setup.json()).data?.token;
@@ -21,7 +23,10 @@ const cms={handleContentCreate:(c,b)=>api('content/'+c,'POST',b),handleContentLi
 const store=new CmsReviewStore(cms,db);
 const sourceId='integration-'+Date.now();
 const review={id:sourceId,detailUrl:'https://tabelog.com/rvwr/test/'+sourceId,name:'結合テスト店舗',url:'https://tabelog.com/restaurant/test',title:null,body:'取得原文\n2行目',reviewDate:'2026-10',rating:4,likeCount:3};
-const initial=await store.importNew([review],'2026-10-26T00:00:00.000Z');assert.equal(initial.addedCount,1);
+// 同じ取得元IDを同時に取り込み、DBの一意制約と競合後の照合を実CMSで確認する。
+const concurrent=await Promise.all([store.importNew([review],'2026-10-26T00:00:00.000Z'),store.importNew([review],'2026-10-26T00:00:00.000Z')]);
+assert.equal(concurrent.reduce((sum,result)=>sum+result.addedCount,0),1);
+assert.equal(lastDate,'2026-10-26T00:00:00.000Z');
 const list=await api('content/reviews');const item=list.data.items.find(i=>i.data.source_id===sourceId);assert(item);assert.equal(item.status,'draft');
 async function publicList(){const r=await fetch(base+'/api/reviews');assert.equal(r.status,200);return (await r.json()).reviews;}
 assert(!(await publicList()).some(i=>i.id===sourceId));

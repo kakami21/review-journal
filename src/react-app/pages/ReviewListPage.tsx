@@ -109,7 +109,7 @@ export function ReviewListPage() {
 
         <ul className="space-y-4">
           {sortedReviews.map((review) => (
-            <li key={review.id}>
+            <li key={review.id} id={review.id}>
               <article className="card bg-base-100 shadow-sm">
                 <div className="card-body">
                   <div className="flex items-start justify-between gap-4">
