@@ -2,19 +2,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RefreshReviews } from "../src/reviews/refresh-reviews";
 
 const mocks = vi.hoisted(() => ({
-  astro: vi.fn(() => new Response("Astro")),
   scrape: vi.fn(),
   save: vi.fn(),
 }));
 
-vi.mock("@astrojs/cloudflare/handler", () => ({ handle: mocks.astro }));
 vi.mock("../src/worker/review-refresh-factory", () => ({
   createReviewRefresh: () => new RefreshReviews({ scrape: mocks.scrape } as never, {
     replaceAll: mocks.save,
   }),
 }));
 
-import worker from "../src/worker/astro";
+import worker from "../src/worker/index";
 
 const row = {
   id: "123", restaurant_name: "店舗", restaurant_url: "https://example.com/restaurant",
@@ -41,18 +39,13 @@ beforeEach(() => {
   mocks.save.mockReset().mockResolvedValue(undefined);
 });
 
-describe("Astro移行時のHTTP契約", () => {
-  it.each(["/", "/reviews", "/_emdash/api/auth", "/apiary"])("%s はAstroへ渡す", async (path) => {
-    expect(await (await request(path)).text()).toBe("Astro");
-    expect(mocks.astro).toHaveBeenCalledOnce();
-  });
+describe("現行WorkerのHTTP契約", () => {
 
   it("ヘルスチェックは既存のJSONとキャッシュ抑止を維持する", async () => {
     const response = await request("/api/health");
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ status: "ok" });
     expect(response.headers.get("cache-control")).toBe("no-store");
-    expect(mocks.astro).not.toHaveBeenCalled();
   });
 
   it("一覧は既存のID・本文・訪問年月・最終取得日時を維持する", async () => {
@@ -105,6 +98,5 @@ describe("Astro移行時のHTTP契約", () => {
     const response = await request("/api/unknown");
     expect(response.status).toBe(404);
     expect(await response.json()).toEqual({ error: "APIが見つかりません。" });
-    expect(mocks.astro).not.toHaveBeenCalled();
   });
 });

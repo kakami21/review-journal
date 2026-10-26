@@ -1,6 +1,8 @@
 {
   "type": "module",
   "dependencies": {
+    "@emdash-cms/cloudflare": "^1.3.1",
+    "emdash": "^1.3.1",
     "hono": "^4.12.30",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
@@ -40,11 +42,14 @@
     "build:astro": "npm run check:astro && astro build",
     "preview:astro": "npm run build:astro && astro preview",
     "deploy:astro": "npm run build:astro && wrangler deploy --config dist/astro/server/wrangler.json",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:cms": "node tests/cms.integration.mjs",
+    "types:astro": "wrangler types --config wrangler.astro.jsonc --env-interface AstroBindings --include-runtime=false --strict-vars=false astro/cloudflare.d.ts"
   },
   "overrides": {
     "miniflare": {
       "undici": "7.30.1"
-    }
+    },
+    "zod": "4.6.7"
   }
 }

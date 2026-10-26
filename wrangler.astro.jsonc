@@ -7,6 +7,8 @@
   "secrets": { "required": ["BASIC_AUTH_PASSWORD"] },
   "compatibility_flags": ["nodejs_compat"],
   "routes": [],
+  "triggers": { "crons": ["* * * * *"] },
+  "kv_namespaces": [{ "binding": "SESSION", "id": "f9b3b197ea954dc9907d6dd09a6e3a28" }],
   "browser": { "binding": "BROWSER", "remote": true },
   "vars": {
     "TABELOG_USERNAME": "pakoirileo",
@@ -19,7 +21,7 @@
       "database_name": "table-notes-development",
       "database_id": "3554b63d-b513-432f-bed2-3a90f5159eb0",
       "remote": true,
-      "migrations_dir": "./migrations"
+      "migrations_dir": "./astro/migrations"
     }
   ],
   "observability": { "enabled": true }

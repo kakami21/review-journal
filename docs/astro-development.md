@@ -1,6 +1,6 @@
-# Astro開発・検証環境（#7・#8）
+# Astro・EmDash開発・検証環境（#7・#8・#9）
 
-#7で用意したAstro基盤へ、#8で既存画面とHono APIを接続する。本番への切り替えは #11 で行う。
+#7のAstro基盤へ#8で既存画面とHono APIを接続し、#9で口コミの保存先をEmDashへ切り替える。本番への切り替えは #11 で行う。
 
 ## 構成
 
@@ -8,10 +8,10 @@
 - `astro.config.mjs` は `wrangler.astro.jsonc` を読み込む。
 - 開発ルートは `astro/`、ページは `src/pages/`。既存Viteアプリの `index.html` が開発時に優先されないようルートを分離する。
 - Worker名は `table-notes-astro-development`、D1は既存の開発用 `table-notes-development`。本番D1・本番ドメインは設定しない。
-- 画像変換・セッションはこの段階では使わない。画像用バインディングやKVを自動作成しない。
+- 画像・R2は使わない。CMSの認証セッションは専用のSESSION KVへ保存する。
 - `/` はホーム、`/reviews` は既存Reactを使う口コミ一覧。`/api/*` だけを既存Honoへ委譲する。`/_emdash/*` はHonoへ渡さない。
-- `src/worker/astro.ts` は画面・APIを振り分ける入口。収集・D1保存・Basic認証は既存実装を再利用する。定期処理も引き継ぐが、新しいCron設定は追加しない。
-- D1はリモート接続。ページが表示できても、D1の実在やスキーマを検証したことにはならない。
+- `src/worker/astro.ts` は全リクエストをAstroへ渡し、`src/pages/api/[...path].ts` がCMSコンテキスト内でHonoを呼ぶ。毎分のCronはCMS保守専用で、口コミ収集を呼ばない。
+- ローカル開発はローカルD1、検証サイトは開発用リモートD1へ接続する。ページ表示とデータ読み書きの検証は区別する。
 - Cloudflareアダプターの要件に合わせWranglerを4.152.0へ更新。監査対象だったHonoは互換範囲で更新し、Miniflare内のundiciは修正済み7.30.1に限定して固定する。Miniflareが修正版を採用したら、このoverrideを撤去する。
 
 ## 起動・確認
@@ -25,7 +25,7 @@ npm run preview:astro
 
 `/reviews` で一覧・最終取得日時を確認し、「評価順」「訪問年月順」で並び替えを確認する。
 
-APIの参照確認は `/api/health` と `/api/reviews` を使う。`POST /api/reviews/refresh` はBasic認証が必要で、収集成功後に開発用D1を全件置換する。CMSへの追加のみの取り込みは #9 で実装する。
+APIの参照確認は `/api/health` と `/api/reviews` を使う。`POST /api/reviews/refresh` はBasic認証が必要。#9以降のAstro側はCMSへ未登録分だけ下書き追加する（後述）。
 
 ローカルのパスワードは `.dev.vars` を使う。ユーザー名はローカル・公開ともに `wrangler.astro.jsonc` の `vars.BASIC_AUTH_USERNAME` を使い、公開パスワードはWorkerの `BASIC_AUTH_PASSWORD` シークレットで管理する。必須シークレット名を設定へ宣言しているため、CIの型生成にローカルの秘密ファイルは不要。認証情報をコードやコマンド引数に書かない。Brunoの環境と設定方法は [API確認手順](bruno.md) を参照。
 
@@ -73,3 +73,42 @@ Astro 7の開発・プレビューはバックグラウンドで起動する。�
 
 - [Cloudflare連携](https://docs.astro.build/en/guides/integrations-guide/cloudflare/)
 - [React連携](https://docs.astro.build/en/guides/integrations-guide/react/)
+
+## EmDashの検証（#9）
+
+Astro側はEmDash 1.3.1の `reviews` コレクションを正本として使う。現行Vite/Hono本番は従来のテーブルを利用し、本番切り替えは #11 で行う。
+
+### ローカル起動
+
+```sh
+npx wrangler d1 migrations apply table-notes-development --local --config wrangler.astro.jsonc
+npm run dev:astro
+```
+
+ローカルのD1・KVは `.wrangler/state` へ保存する。Astroアダプターの `remoteBindings: false` によりリモートD1・Browser Runには接続しない。実際の口コミ収集は検証用Workerで確認する。
+
+`http://localhost:4321/_emdash/admin` から初回セットアップを行い、管理者本人のパスキーを登録する。公開したworkers.devドメインのパスキーとは別に管理する。画像・R2・外部プラグイン・メール認証は今回導入しない。メディア機能は利用しない。
+
+ローカルの開発用DBだけで結合検証する場合：
+
+```sh
+npm run test:cms
+```
+
+このコマンドは起動済みの `127.0.0.1:4321` に接続し、EmDash公式の開発専用セットアップでテスト管理者を準備する。下書き追加・公開・編集・公開前下書きの非表示・再取得時の編集保護・取得元変更拒否・ゴミ箱再追加防止を実CMS APIで検証する。作成したテスト口コミは最後にゴミ箱へ移す。リモート・本番への接続先指定は受け付けない。実際のパスキー認証の検証とは区別する。
+
+### 取り込みと公開
+
+- `astro/seed/seed.json` が初回のコレクションを定義する。既存DBのスキーマ変更はseedの編集だけでは反映されない。
+- `POST /api/reviews/refresh` のBasic認証は維持する。新しい口コミだけを下書き追加し、公開・下書き・ゴミ箱にある既存口コミを上書きしない。
+- 応答の `count` は取得件数、`addedCount` は追加件数、`scrapedAt` は全件取り込みが成功した日時。途中失敗は500となり、追加済み下書きは残す。再実行時は登録済みIDを照合する。
+- 追加0件でも収集全体が成功すれば `app_review_sync` の成功日時を更新する。失敗時は更新しない。既存SQLとCMSコアマイグレーションを混同しない。
+- `source_id` は必須・一意。取得元ID・URL・初回取り込み日時の変更は保存フックで拒否する。
+- 管理画面から編集・公開すると `/reviews` と `/api/reviews` に反映される。公開用クエリだけを利用し、公開済みエントリーの編集中の下書きも返さない。
+- CMS定期処理は毎分の `createScheduledHandler` に接続する。口コミの定期収集は接続せず、手動更新だけを利用する。開発サーバーのタイマーとCloudflare Cronの実行確認は区別する。
+
+### 検証サイトへの公開
+
+開発用D1をバックアップし、`astro/migrations` を `wrangler.astro.jsonc` で適用してからビルド・公開する。EmDashのコアスキーマとseedは初回リクエストで適用される。管理者登録はサイト所有者が実施する。既存口コミの本番からの移行・自動公開は #11 の作業であり、この段階では行わない。
+
+EmDashの導入で固定されるZodの既知問題を避けるため、互換性のある修正版4.6.7へoverrideしている。上流が修正版を採用したら解除を検討する。

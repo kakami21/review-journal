@@ -1,12 +1,9 @@
 import { handle } from "@astrojs/cloudflare/handler";
-import worker from "./index";
+import { createScheduledHandler } from "@emdash-cms/cloudflare/worker";
 
 export default {
-  ...worker,
-  // アプリAPIだけをHonoへ渡す。ページと将来の /_emdash/* はAstro側で処理する。
-  fetch(request, env, ctx) {
-    return new URL(request.url).pathname.startsWith("/api/")
-      ? worker.fetch(request, env, ctx)
-      : handle(request, env, ctx);
-  },
+  // APIもAstroを通し、CMSのリクエストコンテキストと公開データ用クエリを利用する。
+  fetch: handle,
+  // CMSの公開予約・保守だけを実行する。口コミ収集は認証付き手動更新に限定する。
+  scheduled: createScheduledHandler({ generalCron: "* * * * *" }),
 } satisfies ExportedHandler<CloudflareBindings>;

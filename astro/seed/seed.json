@@ -1,0 +1,88 @@
+{
+  "version": "1",
+  "settings": {
+    "title": "箱入レオのルーザー日記",
+    "timezone": "Asia/Tokyo"
+  },
+  "collections": [
+    {
+      "slug": "reviews",
+      "label": "口コミ",
+      "labelSingular": "口コミ",
+      "titleField": "restaurant_name",
+      "routable": false,
+      "supports": [
+        "drafts",
+        "revisions",
+        "scheduling"
+      ],
+      "fields": [
+        {
+          "slug": "source_id",
+          "label": "食べログ口コミID",
+          "type": "string",
+          "required": true,
+          "unique": true
+        },
+        {
+          "slug": "source_url",
+          "label": "食べログ口コミURL",
+          "type": "url",
+          "required": true
+        },
+        {
+          "slug": "restaurant_name",
+          "label": "店舗名",
+          "type": "string",
+          "required": true
+        },
+        {
+          "slug": "restaurant_url",
+          "label": "店舗URL",
+          "type": "url",
+          "required": true
+        },
+        {
+          "slug": "title",
+          "label": "タイトル",
+          "type": "string",
+          "required": false
+        },
+        {
+          "slug": "body",
+          "label": "本文",
+          "type": "text",
+          "required": false
+        },
+        {
+          "slug": "review_month",
+          "label": "訪問年月",
+          "type": "string",
+          "required": true
+        },
+        {
+          "slug": "rating",
+          "label": "評価",
+          "type": "number",
+          "required": true,
+          "validation": {
+            "min": 0,
+            "max": 5
+          }
+        },
+        {
+          "slug": "like_count",
+          "label": "いいね数",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "slug": "imported_at",
+          "label": "初回取り込み日時",
+          "type": "datetime",
+          "required": true
+        }
+      ]
+    }
+  ]
+}
