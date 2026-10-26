@@ -70,8 +70,23 @@ async function optionalText(locator: ScrapingLocator) {
   return (await locator.count()) > 0 ? normalize(await locator.innerText()) : null;
 }
 
+/** 欠けた項目を読み飛ばすと部分取得を成功扱いするため、一覧内の位置を付けて停止する。 */
+async function extractReviewLink(item: ScrapingLocator, pageUrl: string, index: number): Promise<ReviewLink> {
+  const link = item.locator("a.rvw-item__rst-name");
+  const name = await optionalText(link);
+  const restaurantPath = (await link.count()) > 0 ? await link.getAttribute("href") : null;
+  const detailPath = await item.getAttribute("data-detail-url");
+  if (!name || !restaurantPath?.trim() || !detailPath?.trim()) {
+    throw new Error(`店舗名・店舗URL・口コミ詳細URLのいずれかがありません: ${pageUrl} 項目${index + 1}`);
+  }
+  const detailUrl = new URL(detailPath, pageUrl).href;
+  return { id: getReviewId(detailUrl), name, url: new URL(restaurantPath, pageUrl).href, detailUrl };
+}
+
 async function collectReviewLinks(page: ScrapingPage, startUrl: string) {
-  const reviews = new Map<string, ReviewLink>();
+  const reviews: ReviewLink[] = [];
+  const ids = new Set<string>();
+  const detailUrls = new Set<string>();
   let url: string | null = startUrl;
 
   while (url) {
@@ -85,21 +100,13 @@ async function collectReviewLinks(page: ScrapingPage, startUrl: string) {
     }
 
     for (let index = 0; index < itemCount; index += 1) {
-      const item = items.nth(index);
-      const link = item.locator("a.rvw-item__rst-name");
-      const name = await optionalText(link);
-      const restaurantPath = await link.getAttribute("href");
-      const detailPath = await item.getAttribute("data-detail-url");
-
-      if (name && restaurantPath && detailPath) {
-        const detailUrl = new URL(detailPath, url).href;
-        reviews.set(detailUrl, {
-          id: getReviewId(detailUrl),
-          name,
-          url: new URL(restaurantPath, url).href,
-          detailUrl,
-        });
+      const review = await extractReviewLink(items.nth(index), url, index);
+      if (detailUrls.has(review.detailUrl) || ids.has(review.id)) {
+        throw new Error(`口コミIDまたは詳細URLが重複しています: ${url} 項目${index + 1} ${review.detailUrl}`);
       }
+      ids.add(review.id);
+      detailUrls.add(review.detailUrl);
+      reviews.push(review);
     }
 
     const nextLink = page.locator('a[rel="next"]');
@@ -109,7 +116,7 @@ async function collectReviewLinks(page: ScrapingPage, startUrl: string) {
     if (url) await page.waitForTimeout(WAIT_MS);
   }
 
-  return [...reviews.values()];
+  return reviews;
 }
 
 async function scrapeReview(page: ScrapingPage, link: ReviewLink) {

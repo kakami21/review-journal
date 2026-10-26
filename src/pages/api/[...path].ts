@@ -4,6 +4,7 @@ import { getEmDashCollection } from "emdash";
 import { withEmDashRuntime } from "emdash/middleware";
 import { CmsReviewStore, publicReview } from "../../cms/review-store";
 import { CloudflareBrowserProvider } from "../../infrastructure/cloudflare-browser-provider";
+import { importCollectedReviews } from "../../reviews/import-collected-reviews";
 import { TabelogReviewScraper } from "../../reviews/tabelog-review-scraper";
 import { createReviewApi } from "../../worker/review-api";
 
@@ -25,11 +26,13 @@ export const ALL: APIRoute = ({ request }) => {
       return { reviews: reviews.sort((a, b) => b.reviewDate.localeCompare(a.reviewDate)), lastUpdatedAt };
     },
     async refresh() {
-      const reviews = await new TabelogReviewScraper(
-        new CloudflareBrowserProvider(bindings.BROWSER), bindings.TABELOG_USERNAME,
-      ).scrape();
-      return withEmDashRuntime((cms) => new CmsReviewStore(cms, bindings.DB)
-        .importNew(reviews, new Date().toISOString()));
+      return importCollectedReviews(
+        () => new TabelogReviewScraper(
+          new CloudflareBrowserProvider(bindings.BROWSER), bindings.TABELOG_USERNAME,
+        ).scrape(),
+        (reviews, scrapedAt) => withEmDashRuntime((cms) => new CmsReviewStore(cms, bindings.DB)
+          .importNew(reviews, scrapedAt)),
+      );
     },
   });
   return api.fetch(request, bindings);
