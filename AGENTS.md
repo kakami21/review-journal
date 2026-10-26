@@ -19,7 +19,7 @@
 | PRの作成・更新・レビュー・マージ | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)、[.github/pull_request_template.md](.github/pull_request_template.md) |
 | PRタイトル・本文の作成・修正・自動生成 | [.github/instructions/pull-request.instructions.md](.github/instructions/pull-request.instructions.md) |
 | 作業Issue（単独・子Issue）の本文の作成・更新 | [.github/ISSUE_TEMPLATE/task.yml](.github/ISSUE_TEMPLATE/task.yml) |
-| リリースの準備・実行 | [共通リリース規則](.github/CONTRIBUTING.md)と導入先プロジェクトのリリース手順 |
+| リリースの準備・実行 | [共通リリース規則](.github/instructions/release.instructions.md)と導入先プロジェクトのリリース手順 |
 | 親Issue（テーマ）の本文の作成・更新 | [.github/ISSUE_TEMPLATE/parent.yml](.github/ISSUE_TEMPLATE/parent.yml) |
 
 複数の作業に該当する場合は、対応する参照先をすべて確認してください。IssueをCLI・APIから登録する場合も、運用規則と該当するフォームのYAMLを読んでください。

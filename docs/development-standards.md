@@ -1,7 +1,7 @@
 # 共有ルールの運用
 
 原本は[development-standards](https://github.com/kakami21/development-standards)で管理する。
-今回の導入元はコミット`69b4b34`（リリース規則の共通化を含む）。同期コマンドは原本側にあり、このリポジトリへのコピーは不要。
+今回の導入元はコミット`3165d03`（リリース規則の共通化を含む）。同期コマンドは原本側にあり、このリポジトリへのコピーは不要。
 
 ## 導入・更新
 
@@ -26,7 +26,7 @@ node ../development-standards/scripts/sync.mjs .
 
 ## プロジェクト固有の規則
 
-リリースの共通規則は[共通運用規則](../.github/CONTRIBUTING.md)で管理する。
+リリースの共通規則は[共通リリース規則](../.github/instructions/release.instructions.md)で管理する。
 本プロジェクトの公開先・Secrets設定・CI・復旧などの具体的な手順は[リリース手順](releases.md)に保持する。
 `.github/workflows/`のCI・公開設定はこのプロジェクトで管理し、今回の同期対象には含まれない。
 
