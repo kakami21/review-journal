@@ -18,11 +18,14 @@ export function checkTag(tag, commit, cwd = process.cwd()) {
   execFileSync("git", ["merge-base", "--is-ancestor", commit, "refs/remotes/origin/main"], { cwd });
 }
 
-/** #11で明示的に切り替えるまで、Astro検証用Worker・開発用D1の本番公開を拒否する。 */
+/** Astro本番のWorker・DB・セッション・Cron・ドメインを照合し、検証環境との混同を拒否する。 */
 export function checkProduction(config) {
   if (config.name !== "dining-archive" || config.account_id !== "981a5c317da0eac85b328bc8dbcd9f6a"
     || config.d1_databases?.length !== 1
     || config.d1_databases[0].database_id !== "16a07a44-0646-4227-941d-93b3c2f6d1f8"
+    || config.kv_namespaces?.length !== 1 || config.kv_namespaces[0].binding !== "SESSION"
+    || config.kv_namespaces[0].id !== "d3419d12971c4d3ca72503b4d3674016"
+    || config.triggers?.crons?.length !== 1 || config.triggers.crons[0] !== "* * * * *"
     || config.routes?.length !== 1 || config.routes[0].pattern !== "pakoirileo.nokishita.app"
     || config.routes[0].custom_domain !== true) {
     throw new Error("本番Worker・アカウント・D1・ドメインの設定が一致しません。");

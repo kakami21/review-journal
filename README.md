@@ -7,6 +7,12 @@
 - 口コミ収集：Cloudflare Browser Run
 - 保存：Cloudflare D1
 
+## Astro・EmDashへの本番切り替え
+
+本番移行は [本番移行手順](docs/production-migration.md)、公開は [リリース手順](docs/releases.md) に従う。`npm run build:production` が本番Astroを生成し、タグのReleaseが公開する。`npm run build` は旧Vite構成の検証用として残す。以下の旧構成の説明は、切り替え前の照合と復旧のために保持している。
+
+切り替え後は公開済みCMSデータだけを表示し、新規収集は下書きに追加する。全件入れ替えは行わない。CronはCMS保守のみで口コミ収集を起動しない。
+
 ## 口コミの取得項目
 
 | 項目 | 型 | 内容 |
@@ -146,15 +152,12 @@ curl --fail-with-body \
 
 ## ビルドとデプロイ
 
-初回またはマイグレーション追加時は、Workerより先にリモートD1へ適用します。
-
 ```bash
-npx wrangler d1 migrations apply dining-archive-db --remote
-npm run build
-npm run deploy
+npm run build:astro
+npm run build:production
 ```
 
-デプロイ後も口コミは自動取得されません。リモートD1を更新する場合は、前述の認証付き更新APIを実行します。Scheduled Handlerは将来Cron Triggerを設定する場合にも同じ更新処理を利用できます。
+本番への初回移行とDB準備は [本番移行手順](docs/production-migration.md) を参照。公開はmainのCI成功後に正式タグをpushする。`npm run deploy` もAstro本番を直接公開するため、通常運用はタグのReleaseを使う。
 
 ## 主なファイル
 
@@ -219,7 +222,7 @@ npm run deploy
 
 ## 移行設計
 
-Astro・EmDashの起動・検証・管理者登録・取り込み手順は [Astro開発・検証環境](docs/astro-development.md) を参照。Astro検証環境では新規口コミをCMSへ下書き追加し、公開済みの内容だけを表示する。本番の保存方式は #11 の切り替えまで現行のままとする。
+Astro・EmDashの起動・検証・管理者登録・取り込み手順は [Astro開発・検証環境](docs/astro-development.md) を参照。Astro検証環境では新規口コミをCMSへ下書き追加し、公開済みの内容だけを表示する。本番切り替え前の準備と検証状況は [本番移行手順](docs/production-migration.md) を参照。
 
 Astro・EmDashへの移行後の構成は [移行設計](docs/emdash-migration.md) を参照。現在の実装仕様と区別して管理する。
 

@@ -1,0 +1,56 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "account_id": "981a5c317da0eac85b328bc8dbcd9f6a",
+  "name": "dining-archive",
+  "main": "./src/worker/astro.ts",
+  "compatibility_date": "2026-07-18",
+  "secrets": {
+    "required": [
+      "BASIC_AUTH_PASSWORD"
+    ]
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "routes": [
+    {
+      "pattern": "pakoirileo.nokishita.app",
+      "custom_domain": true
+    }
+  ],
+  "triggers": {
+    "crons": [
+      "* * * * *"
+    ]
+  },
+  "kv_namespaces": [
+    {
+      "binding": "SESSION",
+      "id": "d3419d12971c4d3ca72503b4d3674016"
+    }
+  ],
+  "browser": {
+    "binding": "BROWSER",
+    "remote": true
+  },
+  "vars": {
+    "TABELOG_USERNAME": "pakoirileo",
+    "BASIC_AUTH_USERNAME": "admin"
+  },
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./dist/astro-production/client"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "dining-archive-db",
+      "database_id": "16a07a44-0646-4227-941d-93b3c2f6d1f8",
+      "remote": true,
+      "migrations_dir": "./astro/migrations"
+    }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

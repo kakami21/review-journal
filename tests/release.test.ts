@@ -49,13 +49,16 @@ it("イベント発生後に別コミットへ移されたタグは拒否する"
 const production = {
   name: "dining-archive", account_id: "981a5c317da0eac85b328bc8dbcd9f6a",
   d1_databases: [{ database_id: "16a07a44-0646-4227-941d-93b3c2f6d1f8" }],
+  kv_namespaces: [{ binding: "SESSION", id: "d3419d12971c4d3ca72503b4d3674016" }],
+  triggers: { crons: ["* * * * *"] },
   routes: [{ pattern: "pakoirileo.nokishita.app", custom_domain: true }],
 };
 it("本番の生成設定を受理する", () => expect(() => checkProduction(production)).not.toThrow());
 it.each([
   { name: "table-notes-astro-development" }, { account_id: "other-account" },
   { d1_databases: [{ database_id: "3554b63d-b513-432f-bed2-3a90f5159eb0" }] },
-  { routes: [] }, { routes: [{ pattern: "other.example", custom_domain: true }] },
+  { kv_namespaces: [] }, { kv_namespaces: [{ binding: "SESSION", id: "f9b3b197ea954dc9907d6dd09a6e3a28" }] },
+  { triggers: { crons: [] } }, { routes: [] }, { routes: [{ pattern: "other.example", custom_domain: true }] },
 ])("本番以外の接続先を拒否する", (change) => {
   expect(() => checkProduction({ ...production, ...change })).toThrow();
 });

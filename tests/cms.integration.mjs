@@ -15,7 +15,10 @@ async function api(path,method='GET',body){const r=await fetch(base+'/_emdash/ap
 const source=await readFile(new URL('../src/cms/review-store.ts', import.meta.url),'utf8');
 const temp = await mkdtemp(join(tmpdir(), 'table-notes-cms-test-'));
 const compiled=join(temp, 'store.mjs');
-await writeFile(compiled,ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ESNext}}).outputText);
+const compilerOptions={module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ESNext};
+await writeFile(compiled,ts.transpileModule(source,{compilerOptions}).outputText.replaceAll('"./review-data"','"./review-data.mjs"'));
+const dataSource=await readFile(new URL('../src/cms/review-data.ts', import.meta.url),'utf8');
+await writeFile(join(temp,'review-data.mjs'),ts.transpileModule(dataSource,{compilerOptions}).outputText);
 const {CmsReviewStore}=await import(pathToFileURL(compiled).href);
 let lastDate;
 const db={prepare:()=>({bind:date=>({run:async()=>{lastDate=date;}})})};

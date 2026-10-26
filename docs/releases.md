@@ -9,7 +9,7 @@ CI、タグ公開、公開後確認、GitHub Releases、DB変更、復旧の運�
 | 本番Worker | `dining-archive` |
 | 本番D1 | `dining-archive-db` |
 | 公開URL | `https://pakoirileo.nokishita.app` |
-| Wrangler設定 | `wrangler.jsonc` |
+| Wrangler設定 | `wrangler.astro.production.jsonc` |
 | GitHub Environment | `production` |
 | Environment secret | `CLOUDFLARE_API_TOKEN` |
 | Worker側の必須シークレット | `BASIC_AUTH_PASSWORD` |
@@ -21,7 +21,7 @@ Cloudflareの本番Worker → Settings → Buildsでmain連携の停止を確認
 Wranglerの必須シークレット宣言で`BASIC_AUTH_PASSWORD`の不足を検出する。Actionsからこの値を読み取る必要はない。
 
 初回設定の確認状況と公開結果は[Issue #23](https://github.com/kakami21/table-notes/issues/23)へ記録する。
-Astro検証用Workerへの公開コマンドは使わない。Astro本番化の[Issue #11](https://github.com/kakami21/table-notes/issues/11)で接続先検証と手順を更新する。
+Astro検証用Workerへの公開コマンドは使わない。初回切り替えは[本番移行手順](production-migration.md)に従う。
 
 ## 公開後の確認
 
@@ -34,17 +34,32 @@ Actionsの`Release`を開き、Summaryのタグ・コミット・Workerバージ
 document.querySelector('meta[name="release-version"]').content
 ```
 
+## Astro本番化の準備
+
+初回切り替えは [本番移行手順](production-migration.md) に従う。SESSION KVは本番専用の `d3419d12971c4d3ca72503b4d3674016` を使う。
+
+ReleaseはCMSスキーマの適用済み状態を `emdash migrate --check` で確認してから公開する。GitHubのトークンには対象アカウントのD1読み取り権限も必要。未適用なら公開前に停止する。スキーマ適用は自動化しない。
+
+```sh
+ASTRO_ENV=production npm run build:astro
+npx emdash migrate --manifest astro/.emdash/migrations.json --wrangler-config wrangler.astro.production.jsonc --status
+npx emdash migrate --manifest astro/.emdash/migrations.json --wrangler-config wrangler.astro.production.jsonc
+npx emdash migrate --manifest astro/.emdash/migrations.json --wrangler-config wrangler.astro.production.jsonc --check
+```
+
+適用担当者の `CLOUDFLARE_API_TOKEN` にはD1編集権限が必要。CLIの対象アカウント・DB・確認内容を確認して適用する。非対話実行はCLIで確認した対象フィンガープリントを指定する。CMSの本番実行時は `runtime: check` により未適用スキーマを自動変更せず503で停止する。コレクションとフィールドはアプリのEmDash設定で初期化する。
+
 ## D1の操作
 
 本番D1の適用状態とバックアップを確認し、必要な変更がある場合だけ、共通規則の順序で実行する。
 
 ```sh
-npx wrangler d1 migrations list dining-archive-db --remote --config wrangler.jsonc
-npx wrangler d1 export dining-archive-db --remote --config wrangler.jsonc --output /安全な保存先/backup.sql
-npx wrangler d1 migrations apply dining-archive-db --remote --config wrangler.jsonc
+npx wrangler d1 migrations list dining-archive-db --remote --config wrangler.astro.production.jsonc
+npx wrangler d1 export dining-archive-db --remote --config wrangler.astro.production.jsonc --output /安全な保存先/backup.sql
+npx wrangler d1 migrations apply dining-archive-db --remote --config wrangler.astro.production.jsonc
 ```
 
-口コミ一覧APIには`review_list`ビューが必要。`/api/health`の成功だけでは、そのビューや一覧APIの正常性を保証しない。
+復旧用の旧構成の一覧APIには`review_list`ビューが必要。`/api/health`の成功だけでは、そのビューや一覧APIの正常性を保証しない。
 
 ## 復旧時のコマンド
 
@@ -52,8 +67,8 @@ Summary・ログ・CloudflareのDeploymentsで公開状態とバージョンを�
 コードを戻す場合は、共通規則に従い正常だったWorkerバージョンIDを指定する。
 
 ```sh
-npx wrangler deployments list --config wrangler.jsonc
-npx wrangler rollback <正常だったWorkerバージョンID> --config wrangler.jsonc --message "リリース障害の復旧"
+npx wrangler deployments list --config wrangler.astro.production.jsonc
+npx wrangler rollback <正常だったWorkerバージョンID> --config wrangler.astro.production.jsonc --message "リリース障害の復旧"
 ```
 
 復旧後は`/api/health`と口コミ一覧を確認する。D1の復旧判断は共通規則に従う。
@@ -64,7 +79,8 @@ npx wrangler rollback <正常だったWorkerバージョンID> --config wrangler
 npm test
 npm run build:astro
 npm run build
-node scripts/release.mjs check-production dist/dining_archive/wrangler.json
+npm run build:production
+node scripts/release.mjs check-production dist/astro-production/server/wrangler.json
 ```
 
 `tests/release.test.ts`は一時Gitリポジトリでタグ・main履歴・タグ先の変更と、本番／検証接続先の判定を検証する。
