@@ -50,6 +50,10 @@ flowchart LR
 | `npm run dev` / `npm run dev:worker` / `npm run preview` | 開発用 `table-notes-development` |
 | `npm run build` → `npm run deploy` | 本番用 `dining-archive-db` |
 
+ローカルDBは使用しません。アプリをローカルで起動する場合も、開発用リモートD1 `table-notes-development` に接続します。本番D1 `dining-archive-db` とは分離します。ローカルでの書き込みも検証サイトと同じ開発用DBに反映されます。
+
+Astro・EmDashの `npm run dev:astro` / `npm run preview:astro` も同じ方針です。`wrangler.astro.jsonc` のD1の `remote: true` と、Astroアダプターの `remoteBindings: true` で接続します。詳しくは[Astro開発手順](docs/astro-development.md)を参照してください。
+
 開発用は `wrangler.jsonc` の `env.development` で定義し、起動・ビルド時の `CLOUDFLARE_ENV=development` で選択する。
 
 ## セットアップ
@@ -58,13 +62,7 @@ flowchart LR
 npm install
 ```
 
-`.dev.vars`を作成し、ローカル実行用の値を設定します。
-
-```text
-BASIC_AUTH_PASSWORD="更新APIのパスワード"
-```
-
-`TABELOG_USERNAME`（食べログURL上のユーザー名）と `BASIC_AUTH_USERNAME` はWrangler設定の `vars` で管理します。`secrets.required` にパスワードを宣言しているため、`.dev.vars` から読み込むのは `BASIC_AUTH_PASSWORD` だけです。
+`TABELOG_USERNAME`（食べログURL上のユーザー名）はWrangler設定の `vars` で管理します。手動取り込みはEmDash管理画面のパスキー認証を使い、Basic認証の設定は不要です。
 
 Browser RunとD1は`wrangler.jsonc`でリモートバインディングとして設定されています。ローカルから利用した場合もCloudflare側の利用量に加算されます。
 
@@ -82,7 +80,7 @@ npm run dev
 npx wrangler d1 migrations apply table-notes-development --env development --remote
 ```
 
-ローカルの認証付き `POST /api/reviews/refresh` は開発用D1だけを更新する。本番データは自動コピーしない。
+旧 `POST /api/reviews/refresh` は廃止しました。手動取り込みはAstro・EmDash管理画面から行います。本番データは自動コピーしません。
 
 ## ヘルスチェック
 
@@ -100,55 +98,13 @@ curl -i "http://localhost:5173/api/health"
 
 ## BrunoでAPIを確認する
 
-Bruno拡張またはデスクトップアプリで `bruno/` を開きます。通常の一括確認は `checks` フォルダーだけを実行し、認証付き更新は `manual/refresh.yml` を個別送信します。
+Bruno拡張またはデスクトップアプリで `bruno/` を開き、`checks` フォルダーを実行します。参照APIと廃止した取り込みAPIの404を確認できます。[Brunoの利用手順](docs/bruno.md)を参照してください。
 
-初回設定、ローカル・本番の切り替え、認証情報の設定、手動更新、検証結果は [Brunoの利用手順](docs/bruno.md) を参照してください。
+## 管理画面から口コミを取り込む
 
-## 本番D1の手動更新
+Astro・EmDashの管理画面へパスキーでログインし、「口コミの取り込み」→「口コミを取り込む」を押します。新規分だけ下書きとして追加し、登録済みの内容を保持します。取得件数・追加件数・成功日時を確認後、口コミ一覧で編集・公開してください。
 
-初回は、更新API用のパスワードを生成します。
-
-```bash
-openssl rand -base64 32
-```
-
-表示されたパスワードをパスワード管理アプリへ保存し、Wrangler Secretとして登録します。入力内容は画面に表示されません。
-
-```bash
-npx wrangler secret put BASIC_AUTH_PASSWORD
-```
-
-更新APIを含むWorkerを本番へデプロイします。デプロイ前にAPIを呼ぶと、`404`と`APIが見つかりません。`が返ります。
-
-```bash
-npm run deploy
-```
-
-デプロイ後、認証付き更新APIを呼び出します。`--user`にパスワードを書かないことで、コマンド履歴へパスワードを残さず、実行後の入力欄で指定できます。
-
-```bash
-curl --fail-with-body \
-  --user "admin" \
-  --request POST \
-  "https://pakoirileo.nokishita.app/api/reviews/refresh"
-```
-
-コマンド内のURLは上記の文字列をそのまま使用します。`[URL](URL)`というMarkdownリンク形式では入力しません。
-
-更新処理はデプロイ済みWorker内で実行されるため、手元でWranglerの開発サーバーを起動する必要はありません。成功時は取得件数と更新日時を返します。
-
-```json
-{"count":128,"scrapedAt":"2026-10-03T06:30:00.000Z"}
-```
-
-この処理は次の順序で動作します。
-
-1. Browser Runでブラウザーを起動する
-2. 食べログの一覧と詳細ページを巡回する
-3. 取得結果をD1のトランザクションで全件入れ替える
-4. 最終更新日時を保存する
-
-処理途中で失敗した場合、D1の既存口コミは置き換わりません。
+実行中の連打は防止します。保存途中に失敗した場合は追加済みの下書きを保持し、再実行時に重複を除外します。詳しくは[Astro開発・検証環境](docs/astro-development.md#管理画面からの手動取り込み34)を参照してください。
 
 ## ビルドとデプロイ
 

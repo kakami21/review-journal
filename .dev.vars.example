@@ -1,1 +1,1 @@
-BASIC_AUTH_PASSWORD="ローカル更新API用のパスワード"
+# 口コミの取り込みはEmDashのパスキー認証を使います。Basic認証の設定は不要です。

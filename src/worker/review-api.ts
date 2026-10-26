@@ -1,28 +1,14 @@
 import { Hono } from "hono";
-import { basicAuth } from "hono/basic-auth";
 import { HTTPException } from "hono/http-exception";
 import type { Review } from "../reviews/review";
 
 export type ReviewApiDependencies = {
   getAll: (env: CloudflareBindings) => Promise<{ reviews: Review[]; lastUpdatedAt: string | null }>;
-  refresh: (env: CloudflareBindings) => Promise<{ count: number; scrapedAt: string; addedCount?: number }>;
 };
 
-/** 認証とHTTP応答を共通化し、現行D1とCMSの保存処理は呼び出し側で選ぶ。 */
+/** 公開APIのHTTP応答を共通化し、現行D1とCMSの保存処理は呼び出し側で選ぶ。 */
 export function createReviewApi(dependencies: ReviewApiDependencies) {
   const app = new Hono<{ Bindings: CloudflareBindings }>();
-
-  app.use("/api/reviews/refresh", async (c, next) => {
-    return basicAuth({
-      username: c.env.BASIC_AUTH_USERNAME,
-      password: c.env.BASIC_AUTH_PASSWORD,
-    })(c, next);
-  });
-
-  // 認証済みPOSTで口コミを収集し、取り込み結果と成功日時を返す。
-  app.post("/api/reviews/refresh", async (c) => {
-    return c.json(await dependencies.refresh(c.env));
-  });
 
   // GETでWorkerの稼働を確認し、キャッシュせずstatus: okを返す。
   app.get("/api/health", (c) => {

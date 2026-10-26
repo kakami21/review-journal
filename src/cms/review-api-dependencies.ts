@@ -1,12 +1,9 @@
 import { getEmDashCollection } from "emdash";
 import { withEmDashRuntime } from "emdash/middleware";
 import { CmsReviewStore, publicReview } from "./review-store";
-import { CloudflareBrowserProvider } from "../infrastructure/cloudflare-browser-provider";
-import { importCollectedReviews } from "../reviews/import-collected-reviews";
-import { TabelogReviewScraper } from "../reviews/tabelog-review-scraper";
 import type { ReviewApiDependencies } from "../worker/review-api";
 
-/** CMSの公開参照と手動収集の接続を集約する。認証前には収集・保存を開始しない。 */
+/** CMSの公開参照を接続する。手動取り込みは管理画面のプラグインに限定する。 */
 export function createCmsReviewApiDependencies(bindings: AstroBindings): ReviewApiDependencies {
   return {
     async getAll() {
@@ -21,15 +18,6 @@ export function createCmsReviewApiDependencies(bindings: AstroBindings): ReviewA
       } while (cursor);
       const lastUpdatedAt = await withEmDashRuntime((cms) => new CmsReviewStore(cms, bindings.DB).lastUpdatedAt());
       return { reviews: reviews.sort((a, b) => b.reviewDate.localeCompare(a.reviewDate)), lastUpdatedAt };
-    },
-    async refresh() {
-      return importCollectedReviews(
-        () => new TabelogReviewScraper(
-          new CloudflareBrowserProvider(bindings.BROWSER), bindings.TABELOG_USERNAME,
-        ).scrape(),
-        (reviews, scrapedAt) => withEmDashRuntime((cms) => new CmsReviewStore(cms, bindings.DB)
-          .importNew(reviews, scrapedAt)),
-      );
     },
   };
 }

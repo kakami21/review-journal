@@ -4,7 +4,6 @@ import { createReviewApi } from "./review-api";
 
 const app = createReviewApi({
   getAll: (env) => new D1ReviewRepository(env.DB).getAll(),
-  refresh: (env) => createReviewRefresh(env).execute(),
 });
 
 // 現行Vite本番の定期収集口を維持する。Astro側のCMS保守Cronとは接続しない。

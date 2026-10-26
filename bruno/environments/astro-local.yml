@@ -2,7 +2,3 @@ name: astro-local
 variables:
   - name: baseUrl
     value: http://localhost:4321
-  - name: basicAuthUsername
-    value: "{{process.env.BRUNO_LOCAL_USERNAME}}"
-  - name: basicAuthPassword
-    value: "{{process.env.BRUNO_LOCAL_PASSWORD}}"

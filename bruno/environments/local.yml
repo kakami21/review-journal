@@ -2,7 +2,3 @@ name: local
 variables:
   - name: baseUrl
     value: http://localhost:5173
-  - name: basicAuthUsername
-    value: "{{process.env.BRUNO_LOCAL_USERNAME}}"
-  - name: basicAuthPassword
-    value: "{{process.env.BRUNO_LOCAL_PASSWORD}}"

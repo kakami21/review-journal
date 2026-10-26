@@ -65,11 +65,11 @@ EmDashのコンテンツID・公開状態・リビジョンはCMSが管理する
 
 ## 公開とAPI
 
-`/`・`/reviews`、`GET /api/health`、`GET /api/reviews`、`POST /api/reviews/refresh` を維持する。HonoのAPI用404がEmDashの `/_emdash/*` やAstroページを捕捉しないように委譲範囲を限定する。
+`/`・`/reviews`、`GET /api/health`、`GET /api/reviews` を維持する。#34で旧 `POST /api/reviews/refresh` を廃止し、手動取り込みは管理画面の認証付きプラグインAPIへ一本化する。HonoのAPI用404がEmDashの `/_emdash/*` やAstroページを捕捉しないように委譲範囲を限定する。
 
 一覧APIはCMSの公開クエリから既存のレスポンス形式へ変換し、下書き・非公開データを返さない。`lastUpdatedAt` は成功した収集の最終日時として、本文とは別のシステムメタデータで保持する。新規追加0件でも収集成功時は更新する。
 
-管理画面は本人のパスキーで認証し、初期セットアップを本番公開前に完了する。開発用と本番用は別々に登録する。更新APIのBasic認証は当面維持し、CMSの管理者セッションとは区別する。メール認証・外部ログイン・Cloudflare Accessは初期導入しない。
+管理画面は本人のパスキーで認証し、初期セットアップを本番公開前に完了する。開発用と本番用は別々に登録する。手動取り込みはCMS管理者セッション・権限・CSRF検証を利用し、Basic認証は廃止する（#34）。メール認証・外部ログイン・Cloudflare Accessは初期導入しない。
 
 ## 既存データの移行
 
