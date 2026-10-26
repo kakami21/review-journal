@@ -30,13 +30,9 @@
 ## Pull Request
 
 - PRは原則として作成者自身にアサインする。担当者を明示された場合はその人を指定する。`gh pr create` では `--assignee @me` を使い、作成後にアサインを確認する。VS Codeでは `githubPullRequests.assignCreated` に `${user}` を設定する
-- ブランチは [命名規則](instructions/branch-naming.instructions.md) に従って最新の `main` から作成し、PRの取り込み先も `main` とする。長期運用ブランチは `main` の1つとする
+- ブランチは [命名規則](../docs/rules/branch-naming.md) に従って最新の `main` から作成し、PRの取り込み先も `main` とする。長期運用ブランチは `main` の1つとする
 - 1つのPRは1つの目的に絞る。無関係な変更は別のPRに分ける
-- タイトルはIssueと同じ形式とし、最終的な変更内容を日本語で具体的に示す
 - タイトル・本文の作成と自動生成は [PR生成規則](instructions/pull-request.instructions.md) に従い、日本語で記載する
-- 本文は [PRテンプレート](pull_request_template.md) に従う。CLIから作成する場合も、変更内容・検証結果・関連Issueを記載する
-- 検証結果には実行した確認と結果を記載する。未実施・失敗・残る制約は明記し、実施済みと混同しない
-- 関連Issueの記法は [PR生成規則](instructions/pull-request.instructions.md) に従う。このPRで完了するIssueは `Closes #番号`、参照だけの場合は `Refs #番号` をPR本文に記載する
 - 作成後に取り込み先・差分・本文を確認し、URLを報告する。作成できなかった場合は本文を保存し、未作成と明記する
 - マージ前に差分をレビューし、必要な検証の成功と指摘の解消を確認する。PR作成の依頼だけでマージせず、マージの依頼または事前の合意に従う
 - マージ前にIssueの完了条件を確認し、検証結果とPRリンクをIssueへ記録する。`Closes` を記載したIssueはmainへのマージ時にGitHub標準機能で自動完了する。本番確認が必要なIssueは、その確認まで `Refs` として残す
@@ -46,7 +42,7 @@
 
 ## リリース
 
-リリースの設計・設定・準備・実行・検証・復旧は[共通リリース規則](instructions/release.instructions.md)に従う。CI、初回設定、タグによる公開、公開後の確認、GitHub Releases、DB変更、復旧までを共通の運用とする。
+リリースの設計・設定・準備・実行・検証・復旧は[共通リリース規則](../docs/rules/release.md)に従う。CI、初回設定、タグによる公開、公開後の確認、GitHub Releases、DB変更、復旧までを共通の運用とする。
 
 ## プロジェクト固有の手順
 
