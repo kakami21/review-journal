@@ -1,0 +1,37 @@
+# 共有ルールの運用
+
+原本は[development-standards](https://github.com/kakami21/development-standards)で管理する。
+今回の導入元はコミット`3165d03`（リリース規則の共通化を含む）。同期コマンドは原本側にあり、このリポジトリへのコピーは不要。
+
+## 導入・更新
+
+Node.js 22以降とGitを使用する。共通リポジトリを取得・更新した後、table-notesのルートから実行する。
+以下は両リポジトリを同じ親フォルダに配置した場合の例。
+
+```sh
+# 変更予定を確認する
+node ../development-standards/scripts/sync.mjs .
+
+# 反映する
+node ../development-standards/scripts/sync.mjs . --write
+
+# 差分と、再実行時の変更が0件であることを確認する
+git diff
+node ../development-standards/scripts/sync.mjs .
+```
+
+共通ルールの変更は原本側で行い、このリポジトリへ同期する。
+`AGENTS.md`と`.github/copilot-instructions.md`では管理マーカー内が同期対象。
+プロジェクト固有の指示はマーカー外に記載する。他の配布ファイルは原本で上書きされる。
+
+## プロジェクト固有の規則
+
+リリースの共通規則は[共通リリース規則](../.github/instructions/release.instructions.md)で管理する。
+本プロジェクトの公開先・Secrets設定・CI・復旧などの具体的な手順は[リリース手順](releases.md)に保持する。
+`.github/workflows/`のCI・公開設定はこのプロジェクトで管理し、今回の同期対象には含まれない。
+
+## 読み込みの確認範囲
+
+ローカルでは配布ファイルの原本一致、相対リンク先、既存規則の保持、再同期時の変更0件を確認できる。
+Copilotが実際に採用した指示は、利用環境の参照一覧で確認する。
+GitHubのIssue・PRテンプレートの画面表示には、デフォルトブランチへの反映が必要。

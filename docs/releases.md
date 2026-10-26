@@ -1,5 +1,8 @@
 # タグによる本番リリース
 
+運用全体の共通規則は[共通リリース規則](../.github/instructions/release.instructions.md)を正本とする。
+以下はtable-notesの公開先・設定・コマンドを具体化した手順。
+
 ## 実行の流れ
 
 - 作業PRとmainへのpush：`CI` がテスト・Astroビルド・本番用ビルドを実行する。本番公開の処理は含まない。
