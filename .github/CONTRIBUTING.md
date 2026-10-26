@@ -48,4 +48,7 @@
 
 - mainへのマージは開発完了、リリースタグの作成・pushは本番公開の契機として分ける
 - バージョンは `vMAJOR.MINOR.PATCH`（例：`v1.0.0`）のタグで管理する。タグはmain上のコミットに付け、公開済みタグは付け替えない
-- PR・mainのCI、タグpushによる本番公開、GitHub Releases、復旧手順は [リリース手順](../docs/releases.md) に従う。初回のSecrets設定・既存自動公開の停止と、実公開の確認状況は [Issue #23](https://github.com/kakami21/table-notes/issues/23) で追跡する
+
+## プロジェクト固有の手順
+
+ビルド・検証・リリースの具体的な手順は、導入先プロジェクトの文書で管理する。
