@@ -45,24 +45,48 @@ npx wrangler d1 execute dining-archive-db --local --persist-to "$migration_backu
 - 最終取得日時には移行実行時刻を補わず、元の成功収集日時を引き継ぐ。
 - 旧 `restaurants`・`reviews`・`review_list` は復旧期間を終えるまで保持する。CMSと旧テーブルへの二重書き込みは行わない。
 
-## 本番切り替え前に実装・検証すること
+## Astro本番切り替え手順
 
-- #4の完了後、Astroの本番ビルド先を作り、Worker `dining-archive`・本番D1・既存ドメインだけを参照することを生成設定で検証する。
-- 本番CMSのSESSION KVとBasic認証シークレットを確認する。検証用のSESSION KVや管理者データを流用しない。
-- 管理者の初回セットアップと本番ドメインでのパスキー登録を手順に組み込む。検証ドメインのパスキーで本番へログインできると仮定しない。認証情報をSQLの手編集で移植しない。
-- DB準備・管理者登録・初期データ公開の順序と、その間の既存サイトへの影響をリハーサルで確定する。無停止で切り替えられることは未検証。
-- Releaseの最後のビルド・公開コマンドと `check-production` をAstro用へ揃える。現在のViteビルドがAstro生成物を削除する順序をそのまま使わない。
-- HTMLの `release-version` をAstro側へ引き継ぐ。CIはmainへのマージで検証だけを実行し、正式タグのpushだけで公開する。
-- CMS保守Cronだけを接続し、口コミ定期収集を有効にしない。
+本PRは切り替え準備まで。本番デプロイ・本番CMSデータの作成は未実施。初回は保守時間を設け、公開からデータ移行完了まで一覧が空になる可能性を許容する。無停止移行とは扱わない。
 
-## 切り替え当日の確認と復旧
+1. 口コミの収集・編集を停止し、上記の最終バックアップ・復元照合を行う。旧Workerの正常なバージョンIDを記録する。
+2. 保護された保存先で公開APIの移行元を取得する。
 
-1. 口コミ更新を止め、最終バックアップと復元・照合を終える。
-2. レビュー済みの移行手順でCMSを初期化し、既存口コミの登録・公開と件数・内容・日時を照合する。
-3. 成功したmainのコミットへ新しい正式タグを付けて公開する。新しいバージョン番号は公開時に決定する。
-4. 既存ドメインでホーム、一覧、API、編集・公開、未認証更新の拒否、下書き非公開、タグ表示を確認する。
-5. 公開後の新規編集・収集を始める前に、旧Workerへ戻せるかを判断する。WorkerのロールバックだけではCMSの編集内容は旧テーブルへ戻らない。移行後の書き込みを無視して古いSQLを上書き復元しない。
+```sh
+node scripts/migrate-reviews.mjs snapshot /安全な保存先/source.json
+```
 
-未実施：CMSへの本番データ初期移行、Astro本番設定・Releaseの変更、本番管理者登録、本番切り替え・切り替え後の復旧試験。
+3. [リリース手順](releases.md)に従って本番CMSコアスキーマを確認・手動適用する。アプリ所有の日時テーブルも準備する。
 
-参考：[D1のインポート・エクスポート](https://developers.cloudflare.com/d1/best-practices/import-export-data/)、[EmDash認証](https://docs.emdashcms.com/guides/authentication/)、[EmDashのCloudflare構成](https://docs.emdashcms.com/deployment/cloudflare/)。
+```sh
+npx wrangler d1 migrations list dining-archive-db --remote --config wrangler.astro.production.jsonc
+npx wrangler d1 migrations apply dining-archive-db --remote --config wrangler.astro.production.jsonc
+```
+
+4. 本番専用SESSION KV、Basic認証シークレット、GitHubトークンのD1読み取り権限を確認し、CI成功済みmainへ新しい正式タグを付けて公開する。旧テーブルは削除しない。
+5. 本番ドメインの `/_emdash/admin` で所有者を登録し、パスキーを登録する。検証環境の認証を流用しない。本番では開発専用セットアップAPIを使わない。所有者の管理画面で口コミの読み取り・作成・公開に必要な権限のAPIトークンを作成し、`EMDASH_API_TOKEN` 環境変数へ安全に設定する。トークンを引数・Git・チャットに残さない。
+6. 本番へ初期移行し、日時を適用して完全照合する。
+
+```sh
+node scripts/migrate-reviews.mjs import /安全な保存先/source.json https://pakoirileo.nokishita.app /安全な保存先/metadata.sql
+npx wrangler d1 execute dining-archive-db --remote --config wrangler.astro.production.jsonc --file /安全な保存先/metadata.sql
+node scripts/migrate-reviews.mjs verify /安全な保存先/source.json https://pakoirileo.nokishita.app
+```
+
+スクリプトはCMS REST APIで下書きを作成し、取得元の全項目が一致するものだけを公開する。編集済み・ゴミ箱・重複IDとの競合は停止する。途中失敗後は同一データに限って再実行できる。日時SQLは公開内容の一致後に生成し、アプリ所有テーブルだけを書き換える。保守中は他の編集者による同時変更を禁止する。移行後はトークンを失効し環境変数を解除する。
+
+7. 既存ドメインのホーム・一覧・API・管理画面で編集と公開・下書き非公開・未認証更新の拒否・HTMLのタグ表示を確認する。収集の定期実行は有効にしない。必要な確認後に #11 を完了する。
+
+## ローカルリハーサル結果（2026-10-26）
+
+- 現行本番の37件を読み取り、独立したローカルD1上の実CMSへ登録・公開した。本番DBへの書き込みは行っていない。
+- 全公開項目・ID・件数・最終取得日時の一致を確認。再実行は追加0件・公開0件。
+- 空の本文がCMSでは省略されるため、公開APIの空欄を `null` に揃えて互換性を維持した。
+- 実CMSの下書き追加・公開・編集・公開版保護・再取得保護・取得元変更拒否・ゴミ箱再追加防止を確認。
+- 本番向けビルド・接続先検証・Wrangler dry-runは成功。本番の管理者登録、トークン権限、スキーマ適用、タグ公開、公開後照合は未実施。
+
+## 復旧
+
+公開失敗時は記録した旧Workerバージョンへ明示的に戻し、一覧を照合する。旧テーブルを保持していても、CMSへの新規編集は旧テーブルへ同期されない。移行後の書き込みを無視した古いSQLの復元は禁止する。WorkerのロールバックとDB復旧は別々に判断する。
+
+参考：[D1のインポート・エクスポート](https://developers.cloudflare.com/d1/best-practices/import-export-data/)、[EmDash認証](https://docs.emdashcms.com/guides/authentication/)、[EmDashコア移行](https://docs.emdashcms.com/deployment/core-migrations/)。

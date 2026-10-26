@@ -7,7 +7,7 @@
 
 - 作業PRとmainへのpush：`CI` がテスト・Astroビルド・本番用ビルドを実行する。本番公開の処理は含まない。
 - `vMAJOR.MINOR.PATCH` タグの新規push：`Release` がタグ形式・対象コミット・main履歴を確認し、テストとビルド成功後に本番へ公開する。
-- 対象は現在の本番Worker `dining-archive`、本番D1 `dining-archive-db`、`https://pakoirileo.nokishita.app`。Astro検証用Workerへの公開コマンドは使わない。Astro本番化は #11 でこの接続先検証と手順も更新する。
+- 対象は現在の本番Worker `dining-archive`、本番D1 `dining-archive-db`、`https://pakoirileo.nokishita.app`。本番設定は `wrangler.astro.production.jsonc`。検証用Workerへの公開コマンドは使わない。
 - タグ更新・削除・強制pushでは公開しない。公開済みタグは付け替えず、修正は新しいバージョンを使う。
 
 ## 初回設定（公開前に必要）
@@ -51,14 +51,29 @@ gh release create v1.0.0 --verify-tag --title v1.0.0 --generate-notes
 
 このコマンドは既存タグを使う。Actionsからタグを作る仕組みは設けず、GitHub標準トークンで作成したイベントが別のワークフローを起動しない問題も避ける。
 
+## Astro本番化の準備
+
+初回切り替えは [本番移行手順](production-migration.md) に従う。SESSION KVは本番専用の `d3419d12971c4d3ca72503b4d3674016` を使う。
+
+ReleaseはCMSスキーマの適用済み状態を `emdash migrate --check` で確認してから公開する。GitHubのトークンには対象アカウントのD1読み取り権限も必要。未適用なら公開前に停止する。スキーマ適用は自動化しない。
+
+```sh
+ASTRO_ENV=production npm run build:astro
+npx emdash migrate --manifest astro/.emdash/migrations.json --wrangler-config wrangler.astro.production.jsonc --status
+npx emdash migrate --manifest astro/.emdash/migrations.json --wrangler-config wrangler.astro.production.jsonc
+npx emdash migrate --manifest astro/.emdash/migrations.json --wrangler-config wrangler.astro.production.jsonc --check
+```
+
+適用担当者の `CLOUDFLARE_API_TOKEN` にはD1編集権限が必要。CLIの対象アカウント・DB・確認内容を確認して適用する。非対話実行はCLIで確認した対象フィンガープリントを指定する。CMSの本番実行時は `runtime: check` により未適用スキーマを自動変更せず503で停止する。コレクションとフィールドはアプリのEmDash設定で初期化する。
+
 ## D1の扱い
 
 リリースワークフローはD1マイグレーションを自動実行しない。アプリ公開とDB変更を同一の処理で巻き戻せないため、変更内容をレビューし、必要なときだけ先にバックアップ・互換性のあるスキーマ変更を行う。
 
 ```sh
-npx wrangler d1 migrations list dining-archive-db --remote --config wrangler.jsonc
-npx wrangler d1 export dining-archive-db --remote --config wrangler.jsonc --output /安全な保存先/backup.sql
-npx wrangler d1 migrations apply dining-archive-db --remote --config wrangler.jsonc
+npx wrangler d1 migrations list dining-archive-db --remote --config wrangler.astro.production.jsonc
+npx wrangler d1 export dining-archive-db --remote --config wrangler.astro.production.jsonc --output /安全な保存先/backup.sql
+npx wrangler d1 migrations apply dining-archive-db --remote --config wrangler.astro.production.jsonc
 ```
 
 適用前に対象が本番D1であることを確認する。未適用マイグレーションが必要なリリースでは、適用・照合が完了するまでタグをpushしない。既存の一覧APIには `review_list` ビューが必要で、`/api/health` の成功だけではDBスキーマや口コミ一覧の正常性を保証しない。
@@ -70,8 +85,8 @@ npx wrangler d1 migrations apply dining-archive-db --remote --config wrangler.js
 - コードを戻す場合：直前の正常なWorkerバージョンを明示して以下を実行し、ヘルスチェックと一覧を確認する。タグは付け替えない。
 
 ```sh
-npx wrangler deployments list --config wrangler.jsonc
-npx wrangler rollback <正常だったWorkerバージョンID> --config wrangler.jsonc --message "リリース障害の復旧"
+npx wrangler deployments list --config wrangler.astro.production.jsonc
+npx wrangler rollback <正常だったWorkerバージョンID> --config wrangler.astro.production.jsonc --message "リリース障害の復旧"
 ```
 
 WorkerのロールバックはD1のデータやスキーマを戻さない。DB変更がある場合は、旧コードとの互換性とバックアップからの復旧を別途判断する。
@@ -82,7 +97,8 @@ WorkerのロールバックはD1のデータやスキーマを戻さない。DB�
 npm test
 npm run build:astro
 npm run build
-node scripts/release.mjs check-production dist/dining_archive/wrangler.json
+npm run build:production
+node scripts/release.mjs check-production dist/astro-production/server/wrangler.json
 ```
 
 `tests/release.test.ts` は一時Gitリポジトリでタグ・main履歴・タグ先の変更と、本番／検証接続先の判定を検証する。CIは `.dev.vars` なしで実行できる。ビルド時の必須シークレット不足の警告は、実行時パスワードをCIのビルドへ渡していないため。本番デプロイではWorker側の登録が検証される。

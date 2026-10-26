@@ -37,11 +37,16 @@ jobs:
         run: node scripts/release.mjs check-tag "$RELEASE_TAG" "$RELEASE_SHA"
       - run: npm ci
       - run: npm test
-      - run: npm run build:astro
-      # 最後に本番用の既存Viteビルドを実行し、検証用の生成設定と混同しない。
       - run: npm run build
+      - run: npm run build:astro
+      # 本番向けAstroを最後にビルドし、検証用の設定と出力を混同しない。
+      - run: npm run build:production
       - name: 本番の接続先を検証
-        run: node scripts/release.mjs check-production dist/dining_archive/wrangler.json
+        run: node scripts/release.mjs check-production dist/astro-production/server/wrangler.json
+      - name: CMSスキーマの適用済み状態を検証
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx emdash migrate --manifest astro/.emdash/migrations.json --wrangler-config wrangler.astro.production.jsonc --check
       - name: 本番へ公開
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -49,7 +54,7 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$CLOUDFLARE_API_TOKEN"
-          npx wrangler deploy --config dist/dining_archive/wrangler.json \
+          npx wrangler deploy --config dist/astro-production/server/wrangler.json \
             --tag "$RELEASE_TAG" --message "Release $RELEASE_TAG ($RELEASE_SHA)" | tee deploy.log
       - name: Workerバージョンを記録
         id: version
@@ -67,6 +72,10 @@ jobs:
           });
           if (response.status !== 200 || (await response.json()).status !== 'ok') {
             throw new Error('本番のヘルスチェックに失敗しました。');
+          }
+          const page = await fetch('https://pakoirileo.nokishita.app/', { signal: AbortSignal.timeout(30000) });
+          if (!page.ok || !(await page.text()).includes(`name="release-version" content="${process.env.RELEASE_TAG}"`)) {
+            throw new Error('公開HTMLのリリースタグが一致しません。');
           }
           JS
       - name: 公開結果を記録
