@@ -128,3 +128,18 @@ EmDashの導入で固定されるZodの既知問題を避けるため、互換�
 - ローカル実CMSで同じ取得元IDの並行取り込みを実行し、合計追加1件となることを確認。途中失敗・再実行は単体テストでも検証した。
 - ライブビューのURLパターンを `/reviews#{slug}` とし、口コミカードに食べログIDのアンカーを追加。既存の検証DBでは管理画面のコンテンツタイプ設定も同じ値へ更新済み。
 - 修正後の検証用Worker：`0e6395c2-50b8-4642-82f1-ceac8d300d62`。本番切り替えは #11 で扱う。
+
+## APIの依存分離と検証（#4）
+
+- `src/pages/api/[...path].ts` は環境設定を受けてHonoへ渡す入口に限定する。CMSの公開クエリ・収集・保存の接続は `src/cms/review-api-dependencies.ts`、認証とHTTP応答は既存の `src/worker/review-api.ts` が担当する。
+- `npm test` の `tests/cms-review-api.test.ts` はAstroの実API入口を通し、CMS・DB・Browser Runとの境界だけをテスト用に置き換える。公開版だけのページ送り、ID・null・日時・並び順、Basic認証拒否、認証付き下書き追加、取得・保存失敗の共通500、未知APIの404を検証する。
+- APIのBasic認証とCMSのパスキー認証は別。CMSのセッションCookieだけでは更新を許可しない。ヘルスチェックや認証拒否では収集・保存を開始しない。
+- 現行Vite本番のHTTP更新・定期収集は同じ `createReviewRefresh` を継続利用する。AstroのCronはCMS保守専用のままとし、口コミ収集は接続しない。Astroでの定期収集の有効化は今回の対象外。
+- `tests/astro-worker.test.ts` でAstroへの委譲とCMS保守Cronを、`tests/astro-migration.test.ts` で現行本番のHTTP・定期収集の契約を確認する。実CMSの公開・非公開状態の保護は#9の結合検証と区別する。
+
+### #4 の確認結果（2026-10-26）
+
+- テスト66件、Astro・現行Viteの型チェック／ビルドが成功。
+- ローカルAstroで `/`・`/reviews`・`/_emdash/admin` はHTMLの200、`/_emdash/api/unknown` はCMS側の401となり、アプリAPIの404へ捕捉されないことを確認。
+- `/api/health` は200、未知の `/api/*` はアプリAPIのJSONの404、未認証の更新POSTはBasic認証チャレンジ付き401を確認。
+- 検証用Workerへの再公開、実Browser Runでの収集、本番変更は未実施。API内部の失敗はテストで注入し、実外部サービスの障害を発生させたものではない。

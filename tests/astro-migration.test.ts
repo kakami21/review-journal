@@ -94,6 +94,19 @@ describe("現行WorkerのHTTP契約", () => {
     } finally { log.mockRestore(); }
   });
 
+  it("現行本番の定期収集も手動更新と同じ収集・保存の組み立てを使う", async () => {
+    const collected = [{ id: "123", name: "店舗", url: row.restaurant_url,
+      detailUrl: row.detail_url, title: null, body: "本文", reviewDate: "2026-10",
+      rating: 4, likeCount: 3 }];
+    mocks.scrape.mockResolvedValueOnce(collected);
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      await worker.scheduled({} as never, env);
+      expect(mocks.scrape).toHaveBeenCalledOnce();
+      expect(mocks.save).toHaveBeenCalledWith(collected, expect.any(String));
+    } finally { log.mockRestore(); }
+  });
+
   it("未知のアプリAPIはHonoの404を返す", async () => {
     const response = await request("/api/unknown");
     expect(response.status).toBe(404);
