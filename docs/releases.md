@@ -76,7 +76,7 @@ npx wrangler d1 export dining-archive-db --remote --config wrangler.astro.produc
 npx wrangler d1 migrations apply dining-archive-db --remote --config wrangler.astro.production.jsonc
 ```
 
-適用前に対象が本番D1であることを確認する。未適用マイグレーションが必要なリリースでは、適用・照合が完了するまでタグをpushしない。既存の一覧APIには `review_list` ビューが必要で、`/api/health` の成功だけではDBスキーマや口コミ一覧の正常性を保証しない。
+適用前に対象が本番D1であることを確認する。未適用マイグレーションが必要なリリースでは、適用・照合が完了するまでタグをpushしない。復旧用の旧構成の一覧APIには `review_list` ビューが必要で、`/api/health` の成功だけではDBスキーマや口コミ一覧の正常性を保証しない。
 
 ## 失敗時の復旧
 
