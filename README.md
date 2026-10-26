@@ -55,12 +55,10 @@ npm install
 `.dev.vars`を作成し、ローカル実行用の値を設定します。
 
 ```text
-TABELOG_USERNAME="食べログのユーザー名"
-BASIC_AUTH_USERNAME="更新APIのユーザー名"
 BASIC_AUTH_PASSWORD="更新APIのパスワード"
 ```
 
-`TABELOG_USERNAME`には、口コミを取得する食べログユーザーのURL上の名前を設定します。本番では`wrangler.jsonc`の値が使用されます。
+`TABELOG_USERNAME`（食べログURL上のユーザー名）と `BASIC_AUTH_USERNAME` はWrangler設定の `vars` で管理します。`secrets.required` にパスワードを宣言しているため、`.dev.vars` から読み込むのは `BASIC_AUTH_PASSWORD` だけです。
 
 Browser RunとD1は`wrangler.jsonc`でリモートバインディングとして設定されています。ローカルから利用した場合もCloudflare側の利用量に加算されます。
 
@@ -229,4 +227,4 @@ Astro・EmDashへの移行後の構成は [移行設計](docs/emdash-migration.m
 
 最新の `main` から作業ブランチを作成し、検証後に `main` 向けPRを作成する。完了するIssueはPR本文の `Closes #番号` で関連付ける。開発用Worker・D1は引き続き本番と分離する。
 
-リリースはmain上の `vMAJOR.MINOR.PATCH` タグで管理する。タグpushによるGitHub Actionsの本番デプロイは [Issue #23](https://github.com/kakami21/table-notes/issues/23) で実装する。詳細は [運用規則](.github/CONTRIBUTING.md) を参照。
+リリースはmain上の `vMAJOR.MINOR.PATCH` タグで管理する。タグpushによるGitHub Actionsの本番デプロイの初回設定・手順・復旧方法は [リリース手順](docs/releases.md) を参照。運用方針は [運用規則](.github/CONTRIBUTING.md) に記載する。

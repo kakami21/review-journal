@@ -4,6 +4,7 @@
   "name": "table-notes-astro-development",
   "main": "./src/worker/astro.ts",
   "compatibility_date": "2026-07-18",
+  "secrets": { "required": ["BASIC_AUTH_PASSWORD"] },
   "compatibility_flags": ["nodejs_compat"],
   "routes": [],
   "browser": { "binding": "BROWSER", "remote": true },
