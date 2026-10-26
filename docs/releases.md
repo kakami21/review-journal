@@ -34,6 +34,8 @@ git push origin refs/tags/v1.0.0
 
 Actionsの `Release` を開き、成功とSummaryのタグ・コミット・Workerバージョンを確認する。公開後の `/api/health` が200かつ `status: ok` であることもワークフローが検証する。
 
+公開ページのHTMLには `<meta name="release-version" content="v1.0.0">` のように実際のタグ名を埋め込む。開発者ツールのConsoleで `document.querySelector('meta[name="release-version"]').content` を実行すると確認できる。タグ以外のビルドは `unreleased` と表示する。
+
 同じタグの実行を再実行すると同じコミットを再公開する。通信失敗時も公開済みの可能性があるため、Summary・ログ・CloudflareのDeploymentsを確認してから判断する。自動再試行・自動ロールバックはしない。
 
 ## GitHub Releases
