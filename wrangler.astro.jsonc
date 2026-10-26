@@ -4,17 +4,32 @@
   "name": "table-notes-astro-development",
   "main": "./src/worker/astro.ts",
   "compatibility_date": "2026-07-18",
-  "secrets": { "required": ["BASIC_AUTH_PASSWORD"] },
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "routes": [],
-  "triggers": { "crons": ["* * * * *"] },
-  "kv_namespaces": [{ "binding": "SESSION", "id": "f9b3b197ea954dc9907d6dd09a6e3a28" }],
-  "browser": { "binding": "BROWSER", "remote": true },
-  "vars": {
-    "TABELOG_USERNAME": "pakoirileo",
-    "BASIC_AUTH_USERNAME": "admin"
+  "triggers": {
+    "crons": [
+      "* * * * *"
+    ]
   },
-  "assets": { "binding": "ASSETS", "directory": "./dist/astro/client" },
+  "kv_namespaces": [
+    {
+      "binding": "SESSION",
+      "id": "f9b3b197ea954dc9907d6dd09a6e3a28"
+    }
+  ],
+  "browser": {
+    "binding": "BROWSER",
+    "remote": true
+  },
+  "vars": {
+    "TABELOG_USERNAME": "pakoirileo"
+  },
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./dist/astro/client"
+  },
   "d1_databases": [
     {
       "binding": "DB",
@@ -24,5 +39,7 @@
       "migrations_dir": "./astro/migrations"
     }
   ],
-  "observability": { "enabled": true }
+  "observability": {
+    "enabled": true
+  }
 }

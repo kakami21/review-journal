@@ -63,7 +63,7 @@ npx wrangler d1 migrations list dining-archive-db --remote --config wrangler.ast
 npx wrangler d1 migrations apply dining-archive-db --remote --config wrangler.astro.production.jsonc
 ```
 
-4. 本番専用SESSION KV、Basic認証シークレット、GitHubトークンのD1読み取り権限を確認し、CI成功済みmainへ新しい正式タグを付けて公開する。旧テーブルは削除しない。
+4. 本番専用SESSION KV、管理者のパスキー認証、GitHubトークンのD1読み取り権限を確認し、CI成功済みmainへ新しい正式タグを付けて公開する。旧テーブルは削除しない。
 5. 本番ドメインの `/_emdash/admin` で所有者を登録し、パスキーを登録する。検証環境の認証を流用しない。本番では開発専用セットアップAPIを使わない。所有者の管理画面で口コミの読み取り・作成・公開に必要な権限のAPIトークンを作成し、`EMDASH_API_TOKEN` 環境変数へ安全に設定する。トークンを引数・Git・チャットに残さない。
 6. 本番へ初期移行し、日時を適用して完全照合する。
 

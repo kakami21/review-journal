@@ -11,7 +11,7 @@
 - 画像・R2は使わない。CMSの認証セッションは専用のSESSION KVへ保存する。
 - `/` はホーム、`/reviews` は既存Reactを使う口コミ一覧。`/api/*` だけを既存Honoへ委譲する。`/_emdash/*` はHonoへ渡さない。
 - `src/worker/astro.ts` は全リクエストをAstroへ渡し、`src/pages/api/[...path].ts` がCMSコンテキスト内でHonoを呼ぶ。毎分のCronはCMS保守専用で、口コミ収集を呼ばない。
-- ローカル開発はローカルD1、検証サイトは開発用リモートD1へ接続する。ページ表示とデータ読み書きの検証は区別する。
+- ローカルDBは使用せず、ローカル開発・検証サイトとも開発用リモートD1 `table-notes-development` へ接続する。書き込みは両方に反映され、本番D1とは分離する。
 - Cloudflareアダプターの要件に合わせWranglerを4.152.0へ更新。監査対象だったHonoは互換範囲で更新し、Miniflare内のundiciは修正済み7.30.1に限定して固定する。Miniflareが修正版を採用したら、このoverrideを撤去する。
 
 ## 起動・確認
@@ -25,9 +25,9 @@ npm run preview:astro
 
 `/reviews` で一覧・最終取得日時を確認し、「評価順」「訪問年月順」で並び替えを確認する。
 
-APIの参照確認は `/api/health` と `/api/reviews` を使う。`POST /api/reviews/refresh` はBasic認証が必要。#9以降のAstro側はCMSへ未登録分だけ下書き追加する（後述）。
+APIの参照確認は `/api/health` と `/api/reviews` を使う。手動取り込みはEmDash管理画面の「口コミの取り込み」から実行する。旧 `POST /api/reviews/refresh` は廃止し、404を返す。
 
-ローカルのパスワードは `.dev.vars` を使う。ユーザー名はローカル・公開ともに `wrangler.astro.jsonc` の `vars.BASIC_AUTH_USERNAME` を使い、公開パスワードはWorkerの `BASIC_AUTH_PASSWORD` シークレットで管理する。必須シークレット名を設定へ宣言しているため、CIの型生成にローカルの秘密ファイルは不要。認証情報をコードやコマンド引数に書かない。Brunoの環境と設定方法は [API確認手順](bruno.md) を参照。
+取り込みの認証はCMSのパスキー認証に一本化した。Basic認証のユーザー名・パスワード設定は不要。Brunoは参照APIと旧APIの廃止確認に使う（[API確認手順](bruno.md)）。
 
 `build:astro` は `dist/astro/` に出力する。既存の `npm run build` は `dist/` を作り直すため、Astroのプレビュー・公開前は必ず `build:astro` を実行する。
 
@@ -81,26 +81,26 @@ Astro側はEmDash 1.3.1の `reviews` コレクションを正本として使う�
 ### ローカル起動
 
 ```sh
-npx wrangler d1 migrations apply table-notes-development --local --config wrangler.astro.jsonc
+npx wrangler d1 migrations apply table-notes-development --remote --config wrangler.astro.jsonc
 npm run dev:astro
 ```
 
-ローカルのD1・KVは `.wrangler/state` へ保存する。Astroアダプターの `remoteBindings: false` によりリモートD1・Browser Runには接続しない。実際の口コミ収集は検証用Workerで確認する。
+D1とBrowser Runはリモート接続する。Astroアダプターの `remoteBindings: true` とWranglerの各バインディングの `remote: true` を使用する。SESSION KVはローカルで模擬し、`.wrangler/state` へ保存する。
 
 `http://localhost:4321/_emdash/admin` から初回セットアップを行い、管理者本人のパスキーを登録する。公開したworkers.devドメインのパスキーとは別に管理する。画像・R2・外部プラグイン・メール認証は今回導入しない。メディア機能は利用しない。
 
-ローカルの開発用DBだけで結合検証する場合：
+ローカル起動したアプリを通して開発用リモートDBで結合検証する場合：
 
 ```sh
 npm run test:cms
 ```
 
-このコマンドは起動済みの `127.0.0.1:4321` に接続し、EmDash公式の開発専用セットアップでテスト管理者を準備する。下書き追加・公開・編集・公開前下書きの非表示・再取得時の編集保護・取得元変更拒否・ゴミ箱再追加防止を実CMS APIで検証する。作成したテスト口コミは最後にゴミ箱へ移す。別ポートで起動した場合は `CMS_TEST_PORT=4322 npm run test:cms` とする。指定できるのはローカルのポート番号だけで、リモート・本番の接続先は受け付けない。実際のパスキー認証の検証とは区別する。
+この検証は検証サイトと共有する開発用リモートDBへテストデータを書き込みます。このコマンドは起動済みの `127.0.0.1:4321` に接続し、EmDash公式の開発専用セットアップでテスト管理者を準備する。下書き追加・公開・編集・公開前下書きの非表示・再取得時の編集保護・取得元変更拒否・ゴミ箱再追加防止を実CMS APIで検証する。作成したテスト口コミは最後にゴミ箱へ移す。別ポートで起動した場合は `CMS_TEST_PORT=4322 npm run test:cms` とする。指定できるのはローカルのポート番号だけで、公開サイトのURLは受け付けないが、接続先DBは開発用リモートD1となる。実際のパスキー認証の検証とは区別する。
 
 ### 取り込みと公開
 
 - `astro/seed/seed.json` が初回のコレクションを定義する。既存DBのスキーマ変更はseedの編集だけでは反映されない。
-- `POST /api/reviews/refresh` のBasic認証は維持する。新しい口コミだけを下書き追加し、公開・下書き・ゴミ箱にある既存口コミを上書きしない。
+- 管理画面の「口コミの取り込み」を開き、「口コミを取り込む」を押す。新しい口コミだけを下書き追加し、公開・下書き・ゴミ箱にある既存口コミを上書きしない。
 - 応答の `count` は取得件数、`addedCount` は追加件数、`scrapedAt` は全件取り込みが成功した日時。途中失敗は500となり、追加済み下書きは残す。再実行時は登録済みIDを照合する。
 - 追加0件でも収集全体が成功すれば `app_review_sync` の成功日時を更新する。失敗時は更新しない。既存SQLとCMSコアマイグレーションを混同しない。
 - `source_id` は必須・一意。取得元ID・URL・初回取り込み日時の変更は保存フックで拒否する。
@@ -132,8 +132,8 @@ EmDashの導入で固定されるZodの既知問題を避けるため、互換�
 ## APIの依存分離と検証（#4）
 
 - `src/pages/api/[...path].ts` は環境設定を受けてHonoへ渡す入口に限定する。CMSの公開クエリ・収集・保存の接続は `src/cms/review-api-dependencies.ts`、認証とHTTP応答は既存の `src/worker/review-api.ts` が担当する。
-- `npm test` の `tests/cms-review-api.test.ts` はAstroの実API入口を通し、CMS・DB・Browser Runとの境界だけをテスト用に置き換える。公開版だけのページ送り、ID・null・日時・並び順、Basic認証拒否、認証付き下書き追加、取得・保存失敗の共通500、未知APIの404を検証する。
-- APIのBasic認証とCMSのパスキー認証は別。CMSのセッションCookieだけでは更新を許可しない。ヘルスチェックや認証拒否では収集・保存を開始しない。
+- `npm test` の `tests/cms-review-api.test.ts` はAstroの実API入口を通し、CMS・DB・Browser Runとの境界だけをテスト用に置き換える。公開版だけのページ送り、ID・null・日時・並び順、公開一覧失敗の共通500、旧取り込みAPIと未知APIの404を検証する。取り込みの認証・失敗・保存は `tests/review-import.test.ts` と既存のCMSテストで検証する。
+- #34で手動取り込みをCMS管理者認証へ一本化。旧Basic認証付きAPIは廃止し、ヘルスチェックや旧APIへの呼び出しでは収集・保存を開始しない。
 - 現行Vite本番のHTTP更新・定期収集は同じ `createReviewRefresh` を継続利用する。AstroのCronはCMS保守専用のままとし、口コミ収集は接続しない。Astroでの定期収集の有効化は今回の対象外。
 - `tests/astro-worker.test.ts` でAstroへの委譲とCMS保守Cronを、`tests/astro-migration.test.ts` で現行本番のHTTP・定期収集の契約を確認する。実CMSの公開・非公開状態の保護は#9の結合検証と区別する。
 
@@ -143,3 +143,19 @@ EmDashの導入で固定されるZodの既知問題を避けるため、互換�
 - ローカルAstroで `/`・`/reviews`・`/_emdash/admin` はHTMLの200、`/_emdash/api/unknown` はCMS側の401となり、アプリAPIの404へ捕捉されないことを確認。
 - `/api/health` は200、未知の `/api/*` はアプリAPIのJSONの404、未認証の更新POSTはBasic認証チャレンジ付き401を確認。
 - 検証用Workerへの再公開、実Browser Runでの収集、本番変更は未実施。API内部の失敗はテストで注入し、実外部サービスの障害を発生させたものではない。
+
+## 管理画面からの手動取り込み（#34）
+
+1. `/_emdash/admin` で管理者のパスキーを使ってログインする。
+2. サイドバーの「口コミの取り込み」を開き、「口コミを取り込む」を押す。
+3. 実行中は画面を開いたまま待つ。ボタンは無効になり、連打では追加のリクエストを送信しない。
+4. 完了後に取得件数・新規追加件数・成功日時（日本時間）を確認する。追加0件も成功。取得0件は不完全な取得として失敗にする。
+5. 「口コミ一覧を開く」で追加された下書きを確認し、必要な編集と公開を行う。取り込みだけでは公開されない。
+
+取得失敗では保存を開始しない。保存失敗では一部の下書きが残る可能性がある。再実行すると既存の取得元IDを除外して続行する。通信切断で結果不明の場合も処理が進んでいる可能性があるため、しばらく待って一覧を確認してから再実行する。自動再試行はしない。
+
+実行入口は `POST /_emdash/api/plugins/review-import/run`。EmDash標準の管理者権限（`plugins:manage`）・認証・CSRF検証を使う。ブラウザは標準の `apiFetch()` を使用する。GET等は405となる。旧 `/api/reviews/refresh` は認証情報の有無に関係なく404となる。
+
+ローカル起動でもBrowser Runへリモート接続する。登録済みの検証サイト用パスキーによる実収集の成功確認は検証用Workerで行う。旧構成の定期収集とAstroのCMS保守Cronは変更しない。
+
+Basic認証の設定・型定義・Bruno認証変数・手動更新リクエストは撤去済み。公開済みWorkerのシークレットは、各環境への本変更の公開と動作確認後に削除する。旧バージョンへの復旧時に必要となるため、公開前には削除しない。本番の削除は本番リリース時に実施する。

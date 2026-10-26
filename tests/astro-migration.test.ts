@@ -20,16 +20,14 @@ const row = {
   review_date: "2026-10", rating: 4, like_count: 3,
 };
 const env = {
-  BASIC_AUTH_USERNAME: "admin", BASIC_AUTH_PASSWORD: "test-only-password",
   DB: { prepare: () => ({
     all: async () => ({ results: [row] }),
     first: async () => ({ last_updated_at: "2026-10-25T00:00:00Z" }),
   }) },
 } as unknown as CloudflareBindings;
 const ctx = {} as ExecutionContext;
-const authorization = `Basic ${btoa("admin:test-only-password")}`;
 
-/** 実際の委譲先と認証処理を通し、外部収集・保存だけをテスト用に置き換える。 */
+/** 実際の公開APIと旧取り込みAPIの廃止を通し、外部収集・保存だけをテスト用に置き換える。 */
 const request = (path: string, init?: RequestInit) =>
   worker.fetch(new Request(`https://example.com${path}`, init), env, ctx);
 
@@ -58,43 +56,16 @@ describe("現行WorkerのHTTP契約", () => {
     });
   });
 
-  it.each([undefined, "Basic aW52YWxpZA=="])("認証拒否では収集・保存を実行しない", async (auth) => {
+  it.each([undefined, "Basic b2xkOnBhc3N3b3Jk"])("旧取り込みAPIは認証情報の有無にかかわらず実行できない", async (authorization) => {
     const response = await request("/api/reviews/refresh", {
-      method: "POST", headers: auth ? { authorization: auth } : {},
+      method: "POST", headers: authorization ? { authorization } : {},
     });
-    expect(response.status).toBe(401);
-    expect(response.headers.get("www-authenticate")).toContain("Basic");
+    expect(response.status).toBe(404);
     expect(mocks.scrape).not.toHaveBeenCalled();
     expect(mocks.save).not.toHaveBeenCalled();
   });
 
-  it("認証付き更新は収集・保存後に件数と成功日時を返す", async () => {
-    const collected = [{ id: "123", name: "店舗", url: row.restaurant_url,
-      detailUrl: row.detail_url, title: null, body: "本文", reviewDate: "2026-10",
-      rating: 4, likeCount: 3 }];
-    mocks.scrape.mockResolvedValueOnce(collected);
-    const response = await request("/api/reviews/refresh", { method: "POST", headers: { authorization } });
-    expect(response.status).toBe(200);
-    const result = await response.json() as { count: number; scrapedAt: string };
-    expect(result.count).toBe(1);
-    expect(Number.isNaN(Date.parse(result.scrapedAt))).toBe(false);
-    expect(mocks.save).toHaveBeenCalledWith(collected, result.scrapedAt);
-  });
-
-  it("収集失敗は500を返し、保存も最終取得日時の更新も呼ばない", async () => {
-    const log = vi.spyOn(console, "error").mockImplementation(() => {});
-    try {
-      mocks.scrape.mockRejectedValueOnce(new Error("収集失敗"));
-      const before = await (await request("/api/reviews")).json();
-      const response = await request("/api/reviews/refresh", { method: "POST", headers: { authorization } });
-      expect(response.status).toBe(500);
-      expect(await response.json()).toEqual({ error: "処理に失敗しました。時間をおいて再度お試しください。" });
-      expect(mocks.save).not.toHaveBeenCalled();
-      expect(await (await request("/api/reviews")).json()).toEqual(before);
-    } finally { log.mockRestore(); }
-  });
-
-  it("現行本番の定期収集も手動更新と同じ収集・保存の組み立てを使う", async () => {
+  it("旧構成の定期収集は従来の収集・保存の組み立てを維持する", async () => {
     const collected = [{ id: "123", name: "店舗", url: row.restaurant_url,
       detailUrl: row.detail_url, title: null, body: "本文", reviewDate: "2026-10",
       rating: 4, likeCount: 3 }];

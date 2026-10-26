@@ -4,7 +4,6 @@
   "name": "dining-archive",
   "main": "src/worker/index.ts",
   "compatibility_date": "2026-07-18",
-  "secrets": { "required": ["BASIC_AUTH_PASSWORD"] },
   "compatibility_flags": [
     "nodejs_compat"
   ],
@@ -13,8 +12,7 @@
     "remote": true
   },
   "vars": {
-    "TABELOG_USERNAME": "pakoirileo",
-    "BASIC_AUTH_USERNAME": "admin"
+    "TABELOG_USERNAME": "pakoirileo"
   },
   "assets": {
     "binding": "ASSETS",
@@ -43,12 +41,10 @@
   },
   "env": {
     "development": {
-      "secrets": { "required": ["BASIC_AUTH_PASSWORD"] },
       "name": "table-notes-development",
       "routes": [],
       "vars": {
-        "TABELOG_USERNAME": "pakoirileo",
-        "BASIC_AUTH_USERNAME": "admin"
+        "TABELOG_USERNAME": "pakoirileo"
       },
       "browser": {
         "binding": "BROWSER",

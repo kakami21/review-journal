@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => {
   const bind = vi.fn(() => ({ run }));
   return {
     run, first, bind,
-    env: { BASIC_AUTH_USERNAME: "admin", BASIC_AUTH_PASSWORD: "test-password", TABELOG_USERNAME: "test",
+    env: { TABELOG_USERNAME: "test",
       BROWSER: {}, DB: { prepare: vi.fn(() => ({ first, bind })) } },
     published: vi.fn(), runtime: vi.fn(), scrape: vi.fn(), browser: vi.fn(),
     cms: { handleContentList: vi.fn(), handleContentListTrashed: vi.fn(), handleContentCreate: vi.fn() },
@@ -30,7 +30,6 @@ const review = { id: "tabelog-1", name: "店舗", url: "https://tabelog.com/rest
 const entry = (id: string, month: string) => ({ data: { source_id: id, restaurant_name: review.name,
   restaurant_url: review.url, source_url: review.detailUrl, title: null, body: review.body,
   review_month: month, rating: 4, like_count: 3 } });
-const authorization = `Basic ${btoa("admin:test-password")}`;
 
 // Astroの実API入口からHono・CMS接続・保存処理を通し、外部サービスの境界だけ差し替える。
 const request = (path: string, init?: RequestInit) => ALL({ request: new Request(`https://example.com${path}`, init) } as never);
@@ -84,43 +83,21 @@ describe("Astro・CMSのHTTP契約", () => {
     expect(await (await request("/api/reviews")).json()).toEqual({ reviews: [], lastUpdatedAt: null });
   });
 
-  it.each([undefined, "Basic aW52YWxpZA=="])("未認証・誤認証ではCMSセッションCookieがあっても収集を始めない", async (auth) => {
+  it.each([undefined, "Basic b2xkOnBhc3N3b3Jk"])("旧取り込みAPIは認証情報の有無にかかわらず404となる", async (authorization) => {
     const response = await request("/api/reviews/refresh", { method: "POST",
-      headers: { cookie: "emdash-session=test-session", ...(auth ? { authorization: auth } : {}) } });
-    expect(response.status).toBe(401);
-    expect(response.headers.get("WWW-Authenticate")).toContain("Basic");
-    expect(mocks.browser).not.toHaveBeenCalled();
+      headers: authorization ? { authorization } : {} });
+    expect(response.status).toBe(404);
     expect(mocks.scrape).not.toHaveBeenCalled();
     expect(mocks.runtime).not.toHaveBeenCalled();
     expect(mocks.env.DB.prepare).not.toHaveBeenCalled();
   });
 
-  it("Basic認証だけで手動更新でき、CMSへ下書き追加して件数と日時を返す", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date(timestamp));
-    const response = await request("/api/reviews/refresh", { method: "POST", headers: { authorization } });
-    expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ count: 1, addedCount: 1, scrapedAt: timestamp });
-    expect(mocks.browser).toHaveBeenCalledWith(mocks.env.BROWSER);
-    expect(mocks.cms.handleContentCreate).toHaveBeenCalledWith("reviews", expect.objectContaining({
-      slug: review.id, status: "draft", data: expect.objectContaining({ source_id: review.id, body: review.body }),
-    }));
-    expect(mocks.bind).toHaveBeenCalledWith(timestamp);
-    expect(mocks.published).not.toHaveBeenCalled();
-  });
-
-  it.each(["公開一覧", "収集", "保存"])("%sの失敗は内部情報を漏らさず共通500を返す", async (failure) => {
+  it("公開一覧の失敗は内部情報を漏らさず共通500を返す", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
-    const error = new Error("内部情報を含む障害");
-    if (failure === "公開一覧") mocks.published.mockResolvedValue({ error });
-    if (failure === "収集") mocks.scrape.mockRejectedValue(error);
-    if (failure === "保存") mocks.cms.handleContentCreate.mockResolvedValue({ success: false, error: { code: "ERROR", message: error.message } });
-    const response = await request(failure === "公開一覧" ? "/api/reviews" : "/api/reviews/refresh",
-      failure === "公開一覧" ? {} : { method: "POST", headers: { authorization } });
+    mocks.published.mockResolvedValue({ error: new Error("内部情報を含む障害") });
+    const response = await request("/api/reviews");
     expect(response.status).toBe(500);
     expect(await response.json()).toEqual({ error: "処理に失敗しました。時間をおいて再度お試しください。" });
-    expect(mocks.run).not.toHaveBeenCalled();
-    if (failure === "収集") expect(mocks.cms.handleContentCreate).not.toHaveBeenCalled();
   });
 
   it("未知のAPIは外部サービスを呼ばずAPI用404を返す", async () => {

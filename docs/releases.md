@@ -12,13 +12,13 @@ CI、タグ公開、公開後確認、GitHub Releases、DB変更、復旧の運�
 | Wrangler設定 | `wrangler.astro.production.jsonc` |
 | GitHub Environment | `production` |
 | Environment secret | `CLOUDFLARE_API_TOKEN` |
-| Worker側の必須シークレット | `BASIC_AUTH_PASSWORD` |
+| 取り込みの認証 | EmDash管理者のパスキー・セッション |
 | CIワークフロー | `.github/workflows/ci.yml` |
 | 公開ワークフロー | `.github/workflows/release.yml` |
 | 本番公開のconcurrencyグループ | `production-release` |
 
 Cloudflareの本番Worker → Settings → Buildsでmain連携の停止を確認する。Environmentのタグ制限・公開用トークン・秘密値の扱いは共通規則に従って設定する。
-Wranglerの必須シークレット宣言で`BASIC_AUTH_PASSWORD`の不足を検出する。Actionsからこの値を読み取る必要はない。
+取り込み用のBasic認証は#34で廃止。旧 `BASIC_AUTH_PASSWORD` シークレットは本変更の公開と管理画面の取り込み確認後に、対象Workerを確認して削除する。公開前や旧構成が利用中の環境では削除しない。
 
 初回設定の確認状況と公開結果は[Issue #23](https://github.com/kakami21/table-notes/issues/23)へ記録する。
 Astro検証用Workerへの公開コマンドは使わない。初回切り替えは[本番移行手順](production-migration.md)に従う。
@@ -84,4 +84,4 @@ node scripts/release.mjs check-production dist/astro-production/server/wrangler.
 ```
 
 `tests/release.test.ts`は一時Gitリポジトリでタグ・main履歴・タグ先の変更と、本番／検証接続先の判定を検証する。
-CIは`.dev.vars`なしで実行できる。ビルド時の必須シークレット不足の警告は、実行時パスワードをCIのビルドへ渡していないため。本番デプロイではWorker側の登録を検証する。
+CIは`.dev.vars`なしで実行できる。取り込み用のパスワードは不要。

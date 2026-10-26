@@ -1,5 +1,5 @@
 info:
-  name: 認証なしの更新を拒否
+  name: 廃止した取り込みAPIを確認
   type: http
   seq: 3
 http:
@@ -9,12 +9,11 @@ runtime:
   scripts:
     - type: tests
       code: |-
-        test("認証なしの更新はHTTP 401で拒否する", function () {
-          expect(res.getStatus()).to.equal(401);
-          expect(res.getHeader("www-authenticate")).to.match(/^Basic /);
+        test("旧取り込みAPIはHTTP 404となる", function () {
+          expect(res.getStatus()).to.equal(404);
         });
 settings:
   followRedirects: false
   timeout: 30000
 docs: |-
-  authを省略して認証なしとし、親の認証設定を継承しない。成功応答が返る場合は認証設定の不具合として扱う。
+  旧取り込みAPIの廃止を確認する。口コミの取り込みはEmDash管理画面から実行する。
