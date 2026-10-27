@@ -12,18 +12,20 @@ const setup = await fetch(base+'/_emdash/api/setup/dev-bypass?content=0&token=1'
 const token = (await setup.json()).data?.token;
 assert(token, '先にnpm run dev:astroを起動してください。');
 async function api(path,method='GET',body){const r=await fetch(base+'/_emdash/api/'+path,{method,headers:{authorization:'Bearer '+token,'content-type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});return r.json();}
-const source=await readFile(new URL('../src/cms/review-store.ts', import.meta.url),'utf8');
+const source=await readFile(new URL('../src/cms/tabelog-review-store.ts', import.meta.url),'utf8');
 const temp = await mkdtemp(join(tmpdir(), 'table-notes-cms-test-'));
 const compiled=join(temp, 'store.mjs');
 const compilerOptions={module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ESNext};
 await writeFile(compiled,ts.transpileModule(source,{compilerOptions}).outputText.replaceAll('"./review-data"','"./review-data.mjs"'));
 const dataSource=await readFile(new URL('../src/cms/review-data.ts', import.meta.url),'utf8');
-await writeFile(join(temp,'review-data.mjs'),ts.transpileModule(dataSource,{compilerOptions}).outputText);
-const {CmsReviewStore}=await import(pathToFileURL(compiled).href);
+await writeFile(join(temp,'review-data.mjs'),ts.transpileModule(dataSource,{compilerOptions}).outputText.replaceAll('"../posts/post"','"./post.mjs"'));
+const postSource=await readFile(new URL('../src/posts/post.ts', import.meta.url),'utf8');
+await writeFile(join(temp,'post.mjs'),ts.transpileModule(postSource,{compilerOptions}).outputText.replaceAll('"zod"',JSON.stringify(import.meta.resolve('zod'))));
+const {TabelogReviewStore}=await import(pathToFileURL(compiled).href);
 let lastDate;
 const db={prepare:()=>({bind:date=>({run:async()=>{lastDate=date;}})})};
 const cms={handleContentCreate:(c,b)=>api('content/'+c,'POST',b),handleContentList:(c,p)=>api('content/'+c+'?'+new URLSearchParams(Object.entries(p).filter(([,v])=>v!==undefined))),handleContentListTrashed:(c,p)=>api('content/'+c+'/trash?'+new URLSearchParams(Object.entries(p).filter(([,v])=>v!==undefined)))};
-const store=new CmsReviewStore(cms,db);
+const store=new TabelogReviewStore(cms,db);
 const sourceId='integration-'+Date.now();
 const review={id:sourceId,detailUrl:'https://tabelog.com/rvwr/test/'+sourceId,name:'結合テスト店舗',url:'https://tabelog.com/restaurant/test',title:null,body:'取得原文\n2行目',reviewDate:'2026-10',rating:4,likeCount:3};
 // 同じ取得元IDを同時に取り込み、DBの一意制約と競合後の照合を実CMSで確認する。

@@ -1,4 +1,5 @@
 import type { Review } from "../reviews/review";
+import { tabelogPost } from "../posts/post";
 
 type CmsReviewData = {
   source_id: string; source_url: string; restaurant_name: string; restaurant_url: string;
@@ -7,10 +8,11 @@ type CmsReviewData = {
 };
 
 export function reviewData(review: Review, importedAt: string): CmsReviewData {
+  const post = tabelogPost(review);
   return {
-    source_id: review.id, source_url: review.detailUrl, restaurant_name: review.name,
-    restaurant_url: review.url, title: review.title, body: review.body,
-    review_month: review.reviewDate, rating: review.rating, like_count: review.likeCount,
+    source_id: post.externalId, source_url: post.sourceUrl, restaurant_name: post.review.name,
+    restaurant_url: post.review.url, title: post.title, body: post.body,
+    review_month: post.date.value, rating: post.review.rating, like_count: post.review.likeCount,
     imported_at: importedAt,
   };
 }

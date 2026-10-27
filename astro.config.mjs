@@ -26,6 +26,7 @@ export default defineConfig({
     registry: false,
     fonts: false,
     plugins: [
+      { id: "entry-policy", version: "1.0.0", entrypoint: fileURLToPath(new URL("./src/cms/entry-policy.ts", import.meta.url)) },
       { id: "review-source-policy", version: "1.0.0", entrypoint: fileURLToPath(new URL("./src/cms/review-policy.mjs", import.meta.url)) },
       {
         id: "review-import", version: "1.0.0",

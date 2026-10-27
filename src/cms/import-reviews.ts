@@ -2,7 +2,7 @@ import { withEmDashRuntime } from "emdash/middleware";
 import { CloudflareBrowserProvider } from "../infrastructure/cloudflare-browser-provider";
 import { importCollectedReviews } from "../reviews/import-collected-reviews";
 import { TabelogReviewScraper } from "../reviews/tabelog-review-scraper";
-import { CmsReviewStore } from "./review-store";
+import { TabelogReviewStore } from "./tabelog-review-store";
 
 export type ReviewImportResult =
   | { ok: true; count: number; addedCount: number; scrapedAt: string }
@@ -18,7 +18,7 @@ export async function importReviews(bindings: AstroBindings): Promise<ReviewImpo
       ).scrape(),
       (reviews, scrapedAt) => {
         stage = "save";
-        return withEmDashRuntime((cms) => new CmsReviewStore(cms, bindings.DB).importNew(reviews, scrapedAt));
+        return withEmDashRuntime((cms) => new TabelogReviewStore(cms, bindings.DB).importNew(reviews, scrapedAt));
       },
     );
     return { ok: true, ...result };

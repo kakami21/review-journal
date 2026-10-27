@@ -1,10 +1,15 @@
 import { D1ReviewRepository } from "../infrastructure/d1-review-repository";
 import { createReviewRefresh } from "./review-refresh-factory";
 import { createReviewApi } from "./review-api";
+import { createPostApi } from "./post-api";
+import { tabelogPost } from "../posts/post";
 
 const app = createReviewApi({
   getAll: (env) => new D1ReviewRepository(env.DB).getAll(),
-});
+}, createPostApi({ async getAll(env) {
+  const { reviews, lastUpdatedAt } = await new D1ReviewRepository(env.DB).getAll();
+  return { posts: reviews.map(tabelogPost), lastUpdatedAt };
+} }));
 
 // 現行Vite本番の定期収集口を維持する。Astro側のCMS保守Cronとは接続しない。
 export default {

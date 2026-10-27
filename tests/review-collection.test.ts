@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { TabelogReviewScraper, type ScrapingLocator, type ScrapingPage } from "../src/reviews/tabelog-review-scraper";
 import { importCollectedReviews } from "../src/reviews/import-collected-reviews";
-import { CmsReviewStore } from "../src/cms/review-store";
+import { TabelogReviewStore } from "../src/cms/tabelog-review-store";
 
 type Element = { text?: string; attributes?: Record<string, string>; children?: Record<string, Element[]> };
 
@@ -65,7 +65,7 @@ function cmsStore() {
     handleContentCreate: create,
   };
   const db = { prepare: vi.fn(() => ({ bind })) } as unknown as D1Database;
-  const store = new CmsReviewStore(cms as never, db);
+  const store = new TabelogReviewStore(cms as never, db);
   const save = vi.fn((reviews, timestamp) => store.importNew(reviews, timestamp));
   return { save, create, run, bind, list: cms.handleContentList };
 }

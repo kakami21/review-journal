@@ -1,6 +1,6 @@
 import { getEmDashCollection } from "emdash";
 import { withEmDashRuntime } from "emdash/middleware";
-import { CmsReviewStore, publicReview } from "./review-store";
+import { TabelogReviewStore, publicReview } from "./tabelog-review-store";
 import type { ReviewApiDependencies } from "../worker/review-api";
 
 /** CMSの公開参照を接続する。手動取り込みは管理画面のプラグインに限定する。 */
@@ -16,7 +16,7 @@ export function createCmsReviewApiDependencies(bindings: AstroBindings): ReviewA
         reviews.push(...result.entries.map((entry) => publicReview(entry.data)));
         cursor = result.nextCursor;
       } while (cursor);
-      const lastUpdatedAt = await withEmDashRuntime((cms) => new CmsReviewStore(cms, bindings.DB).lastUpdatedAt());
+      const lastUpdatedAt = await withEmDashRuntime((cms) => new TabelogReviewStore(cms, bindings.DB).lastUpdatedAt());
       return { reviews: reviews.sort((a, b) => b.reviewDate.localeCompare(a.reviewDate)), lastUpdatedAt };
     },
   };
