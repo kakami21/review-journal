@@ -39,9 +39,9 @@ npx wrangler deploy --config dist/astro/server/wrangler.json --dry-run
 npm run deploy:astro
 ```
 
-生成設定のWorker名が `table-notes-astro-development`、D1名が `table-notes-development`、`routes` が空であることを確認する。検証URLは通常公開されるため、秘密情報をページに表示しない。本番用の `npm run deploy` と区別する。
+生成設定のWorker名が `table-notes-astro-development`、D1名が `table-notes-development`、`routes` が検証用の `staging.pakoirileo.nokishita.app` だけであることを確認する。検証URLは通常公開されるため、秘密情報をページに表示しない。本番用の `npm run deploy` と区別する。
 
-検証URL：[Astro開発環境](https://table-notes-astro-development.pandalize.workers.dev/)
+検証URL：[Astro開発環境](https://staging.pakoirileo.nokishita.app/)
 
 Astro 7の開発・プレビューはバックグラウンドで起動する。終了する場合は、それぞれ `npx astro dev stop`、`npx astro preview stop` を実行する。
 

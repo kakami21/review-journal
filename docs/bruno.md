@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | `local` | `http://localhost:5173` | 旧Vite開発API |
 | `astro-local` | `http://localhost:4321` | `npm run dev:astro` のAPI |
-| `development` | `https://table-notes-astro-development.pandalize.workers.dev` | Astro検証API |
+| `development` | `https://staging.pakoirileo.nokishita.app` | Astro検証API |
 | `production` | `https://pakoirileo.nokishita.app` | 本番API |
 
 設定は `bruno/environments/` で管理する。ポートが変わった場合は `baseUrl` を変更する。

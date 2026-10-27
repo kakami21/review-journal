@@ -1,4 +1,4 @@
 name: development
 variables:
   - name: baseUrl
-    value: https://table-notes-astro-development.pandalize.workers.dev
+    value: https://staging.pakoirileo.nokishita.app
