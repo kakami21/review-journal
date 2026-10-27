@@ -1,12 +1,15 @@
 ---
 import "../react-app/styles.css";
+import { env } from "cloudflare:workers";
+// タグのない開発・検証用デプロイではunreleasedを表示する。
+const releaseVersion = env.CF_VERSION_METADATA.tag || "unreleased";
 ---
 
 <!doctype html>
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <meta name="release-version" content={import.meta.env.PUBLIC_RELEASE_TAG} />
+    <meta name="release-version" content={releaseVersion} />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>箱入レオのルーザー日記</title>

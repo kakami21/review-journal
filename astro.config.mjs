@@ -37,5 +37,5 @@ export default defineConfig({
       },
     ],
   })],
-  vite: { plugins: [tailwindcss()], define: { "import.meta.env.PUBLIC_RELEASE_TAG": JSON.stringify(process.env.RELEASE_TAG ?? "unreleased") } },
+  vite: { plugins: [tailwindcss()] },
 });

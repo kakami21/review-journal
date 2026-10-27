@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 # 公開途中の実行はキャンセルしない。複数タグを同時にpushせず、前回の完了を待つ。
 concurrency:
@@ -36,11 +37,10 @@ jobs:
       - name: タグ形式・コミット・main履歴を検証
         run: node scripts/release.mjs check-tag "$RELEASE_TAG" "$RELEASE_SHA"
       - run: npm ci
-      - run: npm test
-      - run: npm run build
-      - run: npm run build:astro
-      # 本番向けAstroを最後にビルドし、検証用の設定と出力を混同しない。
-      - run: npm run build:production
+      - name: 同じコミットのCI成果物を取得
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash scripts/download-production.sh
       - name: 本番の接続先を検証
         run: node scripts/release.mjs check-production dist/astro-production/server/wrangler.json
       - name: CMSスキーマの適用済み状態を検証

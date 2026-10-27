@@ -25,14 +25,30 @@ Astro検証用Workerへの公開コマンドは使わない。初回切り替え
 
 ## 公開後の確認
 
-Actionsの`Release`を開き、Summaryのタグ・コミット・Workerバージョンを確認する。
+Actionsの`Release`を開き、Summaryのタグ・コミット・成果物のCI実行・Workerバージョンを確認する。
 ワークフローのヘルスチェックは`/api/health`のHTTP 200と`status: ok`を検証する。口コミ一覧も確認する。
 
-公開HTMLに埋め込んだバージョンは、開発者ツールのConsoleで確認できる。
+公開HTMLのバージョンはCloudflare標準の `CF_VERSION_METADATA.tag` をリクエスト時に読み取り、表示する。`wrangler deploy --tag` のタグ名が反映されるため、CIのビルド時に公開タグを渡したり、CDで成果物を書き換えたりする必要はない。タグのない開発・検証では `unreleased` と表示する。開発者ツールのConsoleで確認できる。
 
 ```js
 document.querySelector('meta[name="release-version"]').content
 ```
+
+## CI成果物を使う公開
+
+PRのCIではテストと各ビルドを確認し、mainへのpushのCIでは、成功時に本番成果物をGitHub Artifactsへ保存する。
+
+- 名前：`production-コミットSHA`
+- 内容：本番の `dist/astro-production` とCMSの `astro/.emdash/migrations.json` を含む `production.tar.gz`
+- 保存期間：30日。実行履歴や成果物の削除でも取得できなくなる
+
+タグ公開では `ci.yml` のうち、mainへのpush・タグと同じコミット・成功済みの実行を選び、対応する成果物を取得する。PRのCIや別コミットの成果物は使わない。CDはCLI依存関係のインストール、タグ・本番接続先・CMSスキーマの検証、デプロイと公開後の確認を行う。アプリのテストや再ビルドは実行しない。
+
+この構成がmainへ反映された後、対象コミットのmain CIが成果物保存まで成功したことを確認してからタグをpushする。導入前のCI実行には成果物がないため使えない。
+
+成果物がない・期限切れ・取得失敗の場合は公開前に停止する。対象コミットのmain CIをGitHub Actionsで再実行し、成功と成果物を確認してから、失敗したReleaseを再実行する。別コミットへの置き換え、CDでの再ビルド、自動再試行は行わない。公開開始後に失敗した場合は、先に本番の公開履歴を確認する。
+
+Artifactsの保存・取得はGitHub公式の [upload-artifact](https://github.com/actions/upload-artifact) と [gh run download](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/download-workflow-artifacts) を使う。Releaseの `GITHUB_TOKEN` は成果物参照のため `actions: read` を必要とする。保管用の外部サービスや秘密値は追加しない。
 
 ## Astro本番化の準備
 
@@ -84,4 +100,5 @@ node scripts/release.mjs check-production dist/astro-production/server/wrangler.
 ```
 
 `tests/release.test.ts`は一時Gitリポジトリでタグ・main履歴・タグ先の変更と、本番／検証接続先の判定を検証する。
+`tests/download-production.test.ts`はGitHub通信だけを置き換え、成功済みCIの選択条件、実際のアーカイブ展開、CIなし・取得失敗・破損時の停止を検証する。
 CIは`.dev.vars`なしで実行できる。取り込み用のパスワードは不要。
