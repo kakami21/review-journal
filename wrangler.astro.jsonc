@@ -7,7 +7,7 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  "routes": [],
+  "routes": [{ "pattern": "staging.pakoirileo.nokishita.app", "custom_domain": true }],
   "triggers": {
     "crons": [
       "* * * * *"
