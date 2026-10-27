@@ -102,28 +102,41 @@ export function PostListPage() {
       setPendingLikes(current => { const next = new Set(current); next.delete(id); return next; });
     }
   }
-  if (error) return <p role="alert">{error}</p>;
-  if (!posts) return <p>読み込み中...</p>;
-  const visible = posts.filter(post => kind === "all" || post.kind === kind);
+  // 初回のサーバー描画でもページの枠を保ち、未取得を0件や取得未実行と表示しない。
+  const loading = !posts && !error;
+  const visible = (posts ?? []).filter(post => kind === "all" || post.kind === kind);
   if (kind === "review" && sort === "rating") visible.sort((a, b) =>
     a.kind === "review" && b.kind === "review" ? b.review.rating - a.review.rating : 0);
   return <main className="brutal min-h-screen bg-amber-50 px-4 py-10">
     <div className="mx-auto max-w-3xl">
       <header className="mb-4">
         <h1 className="text-4xl font-bold">箱入レオのルーザー日記</h1>
-        <p className="mt-2 opacity-70">{visible.length}件の投稿</p>
-        <p className="mt-1 text-sm opacity-60">食べログ最終取得：{lastUpdatedAt
-          ? new Intl.DateTimeFormat("ja-JP", { timeZone: "Asia/Tokyo", dateStyle: "medium" }).format(new Date(lastUpdatedAt)) : "未実行"}</p>
+        {posts && <p className="mt-2 opacity-70">{visible.length}件の投稿</p>}
+        {posts && <p className="mt-1 text-sm opacity-60">食べログ最終取得：{lastUpdatedAt
+          ? new Intl.DateTimeFormat("ja-JP", { timeZone: "Asia/Tokyo", dateStyle: "medium" }).format(new Date(lastUpdatedAt)) : "未実行"}</p>}
       </header>
       <div className="mb-4 flex flex-wrap items-center gap-4">
-        <label>種類 <select className="select select-sm" value={kind} onChange={e => { setKind(e.target.value as PostKind | "all"); setSort("date"); }}>
+        <label>種類 <select className="select select-sm" disabled={!posts} value={kind} onChange={e => { setKind(e.target.value as PostKind | "all"); setSort("date"); }}>
           <option value="all">すべて</option><option value="review">口コミ</option><option value="note">ノート</option><option value="article">記事</option>
         </select></label>
         {kind === "review" && <label>並び順 <select className="select select-sm" value={sort} onChange={e => setSort(e.target.value as "date" | "rating")}>
           <option value="date">日付順</option><option value="rating">評価順</option>
         </select></label>}
       </div>
-      {visible.length === 0 && <p>公開された投稿はまだありません。</p>}
+      {loading && <div role="status" aria-live="polite">
+        <p className="mb-4 opacity-70">投稿を読み込んでいます…</p>
+        <div aria-hidden="true" className="space-y-4">
+          {[0, 1, 2].map(index => <div key={index} className="card bg-base-100 shadow-sm">
+            <div className="card-body gap-4">
+              <div className="h-4 w-24 rounded bg-base-200" />
+              <div className="h-6 w-2/3 rounded bg-base-200" />
+              <div className="h-20 rounded bg-base-200" />
+            </div>
+          </div>)}
+        </div>
+      </div>}
+      {error && <p role="alert">{error}</p>}
+      {posts && visible.length === 0 && <p>公開された投稿はまだありません。</p>}
       {likeError && <p role="alert" className="mb-4">{likeError}</p>}
       <ul className="space-y-4">{visible.map(post => <li key={post.id} id={post.id}>
         <PostCard post={post} likeState={likeStates[post.id]} likeCount={post.likeCount} pending={pendingLikes.has(post.id)} onLike={() => { void like(post.id); }} />

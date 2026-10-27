@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { entryPost, tabelogPost, comparePosts } from "../src/posts/post";
-import { PostCard } from "../src/react-app/pages/PostListPage";
+import { PostCard, PostListPage } from "../src/react-app/pages/PostListPage";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createPlugin } from "../src/cms/entry-policy";
 
@@ -9,6 +9,17 @@ const food = { id: "B1", detailUrl: "https://tabelog.com/reviews/B1", name: "店
   title: null, body: "口コミ", reviewDate: "2026-10", rating: 4, likeCount: 0 };
 
 describe("共通Postと種類別の条件", () => {
+  it("初回HTMLにも背景・見出し・読み込み表示を含め、未取得を0件と表示しない", () => {
+    const html = renderToStaticMarkup(<PostListPage />);
+    expect(html).toContain('bg-amber-50');
+    expect(html).toContain('箱入レオのルーザー日記');
+    expect(html).toContain('role="status"');
+    expect(html).toContain('投稿を読み込んでいます');
+    expect(html).toContain('disabled');
+    expect(html).not.toContain('0件の投稿');
+    expect(html).not.toContain('未実行');
+    expect(html).not.toContain('公開された投稿はまだありません');
+  });
   it("食べログは既存ID・本文・年月を維持し、取得元のいいね数を表示モデルへ混ぜない", () => {
     const post = tabelogPost(food);
     expect(post).toMatchObject({ id: "B1", kind: "review", source: "tabelog", body: food.body,
