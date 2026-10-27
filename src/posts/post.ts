@@ -20,7 +20,7 @@ export type Post = TabelogPost | PostBase & { source: "manual"; externalId: null
 
 const month = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
 const optionalText = z.string().nullish();
-const manualDataSchema = z.object({
+const entryDataSchema = z.object({
   source: z.literal("manual"), kind: z.enum(postKinds),
   title: optionalText, body: z.string().refine(value => value.trim().length > 0, "本文を入力してください。"),
   written_at: z.iso.datetime({ offset: true }).or(z.iso.datetime({ offset: true, precision: -1 })),
@@ -50,8 +50,8 @@ export function tabelogPost(review: Review): TabelogPost {
 }
 
 /** 手入力の公開条件を検証し、食べログのIDと衝突しないCMS由来の識別子を付ける。 */
-export function manualPost(id: string, input: Record<string, unknown>): Post {
-  const data = manualDataSchema.parse(input);
+export function entryPost(id: string, input: Record<string, unknown>): Post {
+  const data = entryDataSchema.parse(input);
   const common = {
     id: `manual-${z.string().min(1).parse(id)}`, source: "manual" as const, externalId: null, sourceUrl: null,
     title: data.title || null, body: data.body,

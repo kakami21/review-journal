@@ -4,7 +4,7 @@
 
 ## 共通投稿への拡張
 
-食べログと手入力を共通の `Post` として扱います。`kind` は `review` / `note` / `article`、`source` は `tabelog` / `manual` です。食べログの既存データと取得処理を保ち、手入力はEmDash管理画面の「手入力投稿」から作成します。
+食べログと手入力を共通の `Post` として扱います。`kind` は `review` / `note` / `article`、`source` は `tabelog` / `manual` です。食べログの既存データと取得処理を保ち、手入力はEmDash管理画面の「手入力投稿」から作成します。共通モデルは `Post`、アプリ内で書いた投稿の保存先は `entries`、食べログの保存処理は `TabelogReviewStore` として役割を分けています。
 
 共通一覧は `/posts` と `/reviews`、APIは `/api/posts` です。既存の `/api/reviews` は食べログ専用として維持します。セットアップ済み環境では公開前に手入力用の保存先の準備が必要です。[設計・導入・復旧手順](docs/posts.md)を参照してください。
 

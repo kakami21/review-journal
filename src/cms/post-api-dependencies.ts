@@ -1,5 +1,5 @@
 import { getEmDashCollection } from "emdash";
-import { manualPost, tabelogPost, comparePosts } from "../posts/post";
+import { entryPost, tabelogPost, comparePosts } from "../posts/post";
 import type { Post } from "../posts/post";
 import { createCmsReviewApiDependencies } from "./review-api-dependencies";
 
@@ -11,9 +11,9 @@ export function createCmsPostApiDependencies(bindings: AstroBindings) {
       const posts: Post[] = reviews.map(tabelogPost);
       let cursor: string | undefined;
       do {
-        const result = await getEmDashCollection("posts", { limit: 100, cursor, status: "published" });
+        const result = await getEmDashCollection("entries", { limit: 100, cursor, status: "published" });
         if (result.error) throw result.error;
-        posts.push(...result.entries.map(entry => manualPost(entry.data.id as string, entry.data)));
+        posts.push(...result.entries.map(entry => entryPost(entry.data.id as string, entry.data)));
         cursor = result.nextCursor;
       } while (cursor);
       return { posts: posts.sort(comparePosts), lastUpdatedAt };

@@ -6,9 +6,9 @@ import { EmDashRuntime } from "emdash/internal/plugin-test-runtime";
 import { SchemaRegistry } from "../node_modules/emdash/src/schema/registry";
 import { createDialect } from "../node_modules/emdash/src/db/sqlite";
 import { sqlite } from "emdash/db";
-import { createPlugin } from "../src/cms/post-policy";
-import { preparePosts } from "../scripts/prepare-posts.mjs";
-import { CmsReviewStore, reviewData } from "../src/cms/review-store";
+import { createPlugin } from "../src/cms/entry-policy";
+import { prepareEntries } from "../scripts/prepare-entries.mjs";
+import { TabelogReviewStore, reviewData } from "../src/cms/tabelog-review-store";
 import { createPlugin as reviewPolicy } from "../src/cms/review-policy.mjs";
 
 let runtime: EmDashRuntime;
@@ -49,35 +49,35 @@ beforeAll(async () => {
     revisions: await runtime.db.selectFrom("revisions").selectAll().execute(),
   });
   beforePreparation = await snapshot();
-  const definition = seed.collections.find((c: { slug: string }) => c.slug === "posts");
+  const definition = seed.collections.find((c: { slug: string }) => c.slug === "entries");
   const api = async (path: string, method = "GET", body?: any) => {
     if (path === "schema/collections" && method === "GET") return { items: await schema.listCollections() };
     if (path === "schema/collections" && method === "POST") return { item: await schema.createCollection(body) };
     if (path.endsWith("/fields") && method === "GET") {
-      const collection = await schema.getCollection("posts");
+      const collection = await schema.getCollection("entries");
       return { items: await schema.listFields(collection!.id) };
     }
-    if (path.endsWith("/fields") && method === "POST") return { item: await schema.createField("posts", body) };
-    if (path === "schema/collections/posts" && method === "PUT") return { item: await schema.updateCollection("posts", body) };
+    if (path.endsWith("/fields") && method === "POST") return { item: await schema.createField("entries", body) };
+    if (path === "schema/collections/entries" && method === "PUT") return { item: await schema.updateCollection("entries", body) };
     throw new Error(`予期しない操作: ${path}`);
   };
-  await preparePosts(api, definition);
-  await preparePosts(api, definition);
+  await prepareEntries(api, definition);
+  await prepareEntries(api, definition);
   afterPreparation = await snapshot();
 }, 30000);
 afterAll(async () => { if (runtime) await runtime.db.destroy(); });
 
 describe("実CMSでの手入力投稿", () => {
   it("初期設定を再実行しても同じコレクションと項目を保持する", async () => {
-    expect((await schema.listCollections()).map(c => c.slug).sort()).toEqual(["posts", "reviews"]);
-    const collection = await schema.getCollection("posts");
+    expect((await schema.listCollections()).map(c => c.slug).sort()).toEqual(["entries", "reviews"]);
+    const collection = await schema.getCollection("entries");
     expect((await schema.listFields(collection!.id)).length).toBe(9);
     expect(afterPreparation).toBe(beforePreparation);
   });
   it("既存食べログの再取り込みは公開版・編集中の版を上書きせず、手入力へ混入しない", async () => {
     const run = vi.fn(async () => ({ success: true }));
     const db = { prepare: () => ({ bind: () => ({ run }) }) } as unknown as D1Database;
-    const result = await new CmsReviewStore(runtime, db).importNew([
+    const result = await new TabelogReviewStore(runtime, db).importNew([
       review, ...["draft", "scheduled", "trash"].map(state => ({ ...review, id: `existing-${state}` })),
     ], data.written_at);
     expect(result.addedCount).toBe(0);
@@ -85,32 +85,32 @@ describe("実CMSでの手入力投稿", () => {
     expect(resultList.success && resultList.data.items.find(item => item.data.source_id === review.id)?.data.body).toBe("元の口コミ");
   });
   it("タイトルもスラッグも指定しないノートを作成・公開できる", async () => {
-    const created = await runtime.handleContentCreate("posts", { status: "draft", data: { body: "短いメモ" } });
+    const created = await runtime.handleContentCreate("entries", { status: "draft", data: { body: "短いメモ" } });
     expect(created.success).toBe(true);
     if (!created.success) throw new Error(JSON.stringify(created));
     expect(created.data.item.data).toMatchObject({ source: "manual", kind: "note" });
-    expect((await runtime.handleContentPublish("posts", created.data.item.id, {})).success).toBe(true);
+    expect((await runtime.handleContentPublish("entries", created.data.item.id, {})).success).toBe(true);
   });
   it.each(["note", "article", "review"])("%sを下書きから公開し、編集を公開版に混入させない", async kind => {
     const input = { ...data, kind, ...(kind === "article" ? { title: "記事" } : {}),
       ...(kind === "review" ? { restaurant_name: "店舗", review_month: "2026-10", rating: 4 } : {}) };
-    const created = await runtime.handleContentCreate("posts", { slug: kind, status: "draft", data: input });
+    const created = await runtime.handleContentCreate("entries", { slug: kind, status: "draft", data: input });
     expect(created.success).toBe(true);
     if (!created.success) throw new Error(JSON.stringify(created));
     const id = created.data.item.id;
-    expect((await runtime.handleContentPublish("posts", id, {})).success).toBe(true);
-    expect((await runtime.handleContentUpdate("posts", id, { data: { body: "編集中の本文" } })).success).toBe(true);
-    const published = await runtime.handleContentList("posts", { status: "published" });
+    expect((await runtime.handleContentPublish("entries", id, {})).success).toBe(true);
+    expect((await runtime.handleContentUpdate("entries", id, { data: { body: "編集中の本文" } })).success).toBe(true);
+    const published = await runtime.handleContentList("entries", { status: "published" });
     expect(published.success).toBe(true);
     if (published.success) expect(published.data.items.find(item => item.id === id)?.data.body).toBe(data.body);
   });
   it("口コミの不足項目は下書き保存できるが、公開・予約は拒否する", async () => {
-    const created = await runtime.handleContentCreate("posts", { slug: "incomplete", status: "draft", data: { ...data, kind: "review" } });
+    const created = await runtime.handleContentCreate("entries", { slug: "incomplete", status: "draft", data: { ...data, kind: "review" } });
     expect(created.success).toBe(true);
     if (!created.success) throw new Error(JSON.stringify(created));
     const id = created.data.item.id;
-    expect((await runtime.handleContentPublish("posts", id, {})).success).toBe(false);
-    const scheduled = await runtime.handleContentSchedule("posts", id, "2099-01-01T00:00:00Z");
+    expect((await runtime.handleContentPublish("entries", id, {})).success).toBe(false);
+    const scheduled = await runtime.handleContentSchedule("entries", id, "2099-01-01T00:00:00Z");
     expect(scheduled).toMatchObject({ success: false, error: { code: "SCHEDULE_REJECTED" } });
   });
 });

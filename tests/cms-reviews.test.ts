@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CmsReviewStore, publicReview, reviewData } from "../src/cms/review-store";
+import { TabelogReviewStore, publicReview, reviewData } from "../src/cms/tabelog-review-store";
 
 const review = { id: "B1", detailUrl: "https://tabelog.com/review/B1", name: "店舗",
   url: "https://tabelog.com/restaurant", title: null, body: "取得した本文", reviewDate: "2026-10", rating: 4, likeCount: 3 };
@@ -10,7 +10,7 @@ const cms = {
 const run = vi.fn();
 const bind = vi.fn(() => ({ run }));
 const db = { prepare: vi.fn(() => ({ bind })) } as unknown as D1Database;
-const store = () => new CmsReviewStore(cms as never, db);
+const store = () => new TabelogReviewStore(cms as never, db);
 
 beforeEach(() => {
   vi.clearAllMocks();

@@ -86,7 +86,7 @@
       "urlPattern": "/reviews#{slug}"
     },
     {
-      "slug": "posts",
+      "slug": "entries",
       "label": "手入力投稿",
       "labelSingular": "投稿",
       "titleField": "title",

@@ -7,7 +7,7 @@ import { reviewData } from "./review-data";
 export { reviewData, publicReview } from "./review-data";
 
 /** CMSライフサイクル経由で新規分だけ追加し、既存の編集・公開状態・ゴミ箱を保持する。 */
-export class CmsReviewStore {
+export class TabelogReviewStore {
   constructor(private readonly cms: Cms, private readonly db: D1Database) {}
 
   private async sourceIds() {
