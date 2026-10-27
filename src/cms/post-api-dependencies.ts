@@ -1,21 +1,18 @@
-import { getEmDashCollection } from "emdash";
-import { entryPost, tabelogPost, comparePosts } from "../posts/post";
+import { withEmDashRuntime } from "emdash/middleware";
+import { comparePosts } from "../posts/post";
 import type { Post } from "../posts/post";
-import { createCmsReviewApiDependencies } from "./review-api-dependencies";
+import { TabelogReviewStore } from "./tabelog-review-store";
+import { readPublicPostCatalog } from "./post-catalog";
+import { D1PostLikeStore } from "../infrastructure/d1-post-like-store";
 
 /** 公開版専用クエリを使い、保存先の違いを共通Postの境界に閉じ込める。 */
 export function createCmsPostApiDependencies(bindings: AstroBindings) {
   return {
     async getAll(): Promise<{ posts: Post[]; lastUpdatedAt: string | null }> {
-      const { reviews, lastUpdatedAt } = await createCmsReviewApiDependencies(bindings).getAll(bindings as unknown as CloudflareBindings);
-      const posts: Post[] = reviews.map(tabelogPost);
-      let cursor: string | undefined;
-      do {
-        const result = await getEmDashCollection("entries", { limit: 100, cursor, status: "published" });
-        if (result.error) throw result.error;
-        posts.push(...result.entries.map(entry => entryPost(entry.data.id as string, entry.data)));
-        cursor = result.nextCursor;
-      } while (cursor);
+      const records = await readPublicPostCatalog();
+      const states = await new D1PostLikeStore(bindings.DB).read(records.map(record => record.likeKey), null);
+      const posts = records.map(record => ({ ...record.post, likeCount: states.get(record.likeKey)!.likeCount }));
+      const lastUpdatedAt = await withEmDashRuntime(cms => new TabelogReviewStore(cms, bindings.DB).lastUpdatedAt());
       return { posts: posts.sort(comparePosts), lastUpdatedAt };
     },
   };

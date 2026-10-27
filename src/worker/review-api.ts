@@ -30,7 +30,9 @@ export function createReviewApi(dependencies: ReviewApiDependencies, posts?: Hon
   // 認証拒否などのHTTP例外はステータスとヘッダーを保持し、予期しない障害だけ共通500へ変換する。
   app.onError((error, c) => {
     if (error instanceof HTTPException) {
-      return error.getResponse();
+      const response = error.getResponse();
+      // 頻度制限などのHTTPエラーでも、直前のミドルウェアが指定したno-storeを保持する。
+      return c.newResponse(response.body, response);
     }
 
     console.error("Request failed", error);

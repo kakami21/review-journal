@@ -9,7 +9,7 @@
 | tabelog | review | 既存の食べログ取り込み |
 | manual | review / note / article | EmDash管理画面の「手入力投稿」 |
 
-共通項目は `id`・`kind`・`source`・`title`・`body`・`date`・`externalId`・`sourceUrl`。口コミだけが店舗名・店舗URL・評価・いいね数を持つ。手入力の `externalId`・`sourceUrl` は `null` とし、入力欄も設けない。
+共通項目は `id`・`kind`・`source`・`title`・`body`・`date`・`externalId`・`sourceUrl`。公開Postにはアプリの `likeCount` も付ける。口コミだけが店舗名・店舗URL・評価を持つ。手入力の `externalId`・`sourceUrl` は `null` とし、入力欄も設けない。
 
 - **review**：店舗名・訪問年月・0〜5の評価が公開に必要。店舗URLは任意。
 - **note**：本文だけで書き始められる。タイトルは任意。
@@ -48,7 +48,7 @@
 
 年月しか存在しない訪問日は `date.precision=month` とし、架空の日を付けない。手入力のノート・記事は `datetime` として投稿日時を使う。CMSの公開日時や取得日時を内容の日付へ流用しない。同月では年月だけの口コミを日時付き投稿の後に置き、前後不明の順序を捏造しない。同順位はIDで固定する。
 
-手入力は元サービスURLやいいね数を持たないため、カードでも省略する。本文はReactのテキスト表示を使い、HTMLとして実行しない。
+手入力は元サービスURLを持たないため、カードでも省略する。食べログのいいね数はCMSに保持し、カードには[アプリ内いいね](post-likes.md)を共通表示する。本文はReactのテキスト表示を使い、HTMLとして実行しない。
 
 ## 依存の受け渡し
 

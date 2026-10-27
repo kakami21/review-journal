@@ -9,10 +9,11 @@ const food = { id: "B1", detailUrl: "https://tabelog.com/reviews/B1", name: "店
   title: null, body: "口コミ", reviewDate: "2026-10", rating: 4, likeCount: 0 };
 
 describe("共通Postと種類別の条件", () => {
-  it("食べログは既存ID・本文・年月と0件のいいねを維持する", () => {
+  it("食べログは既存ID・本文・年月を維持し、取得元のいいね数を表示モデルへ混ぜない", () => {
     const post = tabelogPost(food);
     expect(post).toMatchObject({ id: "B1", kind: "review", source: "tabelog", body: food.body,
-      externalId: "B1", date: { value: "2026-10", precision: "month" }, review: { likeCount: 0 } });
+      externalId: "B1", date: { value: "2026-10", precision: "month" } });
+    expect(post.review).not.toHaveProperty("likeCount");
     expect(entryPost("B1", base).id).not.toBe(post.id);
   });
   it("ノートは店舗・外部ID・外部URL不要で本文の空白を保持する", () => {
@@ -21,7 +22,7 @@ describe("共通Postと種類別の条件", () => {
   });
   it("手入力の口コミは外部URLやいいね数を必要としない", () => {
     expect(entryPost("review", { ...base, kind: "review", restaurant_name: "店舗", review_month: "2026-09", rating: 0 }))
-      .toMatchObject({ kind: "review", source: "manual", review: { rating: 0, url: null, likeCount: null } });
+      .toMatchObject({ kind: "review", source: "manual", review: { rating: 0, url: null } });
   });
   it("記事はタイトルと本文で保存できる", () => {
     expect(entryPost("article", { ...base, kind: "article", title: "技術記事" }).kind).toBe("article");
@@ -51,9 +52,12 @@ describe("共通Postと種類別の条件", () => {
   it("共通カードは本文をHTMLとして実行せず、種類に応じた項目だけを表示する", () => {
     const html = renderToStaticMarkup(<PostCard post={entryPost("note", { ...base, body: "<script>alert(1)</script>" })} />);
     expect(html).toContain("&lt;script&gt;");
-    expect(html).not.toContain("いいね");
+    expect(html).toContain("いいね");
     expect(html).not.toContain("元の投稿");
-    expect(renderToStaticMarkup(<PostCard post={tabelogPost(food)} />)).toContain("いいね 0");
+    const liked = renderToStaticMarkup(<PostCard post={tabelogPost({ ...food, likeCount: 99 })} likeState={{ likeCount: 2, liked: true }} onLike={() => {}} />);
+    expect(liked).toContain("いいね 2");
+    expect(liked).not.toContain("99");
+    expect(liked).toContain('aria-pressed="true"');
   });
 });
 
