@@ -8,6 +8,9 @@ import { createDialect } from "../node_modules/emdash/src/db/sqlite";
 import { sqlite } from "emdash/db";
 import { createPlugin } from "../src/cms/entry-policy";
 import { prepareEntries } from "../scripts/prepare-entries.mjs";
+import { CompiledQuery } from "kysely";
+import { D1PostLikeStore } from "../src/infrastructure/d1-post-like-store";
+import { postLikeKey } from "../src/posts/post-likes";
 import { TabelogReviewStore, reviewData } from "../src/cms/tabelog-review-store";
 import { createPlugin as reviewPolicy } from "../src/cms/review-policy.mjs";
 
@@ -68,6 +71,27 @@ beforeAll(async () => {
 afterAll(async () => { if (runtime) await runtime.db.destroy(); });
 
 describe("実CMSでの手入力投稿", () => {
+  it("投稿の編集・スラッグ変更・非公開化・ゴミ箱・再公開でもアプリの票を保持する", async () => {
+    const migration = await readFile(new URL("../astro/migrations/0002_post_likes.sql", import.meta.url), "utf8");
+    await runtime.db.executeQuery(CompiledQuery.raw(migration));
+    const db = { prepare: (sql: string) => ({ bind: (...parameters: unknown[]) => ({
+      all: async () => ({ success: true, results: (await runtime.db.executeQuery(CompiledQuery.raw(sql, parameters))).rows }),
+      run: async () => { await runtime.db.executeQuery(CompiledQuery.raw(sql, parameters)); return { success: true }; },
+    }) }) } as unknown as D1Database;
+    const likes = new D1PostLikeStore(db);
+    const created = await runtime.handleContentCreate("entries", { slug: "likes-lifecycle", status: "draft", data });
+    if (!created.success) throw new Error(JSON.stringify(created));
+    const id = created.data.item.id;
+    const key = postLikeKey("entries", id);
+    expect((await runtime.handleContentPublish("entries", id, {})).success).toBe(true);
+    await likes.set(key, "visitor", true);
+    expect((await runtime.handleContentUpdate("entries", id, { slug: "renamed", data: { title: "編集したタイトル", body: "編集した本文" } })).success).toBe(true);
+    expect((await runtime.handleContentUnpublish("entries", id, {})).success).toBe(true);
+    expect((await runtime.handleContentDelete("entries", id)).success).toBe(true);
+    expect((await runtime.handleContentRestore("entries", id)).success).toBe(true);
+    expect((await runtime.handleContentPublish("entries", id, {})).success).toBe(true);
+    expect((await likes.read([key], "visitor")).get(key)).toEqual({ likeCount: 1, liked: true });
+  });
   it("初期設定を再実行しても同じコレクションと項目を保持する", async () => {
     expect((await schema.listCollections()).map(c => c.slug).sort()).toEqual(["entries", "reviews"]);
     const collection = await schema.getCollection("entries");

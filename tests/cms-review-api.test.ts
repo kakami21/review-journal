@@ -27,7 +27,7 @@ import { ALL } from "../src/pages/api/[...path]";
 const timestamp = "2026-10-26T00:00:00.000Z";
 const review = { id: "tabelog-1", name: "店舗", url: "https://tabelog.com/restaurant/1/",
   detailUrl: "https://tabelog.com/rvwdtl/1/", title: null, body: "公開本文", reviewDate: "2026-10", rating: 4, likeCount: 3 };
-const entry = (id: string, month: string) => ({ data: { source_id: id, restaurant_name: review.name,
+const entry = (id: string, month: string) => ({ data: { id: `cms-${id}`, source_id: id, restaurant_name: review.name,
   restaurant_url: review.url, source_url: review.detailUrl, title: null, body: review.body,
   review_month: month, rating: 4, like_count: 3 } });
 
@@ -51,6 +51,9 @@ afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
 
 describe("Astro・CMSのHTTP契約", () => {
   it("共通一覧は両方の保存先の公開版を全ページ読み、種類と取得元を分けて返す", async () => {
+    mocks.bind.mockImplementation((keys) => ({ run: mocks.run, all: async () => ({ success: true,
+      results: JSON.parse(keys).map((key: string) => ({ post_key: key, like_count: 7, liked: 0 })),
+    }) }));
     const manual = { id: "cms-memo", source: "manual", kind: "note", slug: "memo", body: "手入力の公開本文", written_at: "2026-10-27T00:00:00Z" };
     mocks.published.mockImplementation(async (collection, options) => {
       expect(options.status).toBe("published");
@@ -63,6 +66,8 @@ describe("Astro・CMSのHTTP契約", () => {
     expect(result.posts.map((post: { source: string; kind: string }) => [post.source, post.kind])).toEqual([["manual", "note"], ["tabelog", "review"]]);
     expect(result.posts[0]).toMatchObject({ id: "manual-cms-memo", body: manual.body, sourceUrl: null });
     expect(result.posts[1].id).toBe(review.id);
+    expect(result.posts.every((post: { likeCount: number }) => post.likeCount === 7)).toBe(true);
+    expect(result.posts[1].review).not.toHaveProperty("likeCount");
     expect(result.lastUpdatedAt).toBe(timestamp);
     expect(mocks.cms.handleContentList).not.toHaveBeenCalled();
     expect(mocks.cms.handleContentCreate).not.toHaveBeenCalled();

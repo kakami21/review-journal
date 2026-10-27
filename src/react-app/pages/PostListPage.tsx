@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
-import type { Post, PostKind } from "../../posts/post";
+import { useEffect, useRef, useState } from "react";
+import type { Post, PostContent, PostKind } from "../../posts/post";
+import type { PostLikeState } from "../../posts/post-likes";
+import { loadLikeStates, updatePostLike } from "../post-likes-client";
 
 const kindLabels = { review: "口コミ", note: "ノート", article: "記事" };
 
 /** 同じカードの枠を使い、店舗・評価だけを内容の種類に応じて追加する。 */
-export function PostCard({ post }: { post: Post }) {
+export function PostCard({ post, likeState, likeCount, pending = false, onLike }: {
+  post: PostContent; likeState?: PostLikeState; likeCount?: number; pending?: boolean; onLike?: () => void;
+}) {
   const date = post.date.precision === "month"
     ? post.date.value.replace("-", "/")
     : new Intl.DateTimeFormat("ja-JP", { timeZone: "Asia/Tokyo", dateStyle: "medium", timeStyle: "short" }).format(new Date(post.date.value));
@@ -23,7 +27,10 @@ export function PostCard({ post }: { post: Post }) {
       {post.body && <p className="whitespace-pre-wrap break-words leading-relaxed">{post.body}</p>}
       <div className="flex flex-wrap justify-between gap-3 text-sm opacity-60">
         <time dateTime={post.date.value}>{date} {post.date.label === "visited" ? "訪問" : "投稿"}</time>
-        {post.kind === "review" && post.review.likeCount !== null && <span>いいね {post.review.likeCount}</span>}
+        <button type="button" className="btn btn-sm" disabled={pending || !likeState || !onLike}
+          aria-label={likeState?.liked ? "いいねを取り消す" : "いいね"} aria-pressed={likeState?.liked === true} onClick={onLike}>
+          {likeState?.liked ? "♥" : "♡"} いいね {likeState ? likeState.likeCount : likeCount}
+        </button>
         {post.sourceUrl && <a className="link" href={post.sourceUrl} target="_blank" rel="noreferrer">元の投稿</a>}
       </div>
     </div>
@@ -37,6 +44,11 @@ export function PostListPage() {
   const [error, setError] = useState("");
   const [kind, setKind] = useState<PostKind | "all">("all");
   const [sort, setSort] = useState<"date" | "rating">("date");
+  const [likeStates, setLikeStates] = useState<Record<string, PostLikeState>>({});
+  const [pendingLikes, setPendingLikes] = useState<Set<string>>(new Set());
+  const [likeError, setLikeError] = useState("");
+  const likeVersion = useRef(0);
+  const pendingLikeIds = useRef(new Set<string>());
   useEffect(() => {
     const controller = new AbortController();
     async function load() {
@@ -52,6 +64,44 @@ export function PostListPage() {
     void load();
     return () => controller.abort();
   }, []);
+  useEffect(() => {
+    if (!posts) return;
+    const controller = new AbortController();
+    const load = async () => {
+      const version = likeVersion.current;
+      try {
+        const states = await loadLikeStates(posts.map(post => post.id), controller.signal);
+        // 更新前に始まった取得結果で、成功した票の状態を巻き戻さない。
+        if (version !== likeVersion.current || pendingLikeIds.current.size) return;
+        setLikeStates(states); setLikeError("");
+      } catch {
+        if (!controller.signal.aborted && version === likeVersion.current) setLikeError("いいねの状態を取得できません。再読み込みしてください。");
+      }
+    };
+    void load();
+    const focused = () => { void load(); };
+    window.addEventListener("focus", focused);
+    return () => { controller.abort(); window.removeEventListener("focus", focused); };
+  }, [posts]);
+
+  async function like(id: string) {
+    if (pendingLikeIds.current.has(id) || !likeStates[id]) return;
+    pendingLikeIds.current.add(id);
+    likeVersion.current++;
+    setPendingLikes(current => new Set(current).add(id));
+    setLikeError("");
+    try {
+      // 同じタブでも連打を抑え、全タブでCookie発行が終わってから票を送る。
+      const updated = await updatePostLike(id, !likeStates[id].liked);
+      setLikeStates(current => ({ ...current, [id]: updated }));
+    } catch (e) {
+      setLikeError(e instanceof Error ? e.message : "いいねの操作に失敗しました。");
+    } finally {
+      pendingLikeIds.current.delete(id);
+      likeVersion.current++;
+      setPendingLikes(current => { const next = new Set(current); next.delete(id); return next; });
+    }
+  }
   if (error) return <p role="alert">{error}</p>;
   if (!posts) return <p>読み込み中...</p>;
   const visible = posts.filter(post => kind === "all" || post.kind === kind);
@@ -74,7 +124,10 @@ export function PostListPage() {
         </select></label>}
       </div>
       {visible.length === 0 && <p>公開された投稿はまだありません。</p>}
-      <ul className="space-y-4">{visible.map(post => <li key={post.id} id={post.id}><PostCard post={post} /></li>)}</ul>
+      {likeError && <p role="alert" className="mb-4">{likeError}</p>}
+      <ul className="space-y-4">{visible.map(post => <li key={post.id} id={post.id}>
+        <PostCard post={post} likeState={likeStates[post.id]} likeCount={post.likeCount} pending={pendingLikes.has(post.id)} onLike={() => { void like(post.id); }} />
+      </li>)}</ul>
     </div>
   </main>;
 }

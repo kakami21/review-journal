@@ -12,7 +12,7 @@ export function reviewData(review: Review, importedAt: string): CmsReviewData {
   return {
     source_id: post.externalId, source_url: post.sourceUrl, restaurant_name: post.review.name,
     restaurant_url: post.review.url, title: post.title, body: post.body,
-    review_month: post.date.value, rating: post.review.rating, like_count: post.review.likeCount,
+    review_month: post.date.value, rating: post.review.rating, like_count: review.likeCount,
     imported_at: importedAt,
   };
 }

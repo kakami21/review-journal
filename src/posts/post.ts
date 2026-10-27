@@ -11,12 +11,13 @@ type PostBase = {
 };
 export type TabelogPost = PostBase & {
   kind: "review"; source: "tabelog"; externalId: string; sourceUrl: string;
-  review: { name: string; url: string; rating: number; likeCount: number };
+  review: { name: string; url: string; rating: number };
 };
-export type Post = TabelogPost | PostBase & { source: "manual"; externalId: null; sourceUrl: null } & (
-  | { kind: "review"; review: { name: string; url: string | null; rating: number; likeCount: number | null } }
+export type PostContent = TabelogPost | PostBase & { source: "manual"; externalId: null; sourceUrl: null } & (
+  | { kind: "review"; review: { name: string; url: string | null; rating: number } }
   | { kind: "note" | "article"; review: null }
 );
+export type Post = PostContent & { likeCount: number };
 
 const month = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
 const optionalText = z.string().nullish();
@@ -45,12 +46,12 @@ export function tabelogPost(review: Review): TabelogPost {
     id: review.id, kind: "review", source: "tabelog", externalId: review.id, sourceUrl: review.detailUrl,
     title: review.title, body: review.body,
     date: { value: review.reviewDate, precision: "month", label: "visited" },
-    review: { name: review.name, url: review.url, rating: review.rating, likeCount: review.likeCount },
+    review: { name: review.name, url: review.url, rating: review.rating },
   };
 }
 
 /** 手入力の公開条件を検証し、食べログのIDと衝突しないCMS由来の識別子を付ける。 */
-export function entryPost(id: string, input: Record<string, unknown>): Post {
+export function entryPost(id: string, input: Record<string, unknown>): PostContent {
   const data = entryDataSchema.parse(input);
   const common = {
     id: `manual-${z.string().min(1).parse(id)}`, source: "manual" as const, externalId: null, sourceUrl: null,
@@ -58,14 +59,14 @@ export function entryPost(id: string, input: Record<string, unknown>): Post {
   };
   if (data.kind === "review") return {
     ...common, kind: "review", date: { value: data.review_month!, precision: "month", label: "visited" },
-    review: { name: data.restaurant_name!, url: data.restaurant_url || null, rating: data.rating!, likeCount: null },
+    review: { name: data.restaurant_name!, url: data.restaurant_url || null, rating: data.rating! },
   };
   return { ...common, kind: data.kind, date: { value: new Date(data.written_at).toISOString(), precision: "datetime", label: "written" }, review: null };
 }
 
 /** 月だけの口コミは同月の日時付き投稿の後に置き、同順位はIDで固定する。 */
-export function comparePosts(a: Post, b: Post): number {
-  const monthOf = (post: Post) => post.date.precision === "month" ? post.date.value
+export function comparePosts(a: PostContent, b: PostContent): number {
+  const monthOf = (post: PostContent) => post.date.precision === "month" ? post.date.value
     : new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Tokyo", year: "numeric", month: "2-digit" }).format(new Date(post.date.value));
   const monthOrder = monthOf(b).localeCompare(monthOf(a));
   if (monthOrder) return monthOrder;

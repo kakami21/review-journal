@@ -8,6 +8,8 @@
 
 共通一覧は `/posts` と `/reviews`、APIは `/api/posts` です。既存の `/api/reviews` は食べログ専用として維持します。セットアップ済み環境では公開前に手入力用の保存先の準備が必要です。[設計・導入・復旧手順](docs/posts.md)を参照してください。
 
+すべての公開Postにログイン不要のアプリ内いいねを提供します。食べログの取得値と票を分離し、同じブラウザからは1投稿1票・取り消し可能です。公開前にアプリ用D1マイグレーションと署名鍵の設定が必要です。[いいねの仕様・導入手順](docs/post-likes.md)を参照してください。
+
 - 画面：React、Vite、Tailwind CSS、daisyUI
 - API：TypeScript、Hono、Cloudflare Workers
 - 口コミ収集：Cloudflare Browser Run

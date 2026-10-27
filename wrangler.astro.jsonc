@@ -41,5 +41,20 @@
   ],
   "observability": {
     "enabled": true
-  }
+  },
+  "secrets": {
+    "required": [
+      "POST_LIKE_SECRET"
+    ]
+  },
+  "ratelimits": [
+    {
+      "name": "POST_LIKE_LIMITER",
+      "namespace_id": "47001",
+      "simple": {
+        "limit": 30,
+        "period": 60
+      }
+    }
+  ]
 }
