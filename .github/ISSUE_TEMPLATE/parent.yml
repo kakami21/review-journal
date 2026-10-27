@@ -8,7 +8,7 @@ body:
     id: purpose
     attributes:
       label: 目的
-      description: このテーマで実現することと、その理由。
+      description: 全体で実現したいことと、その理由を、身近な言葉で2文を目安に書く。
       placeholder: …を実現するため、…を整える
     validations:
       required: true
@@ -16,7 +16,7 @@ body:
     id: scope
     attributes:
       label: 対象範囲
-      description: 対象を明確にし、必要に応じて対象外も記載する。
+      description: どこまで対応するかを短く書く。必要なら対象外も書く。子Issueの説明は繰り返さない。
       placeholder: "対象：…\n対象外：…"
     validations:
       required: true
@@ -24,7 +24,7 @@ body:
     id: acceptance
     attributes:
       label: 完了条件
-      description: テーマ全体の完了を判断できる条件をチェックリストで記載する。
+      description: 全体として何ができたら終わりかを、確認できる言葉でチェックリストにする。
       placeholder: "- [ ] …が利用できる\n- [ ] …を検証する"
     validations:
       required: true
@@ -32,6 +32,6 @@ body:
     id: context
     attributes:
       label: 補足
-      description: 分割する作業、関連Issue、未決定事項など。不要なら省略可。
+      description: 子Issueへのリンク、未決定事項、必要な技術詳細を書く。子Issueの説明は繰り返さず、長い説明は別資料へのリンクにする。不要なら省略可。
     validations:
       required: false
