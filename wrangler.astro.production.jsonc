@@ -44,6 +44,13 @@
       "migrations_dir": "./astro/migrations"
     }
   ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "dining-archive-media",
+      "remote": true
+    }
+  ],
   "observability": {
     "enabled": true
   },

@@ -25,6 +25,9 @@ export function PostCard({ post, likeState, likeCount, pending = false, onLike }
       </div>}
       {post.title && <h2 className="font-bold">{post.title}</h2>}
       {post.body && <p className="whitespace-pre-wrap break-words leading-relaxed">{post.body}</p>}
+      {post.source === "manual" && post.photo && <img src={post.photo.url} alt={post.photo.alt}
+        width={post.photo.width} height={post.photo.height} loading="lazy" decoding="async"
+        className="h-auto max-h-[32rem] w-full rounded-lg object-contain" />}
       <div className="flex flex-wrap justify-between gap-3 text-sm opacity-60">
         <time dateTime={post.date.value}>{date} {post.date.label === "visited" ? "訪問" : "投稿"}</time>
         <button type="button" className="btn btn-sm" disabled={pending || !likeState || !onLike}

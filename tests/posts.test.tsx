@@ -9,6 +9,21 @@ const food = { id: "B1", detailUrl: "https://tabelog.com/reviews/B1", name: "店
   title: null, body: "口コミ", reviewDate: "2026-10", rating: 4, likeCount: 0 };
 
 describe("共通Postと種類別の条件", () => {
+  it("添付写真を本文の下に表示し、写真なしでは画像枠を出さない", () => {
+    const photo = { id: "photo", alt: '海辺の風景', width: 1200, height: 800, meta: { storageKey: "photo.jpg" } };
+    const post = entryPost("photo", { ...base, photo });
+    const html = renderToStaticMarkup(<PostCard post={post} />);
+    expect(html).toContain('src="/_emdash/api/media/file/photo.jpg"');
+    expect(html).toContain('alt="海辺の風景"');
+    expect(html).toContain('loading="lazy"');
+    expect(html.indexOf('2行目')).toBeLessThan(html.indexOf('<img'));
+    expect(renderToStaticMarkup(<PostCard post={entryPost("none", base)} />)).not.toContain('<img');
+    expect(renderToStaticMarkup(<PostCard post={tabelogPost(food)} />)).not.toContain('<img');
+  });
+  it("画像URLのスクリプトと保存先のない画像を拒否する", () => {
+    expect(() => entryPost("invalid", { ...base, photo: { id: "x", src: "javascript:alert(1)" } })).toThrow();
+    expect(() => entryPost("invalid", { ...base, photo: { id: "x" } })).toThrow();
+  });
   it("食べログは既存ID・本文・年月を維持し、取得元のいいね数を表示モデルへ混ぜない", () => {
     const post = tabelogPost(food);
     expect(post).toMatchObject({ id: "B1", kind: "review", source: "tabelog", body: food.body,

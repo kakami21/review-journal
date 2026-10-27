@@ -7,6 +7,7 @@ type PostBase = {
   id: string;
   title: string | null;
   body: string | null;
+  photo?: { url: string; alt: string; width?: number; height?: number } | null;
   date: { value: string; precision: "month" | "datetime"; label: "visited" | "written" };
 };
 export type TabelogPost = PostBase & {
@@ -21,8 +22,16 @@ export type Post = PostContent & { likeCount: number };
 
 const month = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
 const optionalText = z.string().nullish();
+// CMSの画像は保存キーから標準配信URLを作り、外部URL指定はHTTP(S)だけを許可する。
+const photoSchema = z.object({
+  id: z.string(), alt: z.string().optional(),
+  width: z.number().positive().optional(), height: z.number().positive().optional(),
+  src: z.url({ protocol: /^https?$/ }).optional(),
+  meta: z.object({ storageKey: z.string().min(1).optional() }).optional(),
+}).refine(photo => Boolean(photo.meta?.storageKey || photo.src), "写真の保存先がありません。");
 const entryDataSchema = z.object({
   source: z.literal("manual"), kind: z.enum(postKinds),
+  photo: photoSchema.nullish(),
   title: optionalText, body: z.string().refine(value => value.trim().length > 0, "本文を入力してください。"),
   written_at: z.iso.datetime({ offset: true }).or(z.iso.datetime({ offset: true, precision: -1 })),
   restaurant_name: optionalText, restaurant_url: z.union([z.url({ protocol: /^https?$/ }), z.literal("")]).nullish(),
@@ -56,6 +65,12 @@ export function entryPost(id: string, input: Record<string, unknown>): PostConte
   const common = {
     id: `manual-${z.string().min(1).parse(id)}`, source: "manual" as const, externalId: null, sourceUrl: null,
     title: data.title || null, body: data.body,
+    photo: data.photo ? {
+      url: data.photo.meta?.storageKey
+        ? `/_emdash/api/media/file/${data.photo.meta.storageKey.split("/").map(encodeURIComponent).join("/")}`
+        : data.photo.src!,
+      alt: data.photo.alt ?? "", width: data.photo.width, height: data.photo.height,
+    } : null,
   };
   if (data.kind === "review") return {
     ...common, kind: "review", date: { value: data.review_month!, precision: "month", label: "visited" },

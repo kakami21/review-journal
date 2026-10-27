@@ -162,6 +162,20 @@
             "min": 0,
             "max": 5
           }
+        },
+        {
+          "slug": "photo",
+          "label": "投稿の写真（任意・1枚）",
+          "type": "image",
+          "validation": {
+            "allowedMimeTypes": [
+              "image/jpeg",
+              "image/png",
+              "image/webp",
+              "image/avif",
+              "image/gif"
+            ]
+          }
         }
       ]
     }

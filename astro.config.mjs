@@ -4,7 +4,7 @@ import cloudflare from "@astrojs/cloudflare";
 import react from "@astrojs/react";
 import tailwindcss from "@tailwindcss/vite";
 import emdash from "emdash/astro";
-import { d1 } from "@emdash-cms/cloudflare";
+import { d1, r2 } from "@emdash-cms/cloudflare";
 
 // 本番は明示したビルドだけで選択し、通常の開発は検証用Workerと開発用リモートD1を使う。
 const production = process.env.ASTRO_ENV === "production";
@@ -22,6 +22,7 @@ export default defineConfig({
   }),
   integrations: [react(), emdash({
     database: d1({ binding: "DB" }),
+    storage: r2({ binding: "MEDIA" }),
     migrations: { runtime: production ? "check" : "auto", dev: "auto" },
     registry: false,
     fonts: false,

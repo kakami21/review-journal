@@ -78,3 +78,7 @@ DIライブラリは追加せず、既存のファクトリーと関数引数を
 - [稼働済みサイトのスキーマ変更](https://docs.emdashcms.com/deployment/schema-evolution/)
 - [EmDash REST API](https://docs.emdashcms.com/reference/rest-api/)
 - 導入済みEmDash 1.3.1の `SchemaRegistry.updateField`、`createCollection` とコンテンツ公開ポリシーの実装。
+
+## 任意の写真
+
+手入力投稿の共通カードには任意の写真を1枚添付できる。仕様とR2・既存サイトへの項目追加は[投稿写真の手順](post-photos.md)を参照する。
