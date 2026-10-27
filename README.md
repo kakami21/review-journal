@@ -117,7 +117,7 @@ Astro・EmDashの管理画面へパスキーでログインし、「口コミの
 ## ビルドとデプロイ
 
 ```bash
-npm run build:astro
+npm run build:staging
 npm run build:production
 ```
 
