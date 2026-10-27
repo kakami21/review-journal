@@ -41,13 +41,13 @@
     "typecheck": "tsc -p tsconfig.app.json && tsc -p tsconfig.node.json && tsc -p tsconfig.worker.json",
     "dev:astro": "astro dev",
     "check:astro": "astro check --tsconfig astro/tsconfig.json",
-    "build:astro": "npm run check:astro && astro build",
-    "preview:astro": "npm run build:astro && astro preview",
-    "deploy:astro": "npm run build:astro && wrangler deploy --config dist/astro/server/wrangler.json",
+    "build:staging": "npm run check:astro && astro build",
+    "preview:astro": "npm run build:staging && astro preview",
+    "deploy:astro": "npm run build:staging && wrangler deploy --config dist/astro/server/wrangler.json",
     "test": "vitest run",
     "test:cms": "node tests/cms.integration.mjs",
     "types:astro": "wrangler types --config wrangler.astro.jsonc --env-interface AstroBindings --include-runtime=false --strict-vars=false astro/cloudflare.d.ts",
-    "build:production": "ASTRO_ENV=production npm run build:astro"
+    "build:production": "ASTRO_ENV=production npm run check:astro && ASTRO_ENV=production astro build"
   },
   "overrides": {
     "miniflare": {

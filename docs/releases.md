@@ -57,7 +57,7 @@ Artifactsの保存・取得はGitHub公式の [upload-artifact](https://github.c
 ReleaseはCMSスキーマの適用済み状態を `emdash migrate --check` で確認してから公開する。GitHubのトークンには対象アカウントのD1読み取り権限も必要。未適用なら公開前に停止する。スキーマ適用は自動化しない。
 
 ```sh
-ASTRO_ENV=production npm run build:astro
+npm run build:production
 npx emdash migrate --manifest astro/.emdash/migrations.json --wrangler-config wrangler.astro.production.jsonc --status
 npx emdash migrate --manifest astro/.emdash/migrations.json --wrangler-config wrangler.astro.production.jsonc
 npx emdash migrate --manifest astro/.emdash/migrations.json --wrangler-config wrangler.astro.production.jsonc --check
@@ -93,7 +93,7 @@ npx wrangler rollback <正常だったWorkerバージョンID> --config wrangler
 
 ```sh
 npm test
-npm run build:astro
+npm run build:staging
 npm run build
 npm run build:production
 node scripts/release.mjs check-production dist/astro-production/server/wrangler.json

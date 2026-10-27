@@ -19,7 +19,7 @@
 ```sh
 npm run dev:astro
 npm run check:astro
-npm run build:astro
+npm run build:staging
 npm run preview:astro
 ```
 
@@ -29,12 +29,12 @@ APIの参照確認は `/api/health` と `/api/reviews` を使う。手動取り�
 
 取り込みの認証はCMSのパスキー認証に一本化した。Basic認証のユーザー名・パスワード設定は不要。Brunoは参照APIと旧APIの廃止確認に使う（[API確認手順](bruno.md)）。
 
-`build:astro` は `dist/astro/` に出力する。既存の `npm run build` は `dist/` を作り直すため、Astroのプレビュー・公開前は必ず `build:astro` を実行する。
+`build:staging` は `dist/astro/` に出力する。既存の `npm run build` は `dist/` を作り直すため、Astroのプレビュー・公開前は必ず `build:staging` を実行する。
 
 ## 検証用Workerへの公開
 
 ```sh
-npm run build:astro
+npm run build:staging
 npx wrangler deploy --config dist/astro/server/wrangler.json --dry-run
 npm run deploy:astro
 ```
