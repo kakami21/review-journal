@@ -6,7 +6,7 @@ export function createPlugin() {
   const validate = async (event: { collection: string; content: Record<string, unknown> }) => {
     if (event.collection !== "entries") return;
     try { entryPost("validation", event.content.data as Record<string, unknown>); }
-    catch { return { cancel: true as const, reason: "本文・投稿日時を確認してください。口コミには店舗名・訪問年月・0〜5の評価、記事にはタイトルが必要です。" }; }
+    catch { return { cancel: true as const, reason: "本文・投稿日時・添付写真の保存先を確認してください。口コミには店舗名・訪問年月・0〜5の評価、記事にはタイトルが必要です。" }; }
   };
   return definePlugin({
     id: "entry-policy", version: "1.0.0",

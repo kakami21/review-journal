@@ -64,13 +64,46 @@ beforeAll(async () => {
     if (path === "schema/collections/entries" && method === "PUT") return { item: await schema.updateCollection("entries", body) };
     throw new Error(`予期しない操作: ${path}`);
   };
+  // 写真項目のない既存サイトを再現し、公開済み投稿を保持したまま項目を追加する。
+  await prepareEntries(api, { ...definition, fields: definition.fields.filter((field: { slug: string }) => field.slug !== "photo") });
+  const legacyEntry = await runtime.handleContentCreate("entries", { slug: "legacy-no-photo", status: "draft", data });
+  if (!legacyEntry.success) throw new Error(JSON.stringify(legacyEntry));
+  expect((await runtime.handleContentPublish("entries", legacyEntry.data.item.id, {})).success).toBe(true);
+  beforePreparation = await snapshot();
+  const entriesBefore = await runtime.db.selectFrom("ec_entries" as never).selectAll().execute();
   await prepareEntries(api, definition);
   await prepareEntries(api, definition);
+  const entriesAfter = await runtime.db.selectFrom("ec_entries" as never).selectAll().execute();
+  expect(entriesAfter.map(({ photo: _photo, ...entry }: any) => entry)).toEqual(entriesBefore);
   afterPreparation = await snapshot();
 }, 30000);
 afterAll(async () => { if (runtime) await runtime.db.destroy(); });
 
 describe("実CMSでの手入力投稿", () => {
+  it("写真なしの公開後に写真を追加・差し替え・取り外しでき、編集は再公開まで反映しない", async () => {
+    const created = await runtime.handleContentCreate("entries", { status: "draft", data });
+    if (!created.success) throw new Error(JSON.stringify(created));
+    const id = created.data.item.id;
+    expect((await runtime.handleContentPublish("entries", id, {})).success).toBe(true);
+    const publishedPhoto = async () => {
+      const result = await runtime.handleContentList("entries", { status: "published" });
+      if (!result.success) throw new Error(JSON.stringify(result));
+      return result.data.items.find(item => item.id === id)?.data.photo;
+    };
+    for (const photo of [
+      { id: "photo-1", provider: "local", width: 1200, height: 800, mimeType: "image/jpeg", filename: "first.jpg", alt: "最初の写真", meta: { storageKey: "first.jpg" } },
+      { id: "photo-2", provider: "local", width: 800, height: 1200, mimeType: "image/jpeg", filename: "second.jpg", alt: "差し替え写真", meta: { storageKey: "second.jpg" } },
+      null,
+    ]) {
+      const before = await publishedPhoto();
+      const updated = await runtime.handleContentUpdate("entries", id, { data: { photo } });
+      expect(updated.success, JSON.stringify(updated)).toBe(true);
+      expect(await publishedPhoto()).toEqual(before);
+      expect((await runtime.handleContentPublish("entries", id, {})).success).toBe(true);
+      if (photo) expect(await publishedPhoto()).toMatchObject(photo);
+      if (photo === null) expect(await publishedPhoto()).toBeUndefined();
+    }
+  });
   it("投稿の編集・スラッグ変更・非公開化・ゴミ箱・再公開でもアプリの票を保持する", async () => {
     const migration = await readFile(new URL("../astro/migrations/0002_post_likes.sql", import.meta.url), "utf8");
     await runtime.db.executeQuery(CompiledQuery.raw(migration));
@@ -95,7 +128,7 @@ describe("実CMSでの手入力投稿", () => {
   it("初期設定を再実行しても同じコレクションと項目を保持する", async () => {
     expect((await schema.listCollections()).map(c => c.slug).sort()).toEqual(["entries", "reviews"]);
     const collection = await schema.getCollection("entries");
-    expect((await schema.listFields(collection!.id)).length).toBe(9);
+    expect((await schema.listFields(collection!.id)).length).toBe(10);
     expect(afterPreparation).toBe(beforePreparation);
   });
   it("既存食べログの再取り込みは公開版・編集中の版を上書きせず、手入力へ混入しない", async () => {

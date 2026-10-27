@@ -39,6 +39,13 @@
       "migrations_dir": "./astro/migrations"
     }
   ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "table-notes-media-development",
+      "remote": true
+    }
+  ],
   "observability": {
     "enabled": true
   },
