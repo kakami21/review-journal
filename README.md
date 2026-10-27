@@ -2,6 +2,12 @@
 
 本人が食べログへ投稿した口コミを収集し、一覧で確認する個人用アプリです。
 
+## 共通投稿への拡張
+
+食べログと手入力を共通の `Post` として扱います。`kind` は `review` / `note` / `article`、`source` は `tabelog` / `manual` です。食べログの既存データと取得処理を保ち、手入力はEmDash管理画面の「手入力投稿」から作成します。
+
+共通一覧は `/posts` と `/reviews`、APIは `/api/posts` です。既存の `/api/reviews` は食べログ専用として維持します。セットアップ済み環境では公開前に手入力用の保存先の準備が必要です。[設計・導入・復旧手順](docs/posts.md)を参照してください。
+
 - 画面：React、Vite、Tailwind CSS、daisyUI
 - API：TypeScript、Hono、Cloudflare Workers
 - 口コミ収集：Cloudflare Browser Run
@@ -153,7 +159,7 @@ npm run build:production
 | `src/worker/index.ts` | APIルート、エラー処理、Scheduled Handlerを定義するWorkerの入口 |
 | `src/react-app/main.tsx` | Reactアプリを初期化し、ルーターを有効にする |
 | `src/react-app/App.tsx` | `/reviews`へのルーティングを定義する |
-| `src/react-app/pages/ReviewListPage.tsx` | APIから口コミを取得し、訪問年月順または評価順で一覧表示する |
+| `src/react-app/pages/PostListPage.tsx` | 共通APIから投稿を取得し、種類の絞り込みと口コミの評価順を提供する |
 | `src/react-app/styles.css` | Tailwind CSSとdaisyUIを読み込み、画面全体のスタイルを定義する |
 | `wrangler.jsonc` | Worker、Browser Run、D1、静的ファイル配信の設定を管理する |
 | `package.json` | npmコマンドと利用パッケージを管理する |

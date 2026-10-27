@@ -7,8 +7,9 @@ export type ReviewApiDependencies = {
 };
 
 /** 公開APIのHTTP応答を共通化し、現行D1とCMSの保存処理は呼び出し側で選ぶ。 */
-export function createReviewApi(dependencies: ReviewApiDependencies) {
+export function createReviewApi(dependencies: ReviewApiDependencies, posts?: Hono<{ Bindings: CloudflareBindings }>) {
   const app = new Hono<{ Bindings: CloudflareBindings }>();
+  if (posts) app.route("/", posts);
 
   // GETでWorkerの稼働を確認し、キャッシュせずstatus: okを返す。
   app.get("/api/health", (c) => {

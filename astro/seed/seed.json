@@ -84,6 +84,86 @@
         }
       ],
       "urlPattern": "/reviews#{slug}"
+    },
+    {
+      "slug": "posts",
+      "label": "手入力投稿",
+      "labelSingular": "投稿",
+      "titleField": "title",
+      "routable": false,
+      "supports": [
+        "drafts",
+        "revisions",
+        "scheduling"
+      ],
+      "urlPattern": "/posts#manual-{id}",
+      "fields": [
+        {
+          "slug": "source",
+          "label": "取得元",
+          "type": "select",
+          "required": true,
+          "defaultValue": "manual",
+          "validation": {
+            "options": [
+              "manual"
+            ]
+          }
+        },
+        {
+          "slug": "kind",
+          "label": "種類",
+          "type": "select",
+          "required": true,
+          "defaultValue": "note",
+          "validation": {
+            "options": [
+              "review",
+              "note",
+              "article"
+            ]
+          }
+        },
+        {
+          "slug": "title",
+          "label": "タイトル（記事は必須）",
+          "type": "string"
+        },
+        {
+          "slug": "body",
+          "label": "本文",
+          "type": "text"
+        },
+        {
+          "slug": "written_at",
+          "label": "投稿日時",
+          "type": "datetime"
+        },
+        {
+          "slug": "restaurant_name",
+          "label": "店舗名（口コミ）",
+          "type": "string"
+        },
+        {
+          "slug": "restaurant_url",
+          "label": "店舗URL（口コミ・任意）",
+          "type": "url"
+        },
+        {
+          "slug": "review_month",
+          "label": "訪問年月（口コミ・YYYY-MM）",
+          "type": "string"
+        },
+        {
+          "slug": "rating",
+          "label": "評価（口コミ・0〜5）",
+          "type": "number",
+          "validation": {
+            "min": 0,
+            "max": 5
+          }
+        }
+      ]
     }
   ]
 }

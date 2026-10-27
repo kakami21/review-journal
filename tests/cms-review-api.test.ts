@@ -50,6 +50,41 @@ beforeEach(() => {
 afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks(); });
 
 describe("Astro・CMSのHTTP契約", () => {
+  it("共通一覧は両方の保存先の公開版を全ページ読み、種類と取得元を分けて返す", async () => {
+    const manual = { id: "cms-memo", source: "manual", kind: "note", slug: "memo", body: "手入力の公開本文", written_at: "2026-10-27T00:00:00Z" };
+    mocks.published.mockImplementation(async (collection, options) => {
+      expect(options.status).toBe("published");
+      if (collection === "reviews") return { entries: [entry(review.id, review.reviewDate)] };
+      return options.cursor ? { entries: [{ id: "memo", data: manual }] } : { entries: [], nextCursor: "manual-page2" };
+    });
+    const response = await request("/api/posts");
+    expect(response.status).toBe(200);
+    const result = await response.json();
+    expect(result.posts.map((post: { source: string; kind: string }) => [post.source, post.kind])).toEqual([["manual", "note"], ["tabelog", "review"]]);
+    expect(result.posts[0]).toMatchObject({ id: "manual-cms-memo", body: manual.body, sourceUrl: null });
+    expect(result.posts[1].id).toBe(review.id);
+    expect(result.lastUpdatedAt).toBe(timestamp);
+    expect(mocks.cms.handleContentList).not.toHaveBeenCalled();
+    expect(mocks.cms.handleContentCreate).not.toHaveBeenCalled();
+  });
+
+  it("手入力側の取得失敗を空一覧や食べログだけの成功へ変換しない", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.published.mockImplementation(async collection => collection === "reviews"
+      ? { entries: [entry(review.id, review.reviewDate)] }
+      : { error: new Error("手入力側の内部障害") });
+    const response = await request("/api/posts");
+    expect(response.status).toBe(500);
+    expect(JSON.stringify(await response.json())).not.toContain("内部障害");
+  });
+
+  it("公開済みの手入力データが不正なら表示用の値を捏造せず失敗する", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.published.mockImplementation(async collection => collection === "reviews"
+      ? { entries: [] } : { entries: [{ id: "invalid", data: { source: "manual", kind: "review" } }] });
+    expect((await request("/api/posts")).status).toBe(500);
+  });
+
   it("ヘルスチェックはCMS・DB・Browserを呼ばず200を返す", async () => {
     const response = await request("/api/health");
     expect(response.status).toBe(200);
