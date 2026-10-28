@@ -18,10 +18,10 @@
 
 | 用途 | リモートD1 | 選択方法 |
 | --- | --- | --- |
-| 本番 | `dining-archive-db` | `wrangler.jsonc` のトップレベル設定 |
-| 開発 | `table-notes-development` | `env.development`、`CLOUDFLARE_ENV=development` |
+| 本番 | `dining-archive-db` | `wrangler.astro.production.jsonc` |
+| 開発 | `table-notes-development` | `wrangler.astro.jsonc` |
 
-`npm run dev`、`npm run dev:worker`、`npm run preview` は開発用D1を使用する。通常の `npm run build` と `npm run deploy` は本番設定を使用する。
+`npm run dev`、`npm run build`、`npm run preview` は開発用D1を使用する。`npm run build:production` と `npm run deploy` は本番設定を使用する。
 
 既存の本番D1を維持し、開発用D1を追加する。取得データ用・編集データ用にDBを分割せず、CMS内の本文を正本にする。開発用D1は独立したスキーマとデータを持ち、本番データを自動コピーしない。
 

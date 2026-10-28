@@ -42,8 +42,7 @@
   "r2_buckets": [
     {
       "binding": "MEDIA",
-      "bucket_name": "table-notes-media-development",
-      "remote": true
+      "bucket_name": "table-notes-media-development"
     }
   ],
   "version_metadata": {

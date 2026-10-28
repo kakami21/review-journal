@@ -35,12 +35,12 @@ Cookie発行と票の保存を別リクエストにする。全タブでWeb Lock
 
 ## 導入の順序
 
-開発と本番を分離し、[リリース手順](releases.md)に従う。本機能の開発対象はAstro・EmDash構成。旧Vite構成は互換性のビルド検証用で、匿名いいねAPIは提供しない。
+開発と本番を分離し、[リリース手順](releases.md)に従う。本機能はAstro・EmDash構成で提供し、過去のWorkerバージョンへロールバックした場合は匿名いいねAPIを利用できない。
 
 1. 対象D1をバックアップし、`astro/migrations/0002_post_likes.sql` を含む未適用分を確認する。先にアプリ用マイグレーションを適用してからコードを公開する。
 2. 開発用 `table-notes-development` と本番 `dining-archive-db` を取り違えず、対応するWrangler設定を必ず指定する。
 3. 環境ごとに異なるランダムな `POST_LIKE_SECRET` をWorkerのSecretへ設定する。値はCLI引数・チャット・コミットへ書かない。`wrangler secret put` は公開を伴うため、設定もリリース操作として扱う。公開前にステージする場合は公式のversions secretの手順を使う。
-4. Wrangler設定の `POST_LIKE_LIMITER` を確認する。開発と本番は別のnamespace_idを使う。`npm run types:astro` でバインディング型を生成する。
+4. Wrangler設定の `POST_LIKE_LIMITER` を確認する。開発と本番は別のnamespace_idを使う。`npm run types` でバインディング型を生成する。
 5. テスト・ビルド後に通常のリリース手順で公開し、3種類と食べログの操作、別ブラウザ、再読み込み、公開停止・再公開を確認する。
 
 ```sh
@@ -54,12 +54,6 @@ npx wrangler d1 migrations apply dining-archive-db --remote --config wrangler.as
 ```
 
 ローカルのAstro開発では無視対象の `.dev.vars` に署名鍵を設定する。CIは鍵なしでテスト・ビルドできるが、いいねAPIの実利用には設定が必要。未設定を仮の鍵や空の件数へ置き換えない。
-
-## 独立したブラウザ確認
-
-`node tests/likes-browser.mjs` で、固定の公開投稿と実API・メモリ内SQLiteを接続した確認サーバーを起動できる。`http://127.0.0.1:4399/posts` がPC表示、`/mobile` は390px幅のiframe表示。実CMSやリモートD1へは接続せず、終了時に票を破棄する。頻度制限は単体テストで確認し、このサーバーでは制限しない。
-
-この確認は開発Workerの認証・バインディング・実データによる確認とは区別する。サーバー再起動で署名鍵も変わるため、再確認時は確認サイトのCookieを削除する。
 
 ## 復旧
 

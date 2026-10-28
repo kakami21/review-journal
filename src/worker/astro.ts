@@ -6,4 +6,4 @@ export default {
   fetch: handle,
   // CMSの公開予約・保守だけを実行する。口コミ収集は認証付き手動更新に限定する。
   scheduled: createScheduledHandler({ generalCron: "* * * * *" }),
-} satisfies ExportedHandler<CloudflareBindings>;
+} satisfies ExportedHandler<AstroBindings>;

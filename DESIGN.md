@@ -1,5 +1,7 @@
 # 食べログ口コミ収集・閲覧システム 設計書
 
+> この文書はAstro・EmDash移行前の旧Worker設計を記録する。現行構成は[README](README.md)と[移行設計](docs/emdash-migration.md)を正本とし、復旧は旧ソースの再ビルドではなくCloudflareの公開済みWorkerバージョンへロールバックする。
+
 ## 1. 目的
 
 本人が食べログへ投稿した口コミをCloudflare上で収集・保存し、一覧表示する。

@@ -10,14 +10,14 @@
 
 すべての公開Postにログイン不要のアプリ内いいねを提供します。食べログの取得値と票を分離し、同じブラウザからは1投稿1票・取り消し可能です。公開前にアプリ用D1マイグレーションと署名鍵の設定が必要です。[いいねの仕様・導入手順](docs/post-likes.md)を参照してください。
 
-- 画面：React、Vite、Tailwind CSS、daisyUI
-- API：TypeScript、Hono、Cloudflare Workers
+- 画面：Astro、React、Tailwind CSS、daisyUI
+- API：Astro、TypeScript、Hono、Cloudflare Workers
 - 口コミ収集：Cloudflare Browser Run
 - 保存：Cloudflare D1
 
-## Astro・EmDashへの本番切り替え
+## Astro・EmDash構成
 
-本番移行は [本番移行手順](docs/production-migration.md)、公開は [リリース手順](docs/releases.md) に従う。`npm run build:production` が本番Astroを生成し、タグのReleaseが公開する。`npm run build` は旧Vite構成の検証用として残す。以下の旧構成の説明は、切り替え前の照合と復旧のために保持している。
+通常の開発・ビルド・プレビューはAstroを使う。本番移行の記録は [本番移行手順](docs/production-migration.md)、公開は [リリース手順](docs/releases.md) に従う。`npm run build:production` が本番Astroを生成し、タグのReleaseが公開する。
 
 切り替え後は公開済みCMSデータだけを表示し、新規収集は下書きに追加する。全件入れ替えは行わない。CronはCMS保守のみで口コミ収集を起動しない。
 
@@ -43,26 +43,24 @@
 
 ```mermaid
 flowchart LR
-    C["認証付き更新API / Scheduled Handler"] --> B["CloudflareBrowserProvider"]
+    C["EmDash管理画面"] --> B["CloudflareBrowserProvider"]
     B --> S["TabelogReviewScraper"]
-    S --> R["RefreshReviews"]
-    R --> D["D1ReviewRepository"]
-    D --> V["review_list"]
-    V --> A["口コミ一覧API"]
+    S --> I["未登録分の取り込み"]
+    I --> D["EmDash公開データ"]
+    D --> A["口コミ・投稿API"]
+    A --> U["Astro公開画面"]
 ```
 
-ローカル開発と本番のどちらでも、口コミ一覧APIはD1の`review_list`ビューを参照する。D1は環境ごとに分離し、どちらもリモート接続を使用する。
+ローカル開発と本番のどちらでも、口コミ一覧APIはEmDashの公開済みデータを参照する。D1は環境ごとに分離し、どちらもリモート接続を使用する。
 
 | 実行方法 | 接続先D1 |
 | --- | --- |
-| `npm run dev` / `npm run dev:worker` / `npm run preview` | 開発用 `table-notes-development` |
-| `npm run build` → `npm run deploy` | 本番用 `dining-archive-db` |
+| `npm run dev` / `npm run build` / `npm run preview` | 開発用 `table-notes-development` |
+| `npm run build:production` → `npm run deploy` | 本番用 `dining-archive-db` |
 
 ローカルDBは使用しません。アプリをローカルで起動する場合も、開発用リモートD1 `table-notes-development` に接続します。本番D1 `dining-archive-db` とは分離します。ローカルでの書き込みも検証サイトと同じ開発用DBに反映されます。
 
-Astro・EmDashの `npm run dev:astro` / `npm run preview:astro` も同じ方針です。`wrangler.astro.jsonc` のD1の `remote: true` と、Astroアダプターの `remoteBindings: true` で接続します。詳しくは[Astro開発手順](docs/astro-development.md)を参照してください。
-
-開発用は `wrangler.jsonc` の `env.development` で定義し、起動・ビルド時の `CLOUDFLARE_ENV=development` で選択する。
+開発用は `wrangler.astro.jsonc`、本番用は `wrangler.astro.production.jsonc` で定義する。D1の `remote: true` とAstroアダプターの `remoteBindings: true` で接続する。詳しくは[Astro開発手順](docs/astro-development.md)を参照してください。
 
 ## セットアップ
 
@@ -72,7 +70,7 @@ npm install
 
 `TABELOG_USERNAME`（食べログURL上のユーザー名）はWrangler設定の `vars` で管理します。手動取り込みはEmDash管理画面のパスキー認証を使い、Basic認証の設定は不要です。
 
-Browser RunとD1は`wrangler.jsonc`でリモートバインディングとして設定されています。ローカルから利用した場合もCloudflare側の利用量に加算されます。
+Browser RunとD1は`wrangler.astro.jsonc`でリモートバインディングとして設定されています。ローカルから利用した場合もCloudflare側の利用量に加算されます。
 
 ## アプリのローカル起動
 
@@ -85,7 +83,7 @@ npm run dev
 開発用D1のスキーマを更新する場合：
 
 ```bash
-npx wrangler d1 migrations apply table-notes-development --env development --remote
+npx wrangler d1 migrations apply table-notes-development --remote --config wrangler.astro.jsonc
 ```
 
 旧 `POST /api/reviews/refresh` は廃止しました。手動取り込みはAstro・EmDash管理画面から行います。本番データは自動コピーしません。
@@ -95,7 +93,7 @@ npx wrangler d1 migrations apply table-notes-development --env development --rem
 Workerがリクエストを処理できることは、次のAPIで確認できます。
 
 ```bash
-curl -i "http://localhost:5173/api/health"
+curl -i "http://localhost:4321/api/health"
 ```
 
 正常時はHTTP 200と次のJSONを返します。D1などの外部依存サービスは確認しません。
@@ -117,7 +115,7 @@ Astro・EmDashの管理画面へパスキーでログインし、「口コミの
 ## ビルドとデプロイ
 
 ```bash
-npm run build:staging
+npm run build
 npm run build:production
 ```
 
@@ -127,22 +125,19 @@ npm run build:production
 
 ```text
 .
-├── migrations/
-│   ├── 0001_initial_schema.sql
-│   └── 0002_add_review_list_view.sql
+├── astro/
+│   └── migrations/
 ├── src/
 │   ├── reviews/
 │   │   ├── review.ts
-│   │   ├── refresh-reviews.ts
 │   │   └── tabelog-review-scraper.ts
 │   ├── infrastructure/
-│   │   ├── cloudflare-browser-provider.ts
-│   │   └── d1-review-repository.ts
+│   │   └── cloudflare-browser-provider.ts
 │   ├── react-app/
 │   └── worker/
-│       ├── review-refresh-factory.ts
-│       └── index.ts
-├── wrangler.jsonc
+│       └── astro.ts
+├── wrangler.astro.jsonc
+├── wrangler.astro.production.jsonc
 └── package.json
 ```
 
@@ -150,20 +145,17 @@ npm run build:production
 
 | ファイル | 役割 |
 | --- | --- |
-| `migrations/0001_initial_schema.sql` | `restaurants`と`reviews`のテーブル、制約、インデックスを作成する |
-| `migrations/0002_add_review_list_view.sql` | 口コミ一覧APIが参照する`review_list`ビューを作成する |
+| `migrations/` | 復旧用に保持する旧テーブル・ビューの適用済みマイグレーション |
+| `astro/migrations/` | 現行Astroが使うアプリ管理テーブルのマイグレーション |
 | `src/reviews/review.ts` | アプリ内で共通して扱う口コミデータの型を定義する |
-| `src/reviews/refresh-reviews.ts` | 口コミの取得とD1への全件保存を順番に実行する |
 | `src/reviews/tabelog-review-scraper.ts` | 食べログの一覧・詳細ページを巡回し、口コミデータを抽出・検証する |
 | `src/infrastructure/cloudflare-browser-provider.ts` | Browser Runをスクレイパーから利用できる形に変換する |
-| `src/infrastructure/d1-review-repository.ts` | 口コミをD1へ保存し、`review_list`ビューから一覧を取得する |
-| `src/worker/review-refresh-factory.ts` | Browser Run、スクレイパー、D1を組み合わせて口コミ更新処理を作る |
-| `src/worker/index.ts` | APIルート、エラー処理、Scheduled Handlerを定義するWorkerの入口 |
-| `src/react-app/main.tsx` | Reactアプリを初期化し、ルーターを有効にする |
-| `src/react-app/App.tsx` | `/reviews`へのルーティングを定義する |
+| `src/cms/import-reviews.ts` | Browser Runの収集結果をCMSの未登録下書きへ接続する |
+| `src/worker/astro.ts` | Astroへの委譲とCMS保守Cronを定義するWorkerの入口 |
 | `src/react-app/pages/PostListPage.tsx` | 共通APIから投稿を取得し、種類の絞り込みと口コミの評価順を提供する |
 | `src/react-app/styles.css` | Tailwind CSSとdaisyUIを読み込み、画面全体のスタイルを定義する |
-| `wrangler.jsonc` | Worker、Browser Run、D1、静的ファイル配信の設定を管理する |
+| `wrangler.astro.jsonc` | 開発用Worker、Browser Run、D1、静的ファイル配信の設定を管理する |
+| `wrangler.astro.production.jsonc` | 本番Workerの接続先と必須設定を管理する |
 | `package.json` | npmコマンドと利用パッケージを管理する |
 
 ## エラーとして停止する条件
@@ -173,7 +165,7 @@ npm run build:production
 - 訪問年月が`YYYY/MM 訪問`形式ではない
 - 点数またはいいね数を数値へ変換できない
 - 全投稿でいいね要素が見つからない
-- D1への一括保存が失敗する
+- CMSへの下書き追加が途中で失敗する
 
 食べログ側のHTML構造変更を空データとして保存せず、既存データを維持するための条件です。
 

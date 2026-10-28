@@ -6,21 +6,21 @@
 
 - Astro 7、公式Cloudflareアダプター、公式React連携を使用する。
 - `astro.config.mjs` は `wrangler.astro.jsonc` を読み込む。
-- 開発ルートは `astro/`、ページは `src/pages/`。既存Viteアプリの `index.html` が開発時に優先されないようルートを分離する。
+- 開発ルートは `astro/`、ページは `src/pages/`。通常のnpmコマンドはAstro CLIを起動する。
 - Worker名は `table-notes-astro-development`、D1は既存の開発用 `table-notes-development`。本番D1・本番ドメインは設定しない。
 - 画像・R2は使わない。CMSの認証セッションは専用のSESSION KVへ保存する。
 - `/` はホーム、`/reviews` は既存Reactを使う口コミ一覧。`/api/*` だけを既存Honoへ委譲する。`/_emdash/*` はHonoへ渡さない。
 - `src/worker/astro.ts` は全リクエストをAstroへ渡し、`src/pages/api/[...path].ts` がCMSコンテキスト内でHonoを呼ぶ。毎分のCronはCMS保守専用で、口コミ収集を呼ばない。
-- ローカルDBは使用せず、ローカル開発・検証サイトとも開発用リモートD1 `table-notes-development` へ接続する。書き込みは両方に反映され、本番D1とは分離する。
+- ローカルDBは使用せず、ローカル開発・検証サイトとも開発用リモートD1 `table-notes-development` へ接続する。書き込みは両方に反映され、本番D1とは分離する。開発時のR2はローカル状態を使い、存在しない検証用バケットへの接続を要求しない。
 - Cloudflareアダプターの要件に合わせWranglerを4.152.0へ更新。監査対象だったHonoは互換範囲で更新し、Miniflare内のundiciは修正済み7.30.1に限定して固定する。Miniflareが修正版を採用したら、このoverrideを撤去する。
 
 ## 起動・確認
 
 ```sh
-npm run dev:astro
-npm run check:astro
-npm run build:staging
-npm run preview:astro
+npm run dev
+npm run check
+npm run build
+npm run preview
 ```
 
 `/reviews` で一覧・最終取得日時を確認し、「評価順」「訪問年月順」で並び替えを確認する。
@@ -29,14 +29,14 @@ APIの参照確認は `/api/health` と `/api/reviews` を使う。手動取り�
 
 取り込みの認証はCMSのパスキー認証に一本化した。Basic認証のユーザー名・パスワード設定は不要。Brunoは参照APIと旧APIの廃止確認に使う（[API確認手順](bruno.md)）。
 
-`build:staging` は `dist/astro/` に出力する。既存の `npm run build` は `dist/` を作り直すため、Astroのプレビュー・公開前は必ず `build:staging` を実行する。
+`npm run build` は開発用設定で `dist/astro/` に出力する。`npm run build:production` だけが本番設定で `dist/astro-production/` に出力する。
 
 ## 検証用Workerへの公開
 
 ```sh
-npm run build:staging
+npm run build
 npx wrangler deploy --config dist/astro/server/wrangler.json --dry-run
-npm run deploy:astro
+npx wrangler deploy --config dist/astro/server/wrangler.json
 ```
 
 生成設定のWorker名が `table-notes-astro-development`、D1名が `table-notes-development`、`routes` が空であることを確認する。検証URLは通常公開されるため、秘密情報をページに表示しない。本番用の `npm run deploy` と区別する。
@@ -48,7 +48,7 @@ Astro 7の開発・プレビューはバックグラウンドで起動する。�
 ## #7 の確認結果
 
 - Astroの型チェック・ビルドが成功。
-- `dev:astro` で起動し、Astro検証ページのHTMLが返ることを確認。
+- Astro開発サーバーで起動し、Astro検証ページのHTMLが返ることを確認。
 - `wrangler deploy --dry-run` が成功し、開発用D1だけがバインドされることを確認。
 - ビルド済みWorkerをローカル起動し、`GET /` の200応答とReactのHTML出力を確認。
 - 既存の型をWranglerで再生成し、既存の型チェック・本番ビルドも成功。
@@ -76,16 +76,16 @@ Astro 7の開発・プレビューはバックグラウンドで起動する。�
 
 ## EmDashの検証（#9）
 
-Astro側はEmDash 1.3.1の `reviews` コレクションを正本として使う。現行Vite/Hono本番は従来のテーブルを利用し、本番切り替えは #11 で行う。
+Astro側はEmDash 1.3.1の `reviews` コレクションを正本として使う。本番切り替えは #11 で完了している。
 
 ### ローカル起動
 
 ```sh
 npx wrangler d1 migrations apply table-notes-development --remote --config wrangler.astro.jsonc
-npm run dev:astro
+npm run dev
 ```
 
-D1とBrowser Runはリモート接続する。Astroアダプターの `remoteBindings: true` とWranglerの各バインディングの `remote: true` を使用する。SESSION KVはローカルで模擬し、`.wrangler/state` へ保存する。
+D1とBrowser Runはリモート接続する。Astroアダプターの `remoteBindings: true` とWranglerの対象バインディングの `remote: true` を使用する。SESSION KVとR2はローカルで模擬し、`.wrangler/state` へ保存する。
 
 `http://localhost:4321/_emdash/admin` から初回セットアップを行い、管理者本人のパスキーを登録する。公開したworkers.devドメインのパスキーとは別に管理する。画像・R2・外部プラグイン・メール認証は今回導入しない。メディア機能は利用しない。
 
@@ -134,8 +134,8 @@ EmDashの導入で固定されるZodの既知問題を避けるため、互換�
 - `src/pages/api/[...path].ts` は環境設定を受けてHonoへ渡す入口に限定する。CMSの公開クエリ・収集・保存の接続は `src/cms/review-api-dependencies.ts`、認証とHTTP応答は既存の `src/worker/review-api.ts` が担当する。
 - `npm test` の `tests/cms-review-api.test.ts` はAstroの実API入口を通し、CMS・DB・Browser Runとの境界だけをテスト用に置き換える。公開版だけのページ送り、ID・null・日時・並び順、公開一覧失敗の共通500、旧取り込みAPIと未知APIの404を検証する。取り込みの認証・失敗・保存は `tests/review-import.test.ts` と既存のCMSテストで検証する。
 - #34で手動取り込みをCMS管理者認証へ一本化。旧Basic認証付きAPIは廃止し、ヘルスチェックや旧APIへの呼び出しでは収集・保存を開始しない。
-- 現行Vite本番のHTTP更新・定期収集は同じ `createReviewRefresh` を継続利用する。AstroのCronはCMS保守専用のままとし、口コミ収集は接続しない。Astroでの定期収集の有効化は今回の対象外。
-- `tests/astro-worker.test.ts` でAstroへの委譲とCMS保守Cronを、`tests/astro-migration.test.ts` で現行本番のHTTP・定期収集の契約を確認する。実CMSの公開・非公開状態の保護は#9の結合検証と区別する。
+- AstroのCronはCMS保守専用のままとし、口コミ収集は接続しない。口コミ収集は管理画面からの手動取り込みに限定する。
+- `tests/astro-worker.test.ts` でAstroへの委譲とCMS保守Cronを確認する。実CMSの公開・非公開状態の保護は#9の結合検証と区別する。
 
 ### #4 の確認結果（2026-10-26）
 
@@ -156,6 +156,6 @@ EmDashの導入で固定されるZodの既知問題を避けるため、互換�
 
 実行入口は `POST /_emdash/api/plugins/review-import/run`。EmDash標準の管理者権限（`plugins:manage`）・認証・CSRF検証を使う。ブラウザは標準の `apiFetch()` を使用する。GET等は405となる。旧 `/api/reviews/refresh` は認証情報の有無に関係なく404となる。
 
-ローカル起動でもBrowser Runへリモート接続する。登録済みの検証サイト用パスキーによる実収集の成功確認は検証用Workerで行う。旧構成の定期収集とAstroのCMS保守Cronは変更しない。
+ローカル起動でもBrowser Runへリモート接続する。登録済みの検証サイト用パスキーによる実収集の成功確認は検証用Workerで行う。AstroのCMS保守Cronは口コミ収集を実行しない。
 
 Basic認証の設定・型定義・Bruno認証変数・手動更新リクエストは撤去済み。公開済みWorkerのシークレットは、各環境への本変更の公開と動作確認後に削除する。旧バージョンへの復旧時に必要となるため、公開前には削除しない。本番の削除は本番リリース時に実施する。
