@@ -8,10 +8,10 @@
 - `astro.config.mjs` は `wrangler.astro.jsonc` を読み込む。
 - 開発ルートは `astro/`、ページは `src/pages/`。通常のnpmコマンドはAstro CLIを起動する。
 - Worker名は `table-notes-astro-development`、D1は既存の開発用 `table-notes-development`。本番D1・本番ドメインは設定しない。
-- 画像・R2は使わない。CMSの認証セッションは専用のSESSION KVへ保存する。
+- CMSの画像は環境ごとに分けたR2へ保存する。CMSの認証セッションは専用のSESSION KVへ保存する。
 - `/` はホーム、`/reviews` は既存Reactを使う口コミ一覧。`/api/*` だけを既存Honoへ委譲する。`/_emdash/*` はHonoへ渡さない。
 - `src/worker/astro.ts` は全リクエストをAstroへ渡し、`src/pages/api/[...path].ts` がCMSコンテキスト内でHonoを呼ぶ。毎分のCronはCMS保守専用で、口コミ収集を呼ばない。
-- ローカルDBは使用せず、ローカル開発・検証サイトとも開発用リモートD1 `table-notes-development` へ接続する。書き込みは両方に反映され、本番D1とは分離する。開発時のR2はローカル状態を使い、存在しない検証用バケットへの接続を要求しない。
+- ローカルDBは使用せず、ローカル開発・検証サイトとも開発用リモートD1 `table-notes-development` へ接続する。書き込みは両方に反映され、本番D1とは分離する。開発時のR2も開発用リモートバケット `table-notes-media-development` へ接続し、本番用 `dining-archive-media` と分離する。
 - Cloudflareアダプターの要件に合わせWranglerを4.152.0へ更新。監査対象だったHonoは互換範囲で更新し、Miniflare内のundiciは修正済み7.30.1に限定して固定する。Miniflareが修正版を採用したら、このoverrideを撤去する。
 
 ## 起動・確認
@@ -87,7 +87,7 @@ npm run dev
 
 D1・Browser Run・R2はリモート接続する。Astroアダプターの `remoteBindings: true` とWranglerの対象バインディングの `remote: true` を使用する。SESSION KVはローカルで模擬し、`.wrangler/state` へ保存する。
 
-`http://localhost:4321/_emdash/admin` から初回セットアップを行い、管理者本人のパスキーを登録する。公開したworkers.devドメインのパスキーとは別に管理する。画像・R2・外部プラグイン・メール認証は今回導入しない。メディア機能は利用しない。
+`http://localhost:4321/_emdash/admin` から初回セットアップを行い、管理者本人のパスキーを登録する。公開したworkers.devドメインのパスキーとは別に管理する。写真は開発用R2へ保存し、本番用バケットへは書き込まない。保存と配信の手順は[投稿写真の手順](post-photos.md)を参照する。
 
 ローカル起動したアプリを通して開発用リモートDBで結合検証する場合：
 
