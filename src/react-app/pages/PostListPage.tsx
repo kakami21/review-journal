@@ -40,11 +40,10 @@ export function PostCard({ post, likeState, likeCount, pending = false, onLike }
   </article>;
 }
 
-/** 公開済みPostをまとめて読み、種類の絞り込みと口コミだけの評価順を提供する。 */
-export function PostListPage() {
-  const [posts, setPosts] = useState<Post[]>();
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
-  const [error, setError] = useState("");
+/** Astroが渡した公開済みPostに、種類の絞り込みと口コミだけの評価順を提供する。 */
+export function PostListPage({ posts, lastUpdatedAt, error = "" }: {
+  posts: Post[] | null; lastUpdatedAt: string | null; error?: string;
+}) {
   const [kind, setKind] = useState<PostKind | "all">("all");
   const [sort, setSort] = useState<"date" | "rating">("date");
   const [likeStates, setLikeStates] = useState<Record<string, PostLikeState>>({});
@@ -53,22 +52,7 @@ export function PostListPage() {
   const likeVersion = useRef(0);
   const pendingLikeIds = useRef(new Set<string>());
   useEffect(() => {
-    const controller = new AbortController();
-    async function load() {
-      try {
-        const response = await fetch("/api/posts", { signal: controller.signal });
-        if (!response.ok) throw new Error("投稿の取得に失敗しました。");
-        const result = await response.json() as { posts: Post[]; lastUpdatedAt: string | null };
-        setPosts(result.posts); setLastUpdatedAt(result.lastUpdatedAt);
-      } catch (e) {
-        if (!controller.signal.aborted) setError(e instanceof Error ? e.message : "投稿の取得に失敗しました。");
-      }
-    }
-    void load();
-    return () => controller.abort();
-  }, []);
-  useEffect(() => {
-    if (!posts) return;
+    if (!posts?.length) return;
     const controller = new AbortController();
     const load = async () => {
       const version = likeVersion.current;
@@ -105,28 +89,28 @@ export function PostListPage() {
       setPendingLikes(current => { const next = new Set(current); next.delete(id); return next; });
     }
   }
-  if (error) return <p role="alert">{error}</p>;
-  if (!posts) return <p>読み込み中...</p>;
-  const visible = posts.filter(post => kind === "all" || post.kind === kind);
+  const visible = (posts ?? []).filter(post => kind === "all" || post.kind === kind);
   if (kind === "review" && sort === "rating") visible.sort((a, b) =>
     a.kind === "review" && b.kind === "review" ? b.review.rating - a.review.rating : 0);
   return <main className="brutal min-h-screen bg-amber-50 px-4 py-10">
     <div className="mx-auto max-w-3xl">
       <header className="mb-4">
         <h1 className="text-4xl font-bold">箱入レオのルーザー日記</h1>
-        <p className="mt-2 opacity-70">{visible.length}件の投稿</p>
-        <p className="mt-1 text-sm opacity-60">食べログ最終取得：{lastUpdatedAt
+        {posts && <p className="mt-2 opacity-70">{visible.length}件の投稿</p>}
+        {posts && <p className="mt-1 text-sm opacity-60">食べログ最終取得：{lastUpdatedAt
           ? new Intl.DateTimeFormat("ja-JP", { timeZone: "Asia/Tokyo", dateStyle: "medium" }).format(new Date(lastUpdatedAt)) : "未実行"}</p>
+        }
       </header>
       <div className="mb-4 flex flex-wrap items-center gap-4">
-        <label>種類 <select className="select select-sm" value={kind} onChange={e => { setKind(e.target.value as PostKind | "all"); setSort("date"); }}>
+        <label>種類 <select className="select select-sm" disabled={!posts} value={kind} onChange={e => { setKind(e.target.value as PostKind | "all"); setSort("date"); }}>
           <option value="all">すべて</option><option value="review">口コミ</option><option value="note">ノート</option><option value="article">記事</option>
         </select></label>
         {kind === "review" && <label>並び順 <select className="select select-sm" value={sort} onChange={e => setSort(e.target.value as "date" | "rating")}>
           <option value="date">日付順</option><option value="rating">評価順</option>
         </select></label>}
       </div>
-      {visible.length === 0 && <p>公開された投稿はまだありません。</p>}
+      {error && <p role="alert">{error}</p>}
+      {posts && visible.length === 0 && <p>公開された投稿はまだありません。</p>}
       {likeError && <p role="alert" className="mb-4">{likeError}</p>}
       <ul className="space-y-4">{visible.map(post => <li key={post.id} id={post.id}>
         <PostCard post={post} likeState={likeStates[post.id]} likeCount={post.likeCount} pending={pendingLikes.has(post.id)} onLike={() => { void like(post.id); }} />

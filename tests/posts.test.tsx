@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { entryPost, tabelogPost, comparePosts } from "../src/posts/post";
-import { PostCard } from "../src/react-app/pages/PostListPage";
+import { PostCard, PostListPage } from "../src/react-app/pages/PostListPage";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createPlugin } from "../src/cms/entry-policy";
 
@@ -9,6 +9,34 @@ const food = { id: "B1", detailUrl: "https://tabelog.com/reviews/B1", name: "店
   title: null, body: "口コミ", reviewDate: "2026-10", rating: 4, likeCount: 0 };
 
 describe("共通Postと種類別の条件", () => {
+  it("Astroから渡した公開投稿を初回HTMLへ表示し、ブラウザ取得の待機表示を出さない", () => {
+    const post = { ...tabelogPost(food), likeCount: 3 };
+    const html = renderToStaticMarkup(<PostListPage posts={[post]} lastUpdatedAt="2026-10-27T00:00:00Z" />);
+    expect(html).toContain("箱入レオのルーザー日記");
+    expect(html).toContain("口コミ");
+    expect(html).toContain("1件の投稿");
+    expect(html).toContain("2026/10/27");
+    expect(html).toContain("いいね 3");
+    expect(html).not.toContain("読み込み中");
+  });
+  it("取得失敗を0件扱いにせず、背景・見出し・エラーを初回HTMLへ残す", () => {
+    const html = renderToStaticMarkup(<PostListPage posts={null} lastUpdatedAt={null} error="投稿の取得に失敗しました。" />);
+    expect(html).toContain("bg-amber-50");
+    expect(html).toContain("箱入レオのルーザー日記");
+    expect(html).toContain('role="alert"');
+    expect(html).toContain("投稿の取得に失敗しました。");
+    expect(html).toContain("disabled");
+    expect(html).not.toContain("0件の投稿");
+    expect(html).not.toContain("未実行");
+    expect(html).not.toContain("公開された投稿はまだありません");
+  });
+  it("取得成功後の0件だけを空の一覧として表示する", () => {
+    const html = renderToStaticMarkup(<PostListPage posts={[]} lastUpdatedAt={null} />);
+    expect(html).toContain("0件の投稿");
+    expect(html).toContain("未実行");
+    expect(html).toContain("公開された投稿はまだありません");
+    expect(html).not.toContain('role="alert"');
+  });
   it("添付写真を本文の下に表示し、写真なしでは画像枠を出さない", () => {
     const photo = { id: "photo", alt: '海辺の風景', width: 1200, height: 800, meta: { storageKey: "photo.jpg" } };
     const post = entryPost("photo", { ...base, photo });

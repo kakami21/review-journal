@@ -1,5 +1,21 @@
 ---
+import { env } from "cloudflare:workers";
+import { createCmsPostApiDependencies } from "../cms/post-api-dependencies";
 import SiteLayout from "../layouts/SiteLayout.astro";
 import { PostListPage } from "../react-app/pages/PostListPage";
+
+const result = await createCmsPostApiDependencies(env as unknown as AstroBindings).getAll().catch(cause => {
+  console.error("公開投稿の取得に失敗しました。", cause);
+  Astro.response.status = 500;
+  return null;
+});
 ---
-<SiteLayout><PostListPage client:load /></SiteLayout>
+
+<SiteLayout>
+  <PostListPage
+    client:load
+    posts={result?.posts ?? null}
+    lastUpdatedAt={result?.lastUpdatedAt ?? null}
+    error={result ? "" : "投稿の取得に失敗しました。時間をおいて再度お試しください。"}
+  />
+</SiteLayout>
