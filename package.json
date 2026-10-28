@@ -32,8 +32,8 @@
     "build": "npm run check && astro build",
     "preview": "npm run build && astro preview",
     "deploy": "npm run build:production && wrangler deploy --config dist/astro-production/server/wrangler.json",
-    "test": "vitest run",
-    "test:cms": "node tests/cms.integration.mjs",
+    "test": "vitest run --exclude tests/cms.integration.test.ts",
+    "test:cms": "vitest run tests/cms.integration.test.ts",
     "types": "wrangler types --config wrangler.astro.jsonc --env-interface AstroBindings --include-runtime=false --strict-vars=false astro/cloudflare.d.ts",
     "build:production": "ASTRO_ENV=production npm run check && ASTRO_ENV=production astro build"
   },
