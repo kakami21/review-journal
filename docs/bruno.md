@@ -6,8 +6,7 @@
 
 | 環境 | baseUrl | 用途 |
 | --- | --- | --- |
-| `local` | `http://localhost:5173` | 旧Vite開発API |
-| `astro-local` | `http://localhost:4321` | `npm run dev:astro` のAPI |
+| `astro-local` | `http://localhost:4321` | `npm run dev` のAPI |
 | `development` | `https://table-notes-astro-development.pandalize.workers.dev` | Astro検証API |
 | `production` | `https://pakoirileo.nokishita.app` | 本番API |
 

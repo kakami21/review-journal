@@ -21,7 +21,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
-      - run: npm run build:staging
       - run: npm run build
       - run: npm run build:production
       - run: node scripts/release.mjs check-production dist/astro-production/server/wrangler.json

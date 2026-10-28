@@ -3,12 +3,12 @@ import { HTTPException } from "hono/http-exception";
 import type { Review } from "../reviews/review";
 
 export type ReviewApiDependencies = {
-  getAll: (env: CloudflareBindings) => Promise<{ reviews: Review[]; lastUpdatedAt: string | null }>;
+  getAll: (env: AstroBindings) => Promise<{ reviews: Review[]; lastUpdatedAt: string | null }>;
 };
 
 /** 公開APIのHTTP応答を共通化し、現行D1とCMSの保存処理は呼び出し側で選ぶ。 */
-export function createReviewApi(dependencies: ReviewApiDependencies, posts?: Hono<{ Bindings: CloudflareBindings }>) {
-  const app = new Hono<{ Bindings: CloudflareBindings }>();
+export function createReviewApi(dependencies: ReviewApiDependencies, posts?: Hono<{ Bindings: AstroBindings }>) {
+  const app = new Hono<{ Bindings: AstroBindings }>();
   if (posts) app.route("/", posts);
 
   // GETでWorkerの稼働を確認し、キャッシュせずstatus: okを返す。

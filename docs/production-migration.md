@@ -19,9 +19,9 @@
 ```sh
 umask 077
 migration_backup_dir=$(mktemp -d /private/tmp/table-notes-migration.XXXXXX)
-npx wrangler d1 export dining-archive-db --remote --config wrangler.jsonc --output "$migration_backup_dir/production.sql" > "$migration_backup_dir/export.log" 2>&1
-npx wrangler d1 execute dining-archive-db --local --persist-to "$migration_backup_dir/d1-restore" --config wrangler.jsonc --file "$migration_backup_dir/production.sql"
-npx wrangler d1 execute dining-archive-db --local --persist-to "$migration_backup_dir/d1-restore" --config wrangler.jsonc --command 'SELECT COUNT(*) AS reviews, COUNT(DISTINCT id) AS unique_ids FROM review_list; PRAGMA foreign_key_check;'
+npx wrangler d1 export dining-archive-db --remote --config wrangler.astro.production.jsonc --output "$migration_backup_dir/production.sql" > "$migration_backup_dir/export.log" 2>&1
+npx wrangler d1 execute dining-archive-db --local --persist-to "$migration_backup_dir/d1-restore" --config wrangler.astro.production.jsonc --file "$migration_backup_dir/production.sql"
+npx wrangler d1 execute dining-archive-db --local --persist-to "$migration_backup_dir/d1-restore" --config wrangler.astro.production.jsonc --command 'SELECT COUNT(*) AS reviews, COUNT(DISTINCT id) AS unique_ids FROM review_list; PRAGMA foreign_key_check;'
 ```
 
 復元コマンドは必ず `--local` と独立した `--persist-to` を指定する。既存の開発DBを復元先にしない。エクスポートログには期限付きダウンロードURLが含まれるため、SQL・ログをGitへ登録しない。エクスポート中はDB要求が一時的に待たされるため、正式移行時は更新停止後に取得する。

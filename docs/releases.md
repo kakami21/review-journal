@@ -75,7 +75,7 @@ npx wrangler d1 export dining-archive-db --remote --config wrangler.astro.produc
 npx wrangler d1 migrations apply dining-archive-db --remote --config wrangler.astro.production.jsonc
 ```
 
-復旧用の旧構成の一覧APIには`review_list`ビューが必要。`/api/health`の成功だけでは、そのビューや一覧APIの正常性を保証しない。
+過去のWorkerバージョンへロールバックした場合、その一覧APIには`review_list`ビューが必要。`/api/health`の成功だけでは、そのビューや一覧APIの正常性を保証しない。旧アプリのソースは復旧用に維持せず、Workerの公開履歴とD1バックアップを使う。
 
 ## 復旧時のコマンド
 
@@ -93,7 +93,6 @@ npx wrangler rollback <正常だったWorkerバージョンID> --config wrangler
 
 ```sh
 npm test
-npm run build:staging
 npm run build
 npm run build:production
 node scripts/release.mjs check-production dist/astro-production/server/wrangler.json
