@@ -85,7 +85,7 @@ npx wrangler d1 migrations apply table-notes-development --remote --config wrang
 npm run dev
 ```
 
-D1とBrowser Runはリモート接続する。Astroアダプターの `remoteBindings: true` とWranglerの対象バインディングの `remote: true` を使用する。SESSION KVとR2はローカルで模擬し、`.wrangler/state` へ保存する。
+D1・Browser Run・R2はリモート接続する。Astroアダプターの `remoteBindings: true` とWranglerの対象バインディングの `remote: true` を使用する。SESSION KVはローカルで模擬し、`.wrangler/state` へ保存する。
 
 `http://localhost:4321/_emdash/admin` から初回セットアップを行い、管理者本人のパスキーを登録する。公開したworkers.devドメインのパスキーとは別に管理する。画像・R2・外部プラグイン・メール認証は今回導入しない。メディア機能は利用しない。
 
