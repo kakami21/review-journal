@@ -48,22 +48,18 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: npx emdash migrate --manifest astro/.emdash/migrations.json --wrangler-config wrangler.astro.production.jsonc --check
       - name: 本番へ公開
+        id: version
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          WRANGLER_OUTPUT_FILE_PATH: ${{ runner.temp }}/wrangler-${{ github.run_id }}-${{ github.run_attempt }}.ndjson
         shell: bash
         run: |
           set -euo pipefail
           test -n "$CLOUDFLARE_API_TOKEN"
           npx wrangler deploy --config dist/astro-production/server/wrangler.json \
-            --tag "$RELEASE_TAG" --message "Release $RELEASE_TAG ($RELEASE_SHA)" | tee deploy.log
-      - name: Workerバージョンを記録
-        id: version
-        shell: bash
-        run: |
-          set -euo pipefail
-          version=$(sed -nE 's/^Current Version ID: ([0-9a-f-]+).*$/\1/p' deploy.log)
-          [[ "$version" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]
-          printf 'id=%s\n' "$version" >> "$GITHUB_OUTPUT"
+            --tag "$RELEASE_TAG" --message "Release $RELEASE_TAG ($RELEASE_SHA)"
+          jq -ers 'map(select(.type == "deploy")) | select(length == 1) | .[0].version_id | strings | select(test("^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$")) | "id=\(.)"' \
+            "$WRANGLER_OUTPUT_FILE_PATH" >> "$GITHUB_OUTPUT"
       - name: 公開後のヘルスチェック
         run: |
           node --input-type=module <<'JS'
