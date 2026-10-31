@@ -40,8 +40,8 @@
     "enabled": true
   },
   "env": {
-    "development": {
-      "name": "table-notes-development",
+    "staging": {
+      "name": "table-notes-staging",
       "routes": [],
       "vars": {
         "TABELOG_USERNAME": "pakoirileo"
@@ -53,8 +53,8 @@
       "d1_databases": [
         {
           "binding": "DB",
-          "database_name": "table-notes-development",
-          "database_id": "3554b63d-b513-432f-bed2-3a90f5159eb0",
+          "database_name": "table-notes-staging",
+          "database_id": "29d7ef4b-65b8-4a71-8820-3eaee6d9fe4a",
           "remote": true,
           "migrations_dir": "./migrations"
         }

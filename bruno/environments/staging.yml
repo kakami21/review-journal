@@ -1,0 +1,4 @@
+name: staging
+variables:
+  - name: baseUrl
+    value: https://table-notes-astro-staging.pandalize.workers.dev

@@ -1,13 +1,14 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "account_id": "981a5c317da0eac85b328bc8dbcd9f6a",
-  "name": "table-notes-astro-development",
+  "name": "table-notes-astro-staging",
+  "workers_dev": true,
   "main": "./src/worker/astro.ts",
   "compatibility_date": "2026-07-18",
   "compatibility_flags": [
     "nodejs_compat"
   ],
-  "routes": [],
+  "routes": [{ "pattern": "staging.pakoirileo.nokishita.app", "custom_domain": true }],
   "triggers": {
     "crons": [
       "* * * * *"
@@ -33,8 +34,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "table-notes-development",
-      "database_id": "3554b63d-b513-432f-bed2-3a90f5159eb0",
+      "database_name": "table-notes-staging",
+      "database_id": "29d7ef4b-65b8-4a71-8820-3eaee6d9fe4a",
       "remote": true,
       "migrations_dir": "./astro/migrations"
     }

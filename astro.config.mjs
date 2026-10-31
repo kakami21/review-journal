@@ -6,7 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 import emdash from "emdash/astro";
 import { d1 } from "@emdash-cms/cloudflare";
 
-// 本番は明示したビルドだけで選択し、通常の開発は検証用Workerと開発用リモートD1を使う。
+// 本番は明示したビルドだけで選択し、通常の開発とstagingは検証用Worker・D1を使う。
 const production = process.env.ASTRO_ENV === "production";
 export default defineConfig({
   root: fileURLToPath(new URL("./astro/", import.meta.url)),

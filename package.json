@@ -31,23 +31,17 @@
     "wrangler": "^4.152.0"
   },
   "scripts": {
-    "dev": "CLOUDFLARE_ENV=development vite",
-    "dev:worker": "CLOUDFLARE_ENV=development npm run build && wrangler dev --port 8787",
-    "build": "npm run types:check && npm run typecheck && vite build",
-    "preview": "CLOUDFLARE_ENV=development npm run build && vite preview",
+    "dev": "astro dev",
+    "build": "npm run check && astro build",
+    "preview": "astro preview",
     "deploy": "npm run build:production && wrangler deploy --config dist/astro-production/server/wrangler.json",
-    "types": "wrangler types --env-interface CloudflareBindings --strict-vars false",
-    "types:check": "wrangler types --env-interface CloudflareBindings --strict-vars false --check",
-    "typecheck": "tsc -p tsconfig.app.json && tsc -p tsconfig.node.json && tsc -p tsconfig.worker.json",
-    "dev:astro": "astro dev",
-    "check:astro": "astro check --tsconfig astro/tsconfig.json",
-    "build:astro": "npm run check:astro && astro build",
-    "preview:astro": "npm run build:astro && astro preview",
-    "deploy:astro": "npm run build:astro && wrangler deploy --config dist/astro/server/wrangler.json",
+    "deploy:staging": "npm run build:staging && wrangler deploy --config dist/astro/server/wrangler.json",
+    "check": "astro check --tsconfig astro/tsconfig.json",
+    "types": "wrangler types --config wrangler.astro.jsonc --env-interface AstroBindings --include-runtime=false --strict-vars=false astro/cloudflare.d.ts",
     "test": "vitest run",
     "test:cms": "node tests/cms.integration.mjs",
-    "types:astro": "wrangler types --config wrangler.astro.jsonc --env-interface AstroBindings --include-runtime=false --strict-vars=false astro/cloudflare.d.ts",
-    "build:production": "ASTRO_ENV=production npm run build:astro"
+    "build:staging": "ASTRO_ENV=staging npm run build",
+    "build:production": "ASTRO_ENV=production npm run build"
   },
   "overrides": {
     "miniflare": {

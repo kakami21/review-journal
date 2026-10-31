@@ -10,7 +10,7 @@ const base=`http://127.0.0.1:${port}`;
 // 公式の開発専用セットアップをローカルでだけ利用する。本番ではこのエンドポイントは403となる。
 const setup = await fetch(base+'/_emdash/api/setup/dev-bypass?content=0&token=1',{method:'POST'});
 const token = (await setup.json()).data?.token;
-assert(token, '先にnpm run dev:astroを起動してください。');
+assert(token, '先にnpm run devを起動してください。');
 async function api(path,method='GET',body){const r=await fetch(base+'/_emdash/api/'+path,{method,headers:{authorization:'Bearer '+token,'content-type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});return r.json();}
 const source=await readFile(new URL('../src/cms/review-store.ts', import.meta.url),'utf8');
 const temp = await mkdtemp(join(tmpdir(), 'table-notes-cms-test-'));
