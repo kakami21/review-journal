@@ -3,7 +3,7 @@
 最新の `main` から、1つの目的につき1つのブランチを作成する。名前は次の形式とし、`codex/` 接頭辞は付けない。
 
 ```text
-<type>/<issue-number>-<topic>
+<type>/<ticket-id>-<topic>
 ```
 
 ## type
@@ -15,11 +15,11 @@
 - `test`: テストのみ
 - `chore`: 依存関係・設定・保守作業
 
-## issue-number
+## ticket-id
 
-- 対応するGitHub Issueの番号を、`#` なしの数字で記載する
-- 複数のIssueに関係する場合は、主な作業Issueの番号を1つ使う
-- Issueがない作業は、番号を推測せず `<type>/<topic>` とする
+- 対応するチケットのIDを記載する。GitHub Issueでは番号、Azure DevOpsでは作業項目IDを使い、`#`は付けない
+- 複数のチケットに関係する場合は、主なもののIDを1つ使う
+- チケットがない場合は、IDを推測せず `<type>/<topic>` とする
 
 ## topic
 
@@ -35,3 +35,10 @@ docs/6-emdash-architecture
 ```
 
 マージ後はブランチを削除する。
+
+## 参考資料
+
+- [GitHub flow](https://docs.github.com/en/get-started/using-github/github-flow)：目的ごとのブランチ作成、PRによるレビュー・マージ、作業後のブランチ削除。
+- [Git check-ref-format](https://git-scm.com/docs/git-check-ref-format)：Gitで使用できるブランチ名の制約。
+
+`<type>/<ticket-id>-<topic>`の形式、typeの一覧、ケバブケース、`codex/`を付けない方針は、このリポジトリ独自の命名規則とする。

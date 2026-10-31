@@ -1,7 +1,3 @@
-<!-- BEGIN:development-standards -->
-
 # 共通の作業指示
 
 作業前に[AGENTS.md](../AGENTS.md)を読み、該当する作業の参照先に従ってください。規則の本文と一覧はこのファイルに重複して記載しません。
-
-<!-- END:development-standards -->
