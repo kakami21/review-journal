@@ -15,6 +15,7 @@ export type Post = {
   reviewDate: string | null;
   rating: number | null;
   likeCount: number | null;
+  appLikeCount?: number;
 };
 
 /** 訪問年月のない投稿は公開日時で並べ、評価順では口コミだけを比較する。 */

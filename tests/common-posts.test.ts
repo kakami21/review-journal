@@ -6,7 +6,8 @@ import { PostListPage } from "../src/react-app/pages/PostListPage";
 import { setupEntries } from "../scripts/setup-entries.mjs";
 import seed from "../seed/seed.json";
 
-const mocks = vi.hoisted(() => ({ published: vi.fn(), runtime: vi.fn() }));
+const mocks = vi.hoisted(() => ({ published: vi.fn(), runtime: vi.fn(), readLikes: vi.fn() }));
+vi.mock("../src/infrastructure/d1-post-like-store", () => ({ D1PostLikeStore: class { read = mocks.readLikes; } }));
 vi.mock("emdash", () => ({ getEmDashCollection: mocks.published }));
 vi.mock("emdash/middleware", () => ({ withEmDashRuntime: mocks.runtime }));
 import { publicPost, getPublicPosts } from "../src/cms/public-posts";
@@ -19,7 +20,7 @@ const review = (): Post => publicPost("reviews", {
   source_url: "https://example.com/review", body: "既存口コミ本文", review_month: "2026-10", rating: 4, like_count: 9,
 });
 
-beforeEach(() => { vi.resetAllMocks(); mocks.runtime.mockResolvedValue(null); });
+beforeEach(() => { vi.resetAllMocks(); mocks.runtime.mockResolvedValue(null); mocks.readLikes.mockImplementation(async (keys: string[]) => new Map(keys.map(key => [key, { likeCount: 2, liked: false }]))); });
 
 describe("共通の公開投稿", () => {
   it("手入力3種類を取得元と分け、店舗情報なしでもノート・記事を表示できる", () => {
@@ -37,6 +38,9 @@ describe("共通の公開投稿", () => {
     expect(html).toContain('id="old-anchor"');
     expect(html).toContain("2026/10 訪問");
     expect(html).toContain("食べログのいいね 9");
+    expect(html).toContain("アプリのいいね");
+    expect(html).toContain('aria-pressed="false"');
+    expect(html).toContain('aria-label="既存店舗のいいね"');
     expect(html).toContain("2026/11/01");
   });
   it("種類で絞り込み、評価順は口コミだけを比較する", () => {
@@ -50,6 +54,8 @@ describe("共通の公開投稿", () => {
       .mockResolvedValueOnce({ entries: [] }).mockResolvedValueOnce({ entries: [{ data: { id: "02", kind: "note", body: "公開版" } }] });
     const result = await getPublicPosts({} as AstroBindings);
     expect(result.posts.map(p => p.id)).toEqual(["old", "manual-02"]);
+    expect(result.posts.map(p => p.appLikeCount)).toEqual([2, 2]);
+    expect(mocks.readLikes).toHaveBeenCalledWith(["reviews:01", "entries:02"], null);
     expect(mocks.published.mock.calls).toEqual([
       ["reviews", { limit: 100, cursor: undefined, status: "published" }],
       ["reviews", { limit: 100, cursor: "p2", status: "published" }],

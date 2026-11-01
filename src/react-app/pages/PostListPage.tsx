@@ -1,3 +1,4 @@
+import { usePostLikes } from "../use-post-likes";
 import { useState } from "react";
 import { selectPosts, type Post, type PostKind } from "../../posts/post";
 
@@ -7,6 +8,7 @@ const kinds = { all: "すべて", review: "口コミ", note: "ノート", articl
 /** 種類の絞り込みと口コミの評価順を持つ共通一覧。既存口コミのアンカーIDを維持する。 */
 export function PostListPage({ initialData, errorMessage = "" }: { initialData?: PostsResponse; errorMessage?: string }) {
   const data = initialData;
+  const likes = usePostLikes(data?.posts);
   const error = errorMessage;
   const [kind, setKind] = useState<PostKind | "all">("all");
   const [sort, setSort] = useState<"reviewDate" | "rating">("reviewDate");
@@ -29,6 +31,7 @@ export function PostListPage({ initialData, errorMessage = "" }: { initialData?:
       </div>
       {error && <p role="alert">{error}</p>}
       {data && !posts.length && <p>表示する投稿はありません。</p>}
+      {likes.error && <p role="alert" className="mb-4">{likes.error}</p>}
       <ul className="space-y-4">{posts.map(post => <li key={post.id} id={post.id}>
         <article className="card bg-base-100 shadow-sm"><div className="card-body min-w-0 break-words">
           <div className="flex items-start justify-between gap-4">
@@ -42,6 +45,13 @@ export function PostListPage({ initialData, errorMessage = "" }: { initialData?:
             {post.kind === "review" && post.reviewDate ? <p>{post.reviewDate.replace("-", "/")} 訪問</p> : post.publishedAt && <p>{new Intl.DateTimeFormat("ja-JP", { timeZone: "Asia/Tokyo" }).format(new Date(post.publishedAt))} 公開</p>}
             {post.source === "tabelog" && <p>食べログのいいね {post.likeCount}</p>}
           </div>
+          <button className="btn btn-sm self-start" type="button"
+            disabled={likes.pending.has(post.id) || !likes.states[post.id]}
+            aria-pressed={likes.states[post.id]?.liked === true}
+            aria-label={`${post.name || post.title || kinds[post.kind]}の${likes.states[post.id]?.liked ? "いいねを取り消す" : "いいね"}`}
+            onClick={() => { void likes.like(post.id); }}>
+            {likes.states[post.id]?.liked ? "♥" : "♡"} アプリのいいね {likes.states[post.id]?.likeCount ?? post.appLikeCount ?? "取得中"}
+          </button>
         </div></article>
       </li>)}</ul>
     </div>

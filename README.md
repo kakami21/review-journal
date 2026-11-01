@@ -209,3 +209,5 @@ Astro・EmDashへの移行後の構成は [移行設計](docs/emdash-migration.m
 最新の `main` から作業ブランチを作成し、検証後に `main` 向けPRを作成する。完了するIssueはPR本文の `Closes #番号` で関連付ける。開発用Worker・D1は引き続き本番と分離する。
 
 リリースはmain上の `vMAJOR.MINOR.PATCH` タグで管理する。タグpushによるGitHub Actionsの本番デプロイの初回設定・手順・復旧方法は [リリース手順](docs/releases.md) を参照。運用方針は [運用規則](.github/CONTRIBUTING.md) に記載する。
+
+公開投稿のアプリ内いいねは[いいねの導入手順](docs/post-likes.md)を参照。食べログの取得値とは別に保存し、導入にはD1の追加マイグレーションと環境別の署名鍵が必要です。
