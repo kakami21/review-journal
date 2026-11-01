@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { TabelogReviewScraper, type ScrapingLocator, type ScrapingPage } from "../src/lib/reviews/tabelog-review-scraper";
-import { importCollectedReviews } from "../src/lib/reviews/import-collected-reviews";
-import { CmsReviewStore } from "../src/lib/cms/review-store";
+import { TabelogReviewScraper } from "../src/lib/reviews/tabelog-review-scraper";
+import type { ScrapingLocator, ScrapingPage } from "../src/lib/reviews/scraping-browser";
+import { ReviewSyncStore } from "../src/lib/cms/review-sync-store";
+import { collectAndSaveReviews } from "../src/lib/reviews/collect-and-save-reviews";
+import { CmsReviewStore } from "../src/lib/cms/cms-review-store";
 
 type Element = { text?: string; attributes?: Record<string, string>; children?: Record<string, Element[]> };
 
@@ -65,8 +67,12 @@ function cmsStore() {
     handleContentCreate: create,
   };
   const db = { prepare: vi.fn(() => ({ bind })) } as unknown as D1Database;
-  const store = new CmsReviewStore(cms as never, db);
-  const save = vi.fn((reviews, timestamp) => store.importNew(reviews, timestamp));
+  const store = new CmsReviewStore(cms as never);
+  const save = vi.fn(async (reviews, timestamp) => {
+    const saved = await store.importNew(reviews, timestamp);
+    await new ReviewSyncStore(db).recordSuccess(timestamp);
+    return saved;
+  });
   return { save, create, run, bind, list: cms.handleContentList };
 }
 
@@ -82,7 +88,7 @@ describe("口コミ収集からCMS取り込みまで", () => {
       [detailUrl("1")]: detail(), [detailUrl("2")]: detail(),
     });
     const { save, create, bind } = cmsStore();
-    const result = await importCollectedReviews(() => scraper.scrape(), save);
+    const result = await collectAndSaveReviews(() => scraper.scrape(), save);
     expect(result).toEqual({ count: 2, addedCount: 2, scrapedAt: "2026-10-26T00:00:00.000Z" });
     expect(visited).toEqual([startUrl, secondUrl, detailUrl("1"), detailUrl("2")]);
     expect(save).toHaveBeenCalledOnce();
@@ -101,7 +107,7 @@ describe("口コミ収集からCMS取り込みまで", () => {
     if (missing === "店舗リンク欠落") broken.children = {};
     const { scraper, close } = fixture({ [startUrl]: { ".rvw-item": [item("1"), broken] } });
     const { save, run } = cmsStore();
-    await expect(importCollectedReviews(() => scraper.scrape(), save)).rejects.toThrow(`${startUrl} 項目2`);
+    await expect(collectAndSaveReviews(() => scraper.scrape(), save)).rejects.toThrow(`${startUrl} 項目2`);
     expect(save).not.toHaveBeenCalled();
     expect(run).not.toHaveBeenCalled();
     expect(close).toHaveBeenCalledOnce();
@@ -115,7 +121,7 @@ describe("口コミ収集からCMS取り込みまで", () => {
       [secondUrl]: { ".rvw-item": [repeated] },
     });
     const { save, run } = cmsStore();
-    await expect(importCollectedReviews(() => scraper.scrape(), save)).rejects.toThrow(`重複しています: ${secondUrl} 項目1`);
+    await expect(collectAndSaveReviews(() => scraper.scrape(), save)).rejects.toThrow(`重複しています: ${secondUrl} 項目1`);
     expect(save).not.toHaveBeenCalled();
     expect(run).not.toHaveBeenCalled();
     expect(close).toHaveBeenCalledOnce();
@@ -124,7 +130,7 @@ describe("口コミ収集からCMS取り込みまで", () => {
   it("一覧0件では取り込みも日時更新もしない", async () => {
     const { scraper, close } = fixture({ [startUrl]: { ".rvw-item": [] } });
     const { save, run } = cmsStore();
-    await expect(importCollectedReviews(() => scraper.scrape(), save)).rejects.toThrow(startUrl);
+    await expect(collectAndSaveReviews(() => scraper.scrape(), save)).rejects.toThrow(startUrl);
     expect(save).not.toHaveBeenCalled();
     expect(run).not.toHaveBeenCalled();
     expect(close).toHaveBeenCalledOnce();
@@ -132,7 +138,7 @@ describe("口コミ収集からCMS取り込みまで", () => {
 
   it("収集関数が0件を返しても取り込みを開始しない", async () => {
     const { save } = cmsStore();
-    await expect(importCollectedReviews(async () => [], save)).rejects.toThrow("0件");
+    await expect(collectAndSaveReviews(async () => [], save)).rejects.toThrow("0件");
     expect(save).not.toHaveBeenCalled();
   });
 
@@ -143,7 +149,7 @@ describe("口コミ収集からCMS取り込みまで", () => {
       [detailUrl("1")]: detail(), [detailUrl("2")]: detail(),
     }, failedUrl);
     const { save, run } = cmsStore();
-    await expect(importCollectedReviews(() => scraper.scrape(), save)).rejects.toThrow("503");
+    await expect(collectAndSaveReviews(() => scraper.scrape(), save)).rejects.toThrow("503");
     expect(save).not.toHaveBeenCalled();
     expect(run).not.toHaveBeenCalled();
     expect(close).toHaveBeenCalledOnce();
@@ -153,7 +159,7 @@ describe("口コミ収集からCMS取り込みまで", () => {
     const { scraper } = fixture({ [startUrl]: { ".rvw-item": [item("1")] }, [detailUrl("1")]: detail() });
     const { save, create, run } = cmsStore();
     create.mockResolvedValue({ success: false, error: { code: "CONTENT_CREATE_ERROR", message: "保存失敗" } });
-    await expect(importCollectedReviews(() => scraper.scrape(), save)).rejects.toThrow("保存失敗");
+    await expect(collectAndSaveReviews(() => scraper.scrape(), save)).rejects.toThrow("保存失敗");
     expect(run).not.toHaveBeenCalled();
   });
 
@@ -163,7 +169,7 @@ describe("口コミ収集からCMS取り込みまで", () => {
     vi.setSystemTime(new Date("2026-10-26T00:00:00Z"));
     const { save, create, run, list } = cmsStore();
     list.mockResolvedValue({ success: true, data: { items: [{ data: { source_id: "1" } }] } });
-    expect(await importCollectedReviews(() => scraper.scrape(), save)).toEqual({
+    expect(await collectAndSaveReviews(() => scraper.scrape(), save)).toEqual({
       count: 1, addedCount: 0, scrapedAt: "2026-10-26T00:00:00.000Z",
     });
     expect(create).not.toHaveBeenCalled();

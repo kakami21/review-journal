@@ -117,4 +117,15 @@ describe("管理画面の取り込み", () => {
     expect(mocks.cms.handleContentCreate).toHaveBeenCalledWith("reviews", expect.objectContaining({ slug: "second" }));
     expect(mocks.run).toHaveBeenCalledOnce();
   });
+  it("本文の追加後に日時保存が失敗したら失敗を返し、再実行で本文を重複追加しない", async () => {
+    mocks.run.mockRejectedValueOnce(new Error("日時保存の障害"));
+    expect((await (await request()).json()).data).toEqual({ ok: false, stage: "save" });
+    expect(mocks.cms.handleContentCreate).toHaveBeenCalledOnce();
+    mocks.cms.handleContentList.mockResolvedValue({ success: true, data: { items: [{ data: { source_id: review.id } }] } });
+    mocks.cms.handleContentCreate.mockClear();
+    expect((await (await request()).json()).data).toEqual({ ok: true, count: 1, addedCount: 0, scrapedAt: timestamp });
+    expect(mocks.cms.handleContentCreate).not.toHaveBeenCalled();
+    expect(mocks.run).toHaveBeenCalledTimes(2);
+  });
+
 });

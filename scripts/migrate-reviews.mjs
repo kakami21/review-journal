@@ -2,7 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
-import { reviewData, publicReview } from "../src/lib/cms/review-data.ts";
+import { toCmsReviewData, toPublicReview } from "../src/lib/cms/review-mapping.ts";
 
 const reviewSchema = z.object({
   id: z.string().min(1), name: z.string().min(1), url: z.url(), detailUrl: z.url(),
@@ -71,7 +71,7 @@ export async function migrateReviews(input, api) {
   // 既知の不一致は、1件も書き込む前に検出する。
   for (const review of snapshot.reviews) {
     const item = existing.get(review.id);
-    if (item && (item.trashed || !isDeepStrictEqual(review, publicReview(item.data)))) {
+    if (item && (item.trashed || !isDeepStrictEqual(review, toPublicReview(item.data)))) {
       throw new Error(`既存の編集内容またはゴミ箱と競合しています: ${review.id}`);
     }
   }
@@ -81,14 +81,14 @@ export async function migrateReviews(input, api) {
     let item = existing.get(review.id);
     if (!item) {
       const result = await api("content/reviews", "POST", {
-        slug: review.id, status: "draft", data: reviewData(review, snapshot.lastUpdatedAt),
+        slug: review.id, status: "draft", data: toCmsReviewData(review, snapshot.lastUpdatedAt),
       });
       item = result.item;
       created++;
     }
     if (item.status !== "published") {
       const current = await api(`content/reviews/${encodeURIComponent(item.id)}`);
-      if (!isDeepStrictEqual(review, publicReview(current.item.data))) throw new Error("移行中に口コミが変更されました。");
+      if (!isDeepStrictEqual(review, toPublicReview(current.item.data))) throw new Error("移行中に口コミが変更されました。");
       await api(`content/reviews/${encodeURIComponent(item.id)}/publish`, "POST", { _rev: current._rev });
       published++;
     }

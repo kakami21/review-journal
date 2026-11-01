@@ -1,14 +1,12 @@
 import type { EmDashRuntime } from "emdash/middleware";
 import type { Review } from "../reviews/review";
+import { toCmsReviewData } from "./review-mapping";
 
 type Cms = Pick<EmDashRuntime, "handleContentList" | "handleContentListTrashed" | "handleContentCreate">;
 
-import { reviewData } from "./review-data";
-export { reviewData, publicReview } from "./review-data";
-
 /** CMSライフサイクル経由で新規分だけ追加し、既存の編集・公開状態・ゴミ箱を保持する。 */
 export class CmsReviewStore {
-  constructor(private readonly cms: Cms, private readonly db: D1Database) {}
+  constructor(private readonly cms: Cms) {}
 
   private async sourceIds() {
     const ids = new Set<string>();
@@ -32,7 +30,7 @@ export class CmsReviewStore {
     for (const review of reviews) {
       if (ids.has(review.id)) continue;
       const result = await this.cms.handleContentCreate("reviews", {
-        slug: review.id, status: "draft", data: reviewData(review, scrapedAt),
+        slug: review.id, status: "draft", data: toCmsReviewData(review, scrapedAt),
       });
       if (!result.success) {
         // 同時取り込みの一意制約競合だけを照合し直す。他の保存失敗は成功に変換しない。
@@ -44,17 +42,6 @@ export class CmsReviewStore {
       }
       ids.add(review.id);
     }
-    // 全件成功後にだけ日時を進める。途中まで追加した下書きは再実行時に照合される。
-    await this.db.prepare(`
-      INSERT INTO app_review_sync (id, last_updated_at) VALUES (1, ?1)
-      ON CONFLICT(id) DO UPDATE SET last_updated_at = MAX(last_updated_at, excluded.last_updated_at)
-    `).bind(scrapedAt).run();
     return { count: reviews.length, addedCount, scrapedAt };
-  }
-
-  async lastUpdatedAt() {
-    const row = await this.db.prepare("SELECT last_updated_at FROM app_review_sync WHERE id = 1")
-      .first<{ last_updated_at: string }>();
-    return row?.last_updated_at ?? null;
   }
 }

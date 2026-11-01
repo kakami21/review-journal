@@ -2,8 +2,8 @@ import type { Review } from "./review";
 
 type ImportResult = { count: number; addedCount: number; scrapedAt: string };
 
-/** 全件の収集が成功してからCMSへ渡す。収集・保存の失敗は成功結果へ変換しない。 */
-export async function importCollectedReviews(
+/** 全件の収集成功後に日時を付けて保存関数へ渡す。保存先には依存せず、失敗は呼び出し元へ伝える。 */
+export async function collectAndSaveReviews(
   collect: () => Promise<Review[]>,
   importNew: (reviews: Review[], scrapedAt: string) => Promise<ImportResult>,
 ) {

@@ -1,6 +1,6 @@
 import { env } from "cloudflare:workers";
 import { definePlugin } from "emdash";
-import { importReviews } from "./import-reviews";
+import { importTabelogReviews } from "./import-tabelog-reviews";
 
 /** 管理画面の手動取り込みをEmDash標準の権限・CSRF検証を通るPOSTに限定する。 */
 export function createPlugin() {
@@ -14,7 +14,7 @@ export function createPlugin() {
       run: {
         methods: ["POST"],
         permission: "plugins:manage",
-        handler: async () => importReviews(env as unknown as AstroBindings),
+        handler: async () => importTabelogReviews(env as unknown as AstroBindings),
       },
     },
   });

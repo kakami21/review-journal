@@ -5,8 +5,9 @@ import {
 import type {
   BrowserProvider,
   BrowserSession,
-} from "./tabelog-review-scraper";
+} from "./scraping-browser";
 
+/** Cloudflareの接続だけを担当し、食べログの巡回・抽出は収集側へ委ねる。 */
 export class CloudflareBrowserProvider implements BrowserProvider {
   constructor(private readonly binding: BrowserWorker) {}
 
