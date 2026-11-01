@@ -6,7 +6,7 @@ import tailwindcss from "@tailwindcss/vite";
 import emdash from "emdash/astro";
 import { d1 } from "@emdash-cms/cloudflare";
 
-// 本番は明示したビルドだけで選択し、通常の開発は検証用Workerと開発用リモートD1を使う。
+// 本番は明示したビルドだけで選択し、通常の開発とstagingは検証用Worker・D1を使う。
 const production = process.env.ASTRO_ENV === "production";
 export default defineConfig({
   root: fileURLToPath(new URL("./astro/", import.meta.url)),
@@ -26,7 +26,6 @@ export default defineConfig({
     registry: false,
     fonts: false,
     plugins: [
-      { id: "entry-policy", version: "1.0.0", entrypoint: fileURLToPath(new URL("./src/cms/entry-policy.ts", import.meta.url)) },
       { id: "review-source-policy", version: "1.0.0", entrypoint: fileURLToPath(new URL("./src/cms/review-policy.mjs", import.meta.url)) },
       {
         id: "review-import", version: "1.0.0",

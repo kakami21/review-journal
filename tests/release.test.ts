@@ -55,8 +55,8 @@ const production = {
 };
 it("本番の生成設定を受理する", () => expect(() => checkProduction(production)).not.toThrow());
 it.each([
-  { name: "table-notes-astro-development" }, { account_id: "other-account" },
-  { d1_databases: [{ database_id: "3554b63d-b513-432f-bed2-3a90f5159eb0" }] },
+  { name: "table-notes-astro-staging" }, { account_id: "other-account" },
+  { d1_databases: [{ database_id: "29d7ef4b-65b8-4a71-8820-3eaee6d9fe4a" }] },
   { kv_namespaces: [] }, { kv_namespaces: [{ binding: "SESSION", id: "f9b3b197ea954dc9907d6dd09a6e3a28" }] },
   { triggers: { crons: [] } }, { routes: [] }, { routes: [{ pattern: "other.example", custom_domain: true }] },
 ])("本番以外の接続先を拒否する", (change) => {

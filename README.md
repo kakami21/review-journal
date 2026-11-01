@@ -2,14 +2,6 @@
 
 本人が食べログへ投稿した口コミを収集し、一覧で確認する個人用アプリです。
 
-## 共通投稿への拡張
-
-食べログと手入力を共通の `Post` として扱います。`kind` は `review` / `note` / `article`、`source` は `tabelog` / `manual` です。食べログの既存データと取得処理を保ち、手入力はEmDash管理画面の「手入力投稿」から作成します。共通モデルは `Post`、アプリ内で書いた投稿の保存先は `entries`、食べログの保存処理は `TabelogReviewStore` として役割を分けています。
-
-共通一覧は `/posts` と `/reviews`、APIは `/api/posts` です。既存の `/api/reviews` は食べログ専用として維持します。セットアップ済み環境では公開前に手入力用の保存先の準備が必要です。[設計・導入・復旧手順](docs/posts.md)を参照してください。
-
-すべての公開Postにログイン不要のアプリ内いいねを提供します。食べログの取得値と票を分離し、同じブラウザからは1投稿1票・取り消し可能です。公開前にアプリ用D1マイグレーションと署名鍵の設定が必要です。[いいねの仕様・導入手順](docs/post-likes.md)を参照してください。
-
 - 画面：React、Vite、Tailwind CSS、daisyUI
 - API：TypeScript、Hono、Cloudflare Workers
 - 口コミ収集：Cloudflare Browser Run
@@ -17,7 +9,27 @@
 
 ## Astro・EmDashへの本番切り替え
 
-本番移行は [本番移行手順](docs/production-migration.md)、公開は [リリース手順](docs/releases.md) に従う。`npm run build:production` が本番Astroを生成し、タグのReleaseが公開する。`npm run build` は旧Vite構成の検証用として残す。以下の旧構成の説明は、切り替え前の照合と復旧のために保持している。
+### 実行コマンド
+
+| コマンド | 用途 |
+| --- | --- |
+| `npm run dev` | stagingの設定で開発サーバーを起動 |
+| `npm run check` | Astro・TypeScriptの型チェック |
+| `npm run build` / `npm run build:staging` | staging用ビルド（`dist/astro/`） |
+| `npm run preview` | ビルド済みのstaging版をローカルで確認 |
+| `npm run build:production` | 本番用ビルド（`dist/astro-production/`） |
+| `npm run deploy` | 本番用ビルドと公開 |
+| `npm run deploy:staging` | staging用ビルドと公開 |
+| `npm run types` | Astro用のCloudflareバインディング型を生成 |
+| `npm test` / `npm run test:cms` | 単体テスト / 起動済みCMSの結合テスト |
+
+stagingは `wrangler.astro.jsonc` の検証用Worker・D1を使用する。`preview` の前に `npm run build` を実行する。
+
+検証用D1は `table-notes-staging` にデータを移行済み。旧 `table-notes-development` は移行時点の復旧用として保持しており、現在の接続先ではない。
+
+stagingのURL：<https://staging.pakoirileo.nokishita.app>（Workers URL：<https://table-notes-astro-staging.pandalize.workers.dev>）
+
+本番移行は [本番移行手順](docs/production-migration.md)、公開は [リリース手順](docs/releases.md) に従う。`npm run build:production` が本番Astroを生成し、タグのReleaseが公開する。`npm run dev`・`npm run build`・`npm run preview` はAstro版を実行する。旧Vite構成の実行コマンドは削除した。以下の旧構成の説明は、切り替え前の照合と復旧のために保持している。
 
 切り替え後は公開済みCMSデータだけを表示し、新規収集は下書きに追加する。全件入れ替えは行わない。CronはCMS保守のみで口コミ収集を起動しない。
 
@@ -55,14 +67,14 @@ flowchart LR
 
 | 実行方法 | 接続先D1 |
 | --- | --- |
-| `npm run dev` / `npm run dev:worker` / `npm run preview` | 開発用 `table-notes-development` |
-| `npm run build` → `npm run deploy` | 本番用 `dining-archive-db` |
+| `npm run dev` / `npm run build` / `npm run preview` | 開発用 `table-notes-staging` |
+| `npm run build:production` → `npm run deploy` | 本番用 `dining-archive-db` |
 
-ローカルDBは使用しません。アプリをローカルで起動する場合も、開発用リモートD1 `table-notes-development` に接続します。本番D1 `dining-archive-db` とは分離します。ローカルでの書き込みも検証サイトと同じ開発用DBに反映されます。
+ローカルDBは使用しません。アプリをローカルで起動する場合も、開発用リモートD1 `table-notes-staging` に接続します。本番D1 `dining-archive-db` とは分離します。ローカルでの書き込みも検証サイトと同じ開発用DBに反映されます。
 
-Astro・EmDashの `npm run dev:astro` / `npm run preview:astro` も同じ方針です。`wrangler.astro.jsonc` のD1の `remote: true` と、Astroアダプターの `remoteBindings: true` で接続します。詳しくは[Astro開発手順](docs/astro-development.md)を参照してください。
+Astro・EmDashの `npm run dev` / `npm run preview` も同じ方針です。`wrangler.astro.jsonc` のD1の `remote: true` と、Astroアダプターの `remoteBindings: true` で接続します。詳しくは[Astro開発手順](docs/astro-development.md)を参照してください。
 
-開発用は `wrangler.jsonc` の `env.development` で定義し、起動・ビルド時の `CLOUDFLARE_ENV=development` で選択する。
+stagingは `wrangler.astro.jsonc`、本番は `wrangler.astro.production.jsonc` で定義する。
 
 ## セットアップ
 
@@ -85,7 +97,7 @@ npm run dev
 開発用D1のスキーマを更新する場合：
 
 ```bash
-npx wrangler d1 migrations apply table-notes-development --env development --remote
+npx wrangler d1 migrations apply table-notes-staging --config wrangler.astro.jsonc --remote
 ```
 
 旧 `POST /api/reviews/refresh` は廃止しました。手動取り込みはAstro・EmDash管理画面から行います。本番データは自動コピーしません。
@@ -117,7 +129,7 @@ Astro・EmDashの管理画面へパスキーでログインし、「口コミの
 ## ビルドとデプロイ
 
 ```bash
-npm run build:astro
+npm run build
 npm run build:production
 ```
 
@@ -161,7 +173,7 @@ npm run build:production
 | `src/worker/index.ts` | APIルート、エラー処理、Scheduled Handlerを定義するWorkerの入口 |
 | `src/react-app/main.tsx` | Reactアプリを初期化し、ルーターを有効にする |
 | `src/react-app/App.tsx` | `/reviews`へのルーティングを定義する |
-| `src/react-app/pages/PostListPage.tsx` | 共通APIから投稿を取得し、種類の絞り込みと口コミの評価順を提供する |
+| `src/react-app/pages/ReviewListPage.tsx` | APIから口コミを取得し、訪問年月順または評価順で一覧表示する |
 | `src/react-app/styles.css` | Tailwind CSSとdaisyUIを読み込み、画面全体のスタイルを定義する |
 | `wrangler.jsonc` | Worker、Browser Run、D1、静的ファイル配信の設定を管理する |
 | `package.json` | npmコマンドと利用パッケージを管理する |

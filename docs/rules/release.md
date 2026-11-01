@@ -1,7 +1,7 @@
 # タグによる本番リリースの共通規則
 
 各プロジェクトで次のリリース運用を共通で使用する。
-対象のサービス・DB・URL・設定ファイル・検証コマンド・追跡Issueは、導入先のリリース手順で具体的に指定する。
+対象のサービス・DB・URL・設定ファイル・検証コマンド・追跡するチケットは、導入先のリリース手順で具体的に指定する。
 
 ## CIと本番公開
 
@@ -18,7 +18,7 @@
 - ホスティング側のmain連携など、別経路の自動公開を確認して停止する。公開経路はタグによるActionsに統一し、確認せずに初回タグをpushしない。
 - 実行環境に必要なSecretsを登録し、公開時に不足を検出して拒否する。アプリ実行用の秘密値をCIビルドへ渡さない。
 - Cloudflareでは公式の「Edit Cloudflare Workers」テンプレートを基に権限を限定し、Workerの必須シークレット宣言で不足を検出する。
-- 設定の確認状況と初回の公開結果は導入先のIssueに記録する。ローカル認証の成功だけで、GitHub上の公開を確認済みとしない。
+- 設定の確認状況と初回の公開結果は導入先のチケットに記録する。ローカル認証の成功だけで、公開を確認済みとしない。
 
 ## タグと公開後の確認
 
@@ -67,3 +67,19 @@ gh release create v1.0.0 --verify-tag --title v1.0.0 --generate-notes
 - 導入先のテストと各ビルド、本番接続先の検証を実行する。未実施の確認や外部設定不足は明記する。
 - タグ形式・main履歴・タグ先の変更、本番／検証接続先の判定を検証する。
 - CIはローカルの秘密設定ファイルなしで実行できるようにし、公開時は実行環境のSecrets登録を検証する。
+
+## 導入先での実装
+
+この文書はリリースの判断基準と確認事項を共有する。GitHub Actionsなどの実行ワークフロー、公開先、コマンド、Secrets、DB名は各プロジェクトで管理する。共通セットから公開処理は同期しない。
+
+導入先では、使用するCIサービスの仕様に合わせてタグの新規作成、対象コミット、テスト・ビルド、本番接続先、公開後の状態を検証する。公開用の認証情報は必要な権限に絞り、実行環境で保護する。
+
+## 参考資料
+
+- [Semantic Versioning 2.0.0（日本語）](https://semver.org/lang/ja/)：MAJOR・MINOR・PATCHの意味と、公開済みバージョンを変更しない原則。
+- [GitHub Actionsのpushイベント](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#push)：ブランチやタグのpushを起点とするワークフローの仕様。
+- [GitHubのデプロイ環境管理](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments)：Environment、Secrets、デプロイ対象のブランチ・タグの制限。
+- [Cloudflare WorkersのSecrets](https://developers.cloudflare.com/workers/configuration/secrets/)：秘密値の登録と必須シークレットの宣言。
+- [Cloudflare Workersのロールバック](https://developers.cloudflare.com/workers/versions-and-deployments/rollbacks/)：以前のバージョンへの復旧と制約。
+
+タグpushだけを本番公開の契機とする方針、承認者を設定しない運用、本番用タグの形式制限、DB変更を別操作にする方針、自動再試行・自動ロールバックを行わない方針は、このリポジトリの規則とする。SemVer自体はプレリリースも定義している。

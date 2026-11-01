@@ -7,9 +7,8 @@ export type ReviewApiDependencies = {
 };
 
 /** 公開APIのHTTP応答を共通化し、現行D1とCMSの保存処理は呼び出し側で選ぶ。 */
-export function createReviewApi(dependencies: ReviewApiDependencies, posts?: Hono<{ Bindings: CloudflareBindings }>) {
+export function createReviewApi(dependencies: ReviewApiDependencies) {
   const app = new Hono<{ Bindings: CloudflareBindings }>();
-  if (posts) app.route("/", posts);
 
   // GETでWorkerの稼働を確認し、キャッシュせずstatus: okを返す。
   app.get("/api/health", (c) => {
@@ -30,9 +29,7 @@ export function createReviewApi(dependencies: ReviewApiDependencies, posts?: Hon
   // 認証拒否などのHTTP例外はステータスとヘッダーを保持し、予期しない障害だけ共通500へ変換する。
   app.onError((error, c) => {
     if (error instanceof HTTPException) {
-      const response = error.getResponse();
-      // 頻度制限などのHTTPエラーでも、直前のミドルウェアが指定したno-storeを保持する。
-      return c.newResponse(response.body, response);
+      return error.getResponse();
     }
 
     console.error("Request failed", error);

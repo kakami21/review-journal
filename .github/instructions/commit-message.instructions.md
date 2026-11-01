@@ -25,8 +25,8 @@
 
 - 要約は日本語で簡潔に記載し、末尾に句点を付けない。「変更」「対応」などの曖昧な表現だけで終わらせない
 - 本文は変更理由や補足が必要な場合のみ記載する。1行目の後に空行を入れ、変更理由や背景を短く示す
-- フッターはIssue番号や破壊的変更がある場合のみ記載する。本文がある場合は、その後に空行を入れる
-- Issue参照は `Refs #123` の形式とする
+- フッターはチケットの参照や破壊的変更がある場合のみ記載する。本文がある場合は、その後に空行を入れる
+- チケットの参照形式は導入先の規則に従う。GitHub Issueでは `Refs #123` を使う
 
 既存の利用方法に影響する破壊的変更は、`type` または `scope` の後ろの `!` と、フッターの `BREAKING CHANGE:` の両方で明示する。
 
@@ -51,7 +51,9 @@ BREAKING CHANGE: 旧ログインAPIを廃止
 - 複数案、説明、前置き、後書きは付けない
 - 入力されたメッセージが規約違反の場合は、正しい形式に修正する
 
-## 参照
+## 参考資料
 
-- Conventional Commits 1.0.0
-- Git interpret-trailers
+- [Conventional Commits 1.0.0（日本語）](https://www.conventionalcommits.org/ja/v1.0.0/)：type・scope・破壊的変更・フッターの仕様。
+- [Git interpret-trailers](https://git-scm.com/docs/git-interpret-trailers)：コミット末尾のトレーラーの形式と扱い。
+
+日本語の要約、使用するtypeの一覧、`Refs #123`、破壊的変更に`!`と`BREAKING CHANGE:`を両方付ける運用は、このリポジトリの規則とする。Conventional Commitsでは、破壊的変更はどちらか一方でも示せる。
