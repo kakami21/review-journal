@@ -5,7 +5,7 @@ import {
 import type {
   BrowserProvider,
   BrowserSession,
-} from "../reviews/tabelog-review-scraper";
+} from "./tabelog-review-scraper";
 
 export class CloudflareBrowserProvider implements BrowserProvider {
   constructor(private readonly binding: BrowserWorker) {}

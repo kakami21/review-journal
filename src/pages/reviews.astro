@@ -1,12 +1,13 @@
 ---
 import { env } from "cloudflare:workers";
-import { loadReviewPage } from "../cms/review-page";
+import { loadReviewPage } from "../lib/cms/review-page";
 import SiteLayout from "../layouts/SiteLayout.astro";
-import { ReviewListPage } from "../react-app/pages/ReviewListPage";
+import { ReviewListPage } from "../components/ReviewListPage";
 
 const page = await loadReviewPage(env as unknown as AstroBindings);
 Astro.response.status = page.status;
 Astro.response.headers.set("Cache-Control", "no-store");
+
 ---
 
 <SiteLayout>

@@ -23,11 +23,11 @@ export default defineConfig({
     registry: false,
     fonts: false,
     plugins: [
-      { id: "review-source-policy", version: "1.0.0", entrypoint: fileURLToPath(new URL("./src/cms/review-policy.mjs", import.meta.url)) },
+      { id: "review-source-policy", version: "1.0.0", entrypoint: fileURLToPath(new URL("./src/lib/cms/review-policy.mjs", import.meta.url)) },
       {
         id: "review-import", version: "1.0.0",
-        entrypoint: fileURLToPath(new URL("./src/cms/review-import-plugin.ts", import.meta.url)),
-        adminEntry: fileURLToPath(new URL("./src/cms/review-import-admin.tsx", import.meta.url)),
+        entrypoint: fileURLToPath(new URL("./src/lib/cms/review-import-plugin.ts", import.meta.url)),
+        adminEntry: fileURLToPath(new URL("./src/lib/cms/review-import-admin.tsx", import.meta.url)),
         adminPages: [{ path: "/import", label: "口コミの取り込み", icon: "download" }],
       },
     ],

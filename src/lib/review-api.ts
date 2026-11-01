@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import type { Review } from "../reviews/review";
+import type { Review } from "./reviews/review";
 
 export type ReviewApiDependencies = {
   getAll: (env: AstroBindings) => Promise<{ reviews: Review[]; lastUpdatedAt: string | null }>;

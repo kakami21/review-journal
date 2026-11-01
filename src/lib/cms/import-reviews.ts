@@ -1,5 +1,5 @@
 import { withEmDashRuntime } from "emdash/middleware";
-import { CloudflareBrowserProvider } from "../infrastructure/cloudflare-browser-provider";
+import { CloudflareBrowserProvider } from "../reviews/cloudflare-browser-provider";
 import { importCollectedReviews } from "../reviews/import-collected-reviews";
 import { TabelogReviewScraper } from "../reviews/tabelog-review-scraper";
 import { CmsReviewStore } from "./review-store";
