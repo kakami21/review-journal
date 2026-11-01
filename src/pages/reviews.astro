@@ -4,6 +4,8 @@ import SiteLayout from "../layouts/SiteLayout.astro";
 import { getPublicPosts } from "../cms/public-posts";
 import { PostListPage, type PostsResponse } from "../react-app/pages/PostListPage";
 
+Astro.response.headers.set("Cache-Control", "no-store");
+
 let initialData: PostsResponse | undefined;
 let errorMessage = "";
 try {

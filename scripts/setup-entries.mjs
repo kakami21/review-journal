@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from "node:util";
 import { readFile } from "node:fs/promises";
 import { createCmsClient } from "./migrate-reviews.mjs";
 
@@ -13,7 +14,7 @@ export async function setupEntries(api, definition) {
     const current = result.items.find(item => item.slug === field.slug);
     if (current) {
       if (current.type !== field.type || Boolean(current.required) !== Boolean(field.required)
-        || JSON.stringify(current.validation ?? null) !== JSON.stringify(field.validation ?? null)) {
+        || !isDeepStrictEqual(current.validation ?? null, field.validation ?? null)) {
         throw new Error(`既存フィールド ${field.slug} が定義と異なります。手動で確認してください。`);
       }
       continue;
