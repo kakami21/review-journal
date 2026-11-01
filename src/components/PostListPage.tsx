@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { selectPosts, type Post, type PostKind } from "../../posts/post";
+import { selectPosts, type Post, type PostKind } from "../lib/posts/post";
 
 export type PostsResponse = { posts: Post[]; lastUpdatedAt: string | null };
 const kinds = { all: "すべて", review: "口コミ", note: "ノート", article: "記事" } as const;

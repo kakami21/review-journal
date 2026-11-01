@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createCmsClient, metadataSql, migrateReviews, parseSnapshot, verifyPublic } from "../scripts/migrate-reviews.mjs";
-import { publicReview, reviewData } from "../src/cms/review-data";
+import { publicReview, reviewData } from "../src/lib/cms/review-data";
 
 const review = { id: "B1", name: "店舗", url: "https://tabelog.com/shop/", detailUrl: "https://tabelog.com/rvwdtl/B1/",
   title: null, body: "元の本文", reviewDate: "2026-10", rating: 4, likeCount: 2 };

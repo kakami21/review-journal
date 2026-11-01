@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CmsReviewStore, publicReview, reviewData } from "../src/cms/review-store";
+import { CmsReviewStore, publicReview, reviewData } from "../src/lib/cms/review-store";
 
 const review = { id: "B1", detailUrl: "https://tabelog.com/review/B1", name: "店舗",
   url: "https://tabelog.com/restaurant", title: null, body: "取得した本文", reviewDate: "2026-10", rating: 4, likeCount: 3 };

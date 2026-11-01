@@ -13,9 +13,9 @@ const mocks = vi.hoisted(() => {
 });
 vi.mock("cloudflare:workers", () => ({ env: mocks.env }));
 vi.mock("emdash/middleware", () => ({ withEmDashRuntime: mocks.runtime }));
-vi.mock("../src/infrastructure/cloudflare-browser-provider", () => ({ CloudflareBrowserProvider: class {} }));
-vi.mock("../src/reviews/tabelog-review-scraper", () => ({ TabelogReviewScraper: class { scrape = mocks.scrape; } }));
-import { createPlugin } from "../src/cms/review-import-plugin";
+vi.mock("../src/lib/reviews/cloudflare-browser-provider", () => ({ CloudflareBrowserProvider: class {} }));
+vi.mock("../src/lib/reviews/tabelog-review-scraper", () => ({ TabelogReviewScraper: class { scrape = mocks.scrape; } }));
+import { createPlugin } from "../src/lib/cms/review-import-plugin";
 
 const plugin = createPlugin();
 const route = plugin.routes!.run;

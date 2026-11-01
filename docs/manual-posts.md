@@ -1,6 +1,6 @@
 # 食べログと手入力の共通投稿
 
-`/reviews` は食べログの口コミと、手入力の口コミ・ノート・記事をまとめて表示する。公開版をAstroで読み、初回HTMLに本文を含める。`/api/posts` は同じ変換を使う共通API。既存の `/api/reviews` と口コミの `#食べログID` リンクを維持する。
+`/reviews` は食べログの口コミと、手入力の口コミ・ノート・記事をまとめて表示する。公開版をAstroで読み、初回HTMLに本文を含める。`/api/posts` は同じ変換を使う共通API。画面部品は `src/components/PostListPage.tsx`、公開データの取得・変換は `src/lib/cms/public-posts.ts`、共通モデルは `src/lib/posts/post.ts` に置く。既存の `/api/reviews` と口コミの `#食べログID` リンクを維持する。
 
 ## 保存先と公開範囲
 
