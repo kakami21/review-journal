@@ -22,7 +22,7 @@ const db = { prepare: sql => ({ bind: (...values) => ({
 const store = new D1PostLikeStore(db);
 const secret = randomBytes(32).toString("hex");
 const keys = new Map([["food", "reviews:cms-food"], ["manual-note", "entries:cms-note"]]);
-const app = createReviewApi({ getAll: async () => ({ reviews: [], lastUpdatedAt: null }) }, createPostLikeApi({
+const app = createReviewApi({ getAll: async () => ({ reviews: [], lastUpdatedAt: null }), getPosts: async () => ({ posts: [], lastUpdatedAt: null }) }, createPostLikeApi({
   store, secret: () => secret, allowUpdate: async () => true,
   resolve: async ids => new Map(ids.filter(id => keys.has(id)).map(id => [id, keys.get(id)])),
 }));

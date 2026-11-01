@@ -2,6 +2,7 @@ import { D1PostLikeStore } from "../infrastructure/d1-post-like-store";
 import { postLikeKey } from "../posts/post-likes";
 import { getEmDashCollection } from "emdash";
 import { withEmDashRuntime } from "emdash/middleware";
+import { publicPhoto } from "../posts/photo";
 import type { Post } from "../posts/post";
 import { CmsReviewStore } from "./review-store";
 import { publicReview } from "./review-data";
@@ -23,6 +24,7 @@ export function publicPost(collection: "reviews" | "entries", data: Record<strin
     name: (data.restaurant_name ?? null) as string | null, url: (data.restaurant_url ?? null) as string | null,
     reviewDate: (data.review_month ?? null) as string | null, rating: (data.rating ?? null) as number | null,
     likeCount: null,
+    photo: publicPhoto(data.photo),
   };
 }
 

@@ -15,7 +15,7 @@ type Dependencies = {
 
 /** Cookie発行と票の保存を分け、同一オリジンから確認済みの閲覧者だけが操作できる。 */
 export function createPostLikeApi(dependencies: Dependencies) {
-  const app = new Hono<{ Bindings: CloudflareBindings }>();
+  const app = new Hono<{ Bindings: AstroBindings }>();
   const secret = () => {
     const value = dependencies.secret();
     if (!value || value.length < 32) throw new Error("いいね用署名鍵を設定してください。");

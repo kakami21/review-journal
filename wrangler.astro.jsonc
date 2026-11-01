@@ -25,6 +25,7 @@
       "id": "f9b3b197ea954dc9907d6dd09a6e3a28"
     }
   ],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "table-notes-media-staging", "remote": true }],
   "browser": {
     "binding": "BROWSER",
     "remote": true

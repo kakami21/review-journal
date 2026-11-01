@@ -4,13 +4,13 @@ import type { Post } from "../posts/post";
 import type { Review } from "../reviews/review";
 
 export type ReviewApiDependencies = {
-  getPosts?: () => Promise<{ posts: Post[]; lastUpdatedAt: string | null }>;
-  getAll: (env: CloudflareBindings) => Promise<{ reviews: Review[]; lastUpdatedAt: string | null }>;
+  getPosts: () => Promise<{ posts: Post[]; lastUpdatedAt: string | null }>;
+  getAll: (env: AstroBindings) => Promise<{ reviews: Review[]; lastUpdatedAt: string | null }>;
 };
 
-/** 公開APIのHTTP応答を共通化し、現行D1とCMSの保存処理は呼び出し側で選ぶ。 */
-export function createReviewApi(dependencies: ReviewApiDependencies, postLikes?: Hono<{ Bindings: CloudflareBindings }>) {
-  const app = new Hono<{ Bindings: CloudflareBindings }>();
+/** CMSの公開口コミ・共通投稿をHTTPへ返し、アプリAPIの404と内部障害の応答を統一する。 */
+export function createReviewApi(dependencies: ReviewApiDependencies, postLikes?: Hono<{ Bindings: AstroBindings }>) {
+  const app = new Hono<{ Bindings: AstroBindings }>();
 
   // GETでWorkerの稼働を確認し、キャッシュせずstatus: okを返す。
   app.get("/api/health", (c) => {
@@ -23,9 +23,8 @@ export function createReviewApi(dependencies: ReviewApiDependencies, postLikes?:
     return c.json(await dependencies.getAll(c.env));
   });
 
-  // GETで公開版の口コミと手入力投稿を返す。旧Workerでは共通投稿を公開しない。
+  // GETで公開版の口コミと手入力投稿を共通の表示モデルで返す。
   app.get("/api/posts", async (c) => {
-    if (!dependencies.getPosts) return c.json({ error: "APIが見つかりません。" }, 404);
     return c.json(await dependencies.getPosts());
   });
 

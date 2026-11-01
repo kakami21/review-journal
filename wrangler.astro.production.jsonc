@@ -24,6 +24,7 @@
       "id": "d3419d12971c4d3ca72503b4d3674016"
     }
   ],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "dining-archive-media", "remote": true }],
   "browser": {
     "binding": "BROWSER",
     "remote": true

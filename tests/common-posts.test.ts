@@ -80,9 +80,9 @@ describe("手入力スキーマの追加", () => {
   it("既存の口コミに触れずentriesと必要フィールドだけを追加する", async () => {
     const api = vi.fn().mockResolvedValue({ items: [] });
     const definition = seed.collections.find(collection => collection.slug === "entries")!;
-    expect(await setupEntries(api, definition)).toEqual({ collection: "entries", fields: 7 });
+    expect(await setupEntries(api, definition)).toEqual({ collection: "entries", fields: 8 });
     expect(api.mock.calls.every(call => !call[0].includes("reviews"))).toBe(true);
-    expect(api.mock.calls.filter(call => call[1] === "POST")).toHaveLength(8);
+    expect(api.mock.calls.filter(call => call[1] === "POST")).toHaveLength(9);
   });
   it("途中から再開しても作成済みフィールドを上書きしない", async () => {
     const definition = seed.collections.find(collection => collection.slug === "entries")!;

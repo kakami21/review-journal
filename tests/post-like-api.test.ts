@@ -8,7 +8,7 @@ const secret = "test-only-secret-for-post-likes-1234567890";
 const store = { read: vi.fn(), set: vi.fn() };
 const resolve = vi.fn();
 const allowUpdate = vi.fn();
-const app = () => createReviewApi({ getAll: vi.fn() }, createPostLikeApi({ store, resolve, secret: () => secret, allowUpdate }));
+const app = () => createReviewApi({ getAll: vi.fn(), getPosts: vi.fn() }, createPostLikeApi({ store, resolve, secret: () => secret, allowUpdate }));
 const request = (path: string, method = "GET", cookie?: string, extra: Record<string, string> = {}) => app().request(`${origin}${path}`, {
   method, headers: { Origin: origin, "X-Post-Likes": "1", ...(cookie ? { Cookie: cookie } : {}), ...extra },
 });
@@ -120,7 +120,7 @@ describe("匿名いいねAPI", () => {
       const { cookie } = await identify(); store.set.mockRejectedValue(new Error("internal"));
       const response = await request("/api/post-likes/food", "PUT", cookie);
       expect(response.status).toBe(500); expect(await response.text()).not.toContain("internal");
-      const invalid = createReviewApi({ getAll: vi.fn() }, createPostLikeApi({ store, resolve, secret: () => "", allowUpdate }));
+      const invalid = createReviewApi({ getAll: vi.fn(), getPosts: vi.fn() }, createPostLikeApi({ store, resolve, secret: () => "", allowUpdate }));
       expect((await invalid.request(`${origin}/api/like-visitor`, { method: "POST", headers: { Origin: origin, "X-Post-Likes": "1" } })).status).toBe(500);
     } finally { log.mockRestore(); }
   });

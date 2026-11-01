@@ -41,6 +41,7 @@ export function PostListPage({ initialData, errorMessage = "" }: { initialData?:
           <p className="text-sm opacity-60">{kinds[post.kind]} · {post.source === "tabelog" ? "食べログ" : "手入力"}</p>
           {post.kind === "review" && post.title && <h3 className="font-bold">{post.title}</h3>}
           {post.body && <p className="whitespace-pre-wrap leading-relaxed">{post.body}</p>}
+          {post.source === "manual" && post.photo && <img src={post.photo.url} alt={post.photo.alt} width={post.photo.width} height={post.photo.height} loading="lazy" decoding="async" className="h-auto max-w-full rounded" />}
           <div className="flex flex-wrap justify-between gap-4 text-sm opacity-60">
             {post.kind === "review" && post.reviewDate ? <p>{post.reviewDate.replace("-", "/")} 訪問</p> : post.publishedAt && <p>{new Intl.DateTimeFormat("ja-JP", { timeZone: "Asia/Tokyo" }).format(new Date(post.publishedAt))} 公開</p>}
             {post.source === "tabelog" && <p>食べログのいいね {post.likeCount}</p>}

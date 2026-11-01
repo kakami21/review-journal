@@ -150,6 +150,12 @@
             "min": 0,
             "max": 5
           }
+        },
+        {
+          "slug": "photo",
+          "label": "投稿の写真",
+          "type": "image",
+          "required": false
         }
       ]
     }
