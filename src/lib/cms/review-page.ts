@@ -7,7 +7,7 @@ export type ReviewsResponse = { reviews: Review[]; lastUpdatedAt: string | null 
 /** 公開APIと同じクエリを使い、失敗は空一覧にせずページの500応答へ渡す。 */
 export async function loadReviewPage(bindings: AstroBindings): Promise<{ status: number; props: ReviewListProps }> {
   try {
-    const data = await createCmsReviewApiDependencies(bindings).getAll(bindings);
+    const data = await createCmsReviewApiDependencies(bindings).getAll();
     return { status: 200, props: { data } };
   } catch (error) {
     console.error("Review page failed", error);
