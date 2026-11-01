@@ -1,13 +1,15 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+import type { Post } from "./posts/post";
 import type { Review } from "./reviews/review";
 
 export type ReviewApiDependencies = {
+  getPosts: () => Promise<{ posts: Post[]; lastUpdatedAt: string | null }>;
   getAll: () => Promise<{ reviews: Review[]; lastUpdatedAt: string | null }>;
 };
 
-/** CMSの公開参照処理を受け取り、一覧とヘルスチェックのHTTP応答を返す。 */
-export function createReviewApi(dependencies: ReviewApiDependencies) {
+/** CMSの公開口コミ・共通投稿をHTTPへ返し、アプリAPIの404と内部障害の応答を統一する。 */
+export function createReviewApi(dependencies: ReviewApiDependencies, postLikes?: Hono) {
   const app = new Hono();
 
   // GETでWorkerの稼働を確認し、キャッシュせずstatus: okを返す。
@@ -21,6 +23,13 @@ export function createReviewApi(dependencies: ReviewApiDependencies) {
     return c.json(await dependencies.getAll());
   });
 
+  // GETで公開版の口コミと手入力投稿を共通の表示モデルで返す。
+  app.get("/api/posts", async (c) => {
+    return c.json(await dependencies.getPosts());
+  });
+
+  if (postLikes) app.route("/", postLikes);
+
   // 定義のないアプリAPIを404のJSONとして返す。
   app.all("/api/*", (c) => {
     return c.json({ error: "APIが見つかりません。" }, 404);
@@ -29,7 +38,8 @@ export function createReviewApi(dependencies: ReviewApiDependencies) {
   // 認証拒否などのHTTP例外はステータスとヘッダーを保持し、予期しない障害だけ共通500へ変換する。
   app.onError((error, c) => {
     if (error instanceof HTTPException) {
-      return error.getResponse();
+      const response = error.getResponse();
+      return c.newResponse(response.body, response);
     }
 
     console.error("Request failed", error);

@@ -24,6 +24,7 @@
       "id": "d3419d12971c4d3ca72503b4d3674016"
     }
   ],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "dining-archive-media", "remote": true }],
   "browser": {
     "binding": "BROWSER",
     "remote": true
@@ -46,5 +47,20 @@
   ],
   "observability": {
     "enabled": true
-  }
+  },
+  "secrets": {
+    "required": [
+      "POST_LIKE_SECRET"
+    ]
+  },
+  "ratelimits": [
+    {
+      "name": "POST_LIKE_LIMITER",
+      "namespace_id": "47002",
+      "simple": {
+        "limit": 30,
+        "period": 60
+      }
+    }
+  ]
 }

@@ -37,7 +37,7 @@ const request = (path: string, init?: RequestInit) => ALL({ request: new Request
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.env.DB.prepare.mockReturnValue({ first: mocks.first, bind: mocks.bind });
-  mocks.bind.mockReturnValue({ run: mocks.run });
+  mocks.bind.mockImplementation((keys) => ({ run: mocks.run, all: async () => ({ success: true, results: JSON.parse(keys).map((key: string) => ({ post_key: key, like_count: 2, liked: 0 })) }) }));
   mocks.run.mockResolvedValue({ success: true });
   mocks.first.mockResolvedValue({ last_updated_at: timestamp });
   mocks.published.mockResolvedValue({ entries: [], nextCursor: undefined });
@@ -76,6 +76,19 @@ describe("Astro・CMSのHTTP契約", () => {
     expect(mocks.cms.handleContentCreate).not.toHaveBeenCalled();
     expect(mocks.scrape).not.toHaveBeenCalled();
     expect(mocks.run).not.toHaveBeenCalled();
+  });
+
+  it("共通APIは公開口コミと手入力を返し、旧APIの応答形式を変えない", async () => {
+    mocks.published.mockImplementation(async (collection: string) => ({ entries: collection === "reviews"
+      ? [{ data: { ...entry(review.id, review.reviewDate).data, id: "cms-review" } }]
+      : [{ data: { id: "cms-manual", kind: "note", title: "ノート", body: "公開ノート" } }] }));
+    const response = await request("/api/posts");
+    expect(response.status).toBe(200);
+    const result = await response.json() as { posts: Record<string, unknown>[] };
+    expect(result.posts).toHaveLength(2);
+    expect(result.posts[0]).toMatchObject({ id: review.id, contentId: "cms-review", kind: "review", source: "tabelog", likeCount: 3, appLikeCount: 2 });
+    expect(result.posts[1]).toMatchObject({ id: "manual-cms-manual", contentId: "cms-manual", kind: "note", source: "manual", body: "公開ノート", appLikeCount: 2 });
+    expect(mocks.cms.handleContentList).not.toHaveBeenCalled();
   });
 
   it("初回の公開一覧は空配列と未収集のnull日時を返す", async () => {

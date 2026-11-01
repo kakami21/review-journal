@@ -1,15 +1,22 @@
 ---
 import { env } from "cloudflare:workers";
-import { loadReviewPage } from "../lib/cms/review-page";
 import SiteLayout from "../layouts/SiteLayout.astro";
-import { ReviewListPage } from "../components/ReviewListPage";
+import { getPublicPosts } from "../lib/cms/public-posts";
+import { PostListPage, type PostsResponse } from "../components/PostListPage";
 
-const page = await loadReviewPage(env as unknown as AstroBindings);
-Astro.response.status = page.status;
 Astro.response.headers.set("Cache-Control", "no-store");
 
+let initialData: PostsResponse | undefined;
+let errorMessage = "";
+try {
+  initialData = await getPublicPosts(env as unknown as AstroBindings);
+} catch (error) {
+  console.error("Public posts failed", error);
+  Astro.response.status = 500;
+  errorMessage = "投稿の取得に失敗しました。時間をおいて再度お試しください。";
+}
 ---
 
 <SiteLayout>
-  <ReviewListPage {...page.props} client:load />
+  <PostListPage initialData={initialData} errorMessage={errorMessage} client:load />
 </SiteLayout>

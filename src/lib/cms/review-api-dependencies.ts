@@ -4,7 +4,7 @@ import { CmsReviewStore, publicReview } from "./review-store";
 import type { ReviewApiDependencies } from "../review-api";
 
 /** CMSの公開参照を接続する。手動取り込みは管理画面のプラグインに限定する。 */
-export function createCmsReviewApiDependencies(bindings: AstroBindings): ReviewApiDependencies {
+export function createCmsReviewApiDependencies(bindings: AstroBindings): Pick<ReviewApiDependencies, "getAll"> {
   return {
     async getAll() {
       // 管理用の一覧APIは編集中データを含むため使わず、公開版専用のクエリをページ送りする。
