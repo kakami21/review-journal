@@ -12,8 +12,7 @@ const server = await createServer({ configFile: false,
   plugins: [react(), tailwindcss(), { name: "likes-browser", configureServer(vite) { vite.middlewares.use(handle); } }],
   server: { host: "127.0.0.1", port: 4399, strictPort: true },
 });
-const { createPostLikeApi } = await server.ssrLoadModule("/src/lib/post-like-api.ts");
-const { createReviewApi } = await server.ssrLoadModule("/src/lib/review-api.ts");
+const { createHonoApp } = await server.ssrLoadModule("/src/lib/hono-app.ts");
 const { D1PostLikeStore } = await server.ssrLoadModule("/src/lib/posts/d1-post-like-store.ts");
 const db = { prepare: sql => ({ bind: (...values) => ({
   all: async () => ({ success: true, results: database.prepare(sql).all(...values) }),
@@ -22,10 +21,11 @@ const db = { prepare: sql => ({ bind: (...values) => ({
 const store = new D1PostLikeStore(db);
 const secret = randomBytes(32).toString("hex");
 const keys = new Map([["food", "reviews:cms-food"], ["manual-note", "entries:cms-note"]]);
-const app = createReviewApi({ getAll: async () => ({ reviews: [], lastUpdatedAt: null }), getPosts: async () => ({ posts: [], lastUpdatedAt: null }) }, createPostLikeApi({
+const app = createHonoApp();
+const dependencies = { getAll: async () => ({ reviews: [], lastUpdatedAt: null }), getPosts: async () => ({ posts: [], lastUpdatedAt: null }), postLikes: {
   store, secret: () => secret, allowUpdate: async () => true,
   resolve: async ids => new Map(ids.filter(id => keys.has(id)).map(id => [id, keys.get(id)])),
-}));
+} };
 
 /** 確認用URLだけを処理し、投票以外のAPIや外部サービスへの転送を作らない。 */
 async function handle(request, response, next) {
@@ -33,7 +33,7 @@ async function handle(request, response, next) {
   if (url.pathname.startsWith("/api/")) {
     const headers = new Headers();
     for (const [name, value] of Object.entries(request.headers)) if (value) headers.set(name, Array.isArray(value) ? value.join(",") : value);
-    const result = await app.fetch(new Request(url, { method: request.method, headers }));
+    const result = await app.fetch(new Request(url, { method: request.method, headers }), dependencies);
     response.writeHead(result.status, Object.fromEntries(result.headers)); response.end(await result.text()); return;
   }
   if (url.pathname === "/" || url.pathname === "/posts") {

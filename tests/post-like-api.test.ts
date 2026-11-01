@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createPostLikeApi } from "../src/lib/post-like-api";
-import { createReviewApi } from "../src/lib/review-api";
+import { createHonoApp } from "../src/lib/hono-app";
 import type { PostLikeState } from "../src/lib/posts/post-likes";
 
 const origin = "https://example.com";
@@ -8,10 +7,11 @@ const secret = "test-only-secret-for-post-likes-1234567890";
 const store = { read: vi.fn(), set: vi.fn() };
 const resolve = vi.fn();
 const allowUpdate = vi.fn();
-const app = () => createReviewApi({ getAll: vi.fn(), getPosts: vi.fn() }, createPostLikeApi({ store, resolve, secret: () => secret, allowUpdate }));
-const request = (path: string, method = "GET", cookie?: string, extra: Record<string, string> = {}) => app().request(`${origin}${path}`, {
+const app = createHonoApp();
+const dependencies = () => ({ getAll: vi.fn(), getPosts: vi.fn(), postLikes: { store, resolve, secret: () => secret, allowUpdate } });
+const request = (path: string, method = "GET", cookie?: string, extra: Record<string, string> = {}) => app.request(`${origin}${path}`, {
   method, headers: { Origin: origin, "X-Post-Likes": "1", ...(cookie ? { Cookie: cookie } : {}), ...extra },
-});
+}, dependencies());
 async function identify() {
   const first = await request("/api/like-visitor", "POST");
   expect(await first.json()).toEqual({ confirmed: false });
@@ -120,8 +120,8 @@ describe("匿名いいねAPI", () => {
       const { cookie } = await identify(); store.set.mockRejectedValue(new Error("internal"));
       const response = await request("/api/post-likes/food", "PUT", cookie);
       expect(response.status).toBe(500); expect(await response.text()).not.toContain("internal");
-      const invalid = createReviewApi({ getAll: vi.fn(), getPosts: vi.fn() }, createPostLikeApi({ store, resolve, secret: () => "", allowUpdate }));
-      expect((await invalid.request(`${origin}/api/like-visitor`, { method: "POST", headers: { Origin: origin, "X-Post-Likes": "1" } })).status).toBe(500);
+      const invalid = { ...dependencies(), postLikes: { store, resolve, secret: () => "", allowUpdate } };
+      expect((await app.request(`${origin}/api/like-visitor`, { method: "POST", headers: { Origin: origin, "X-Post-Likes": "1" } }, invalid)).status).toBe(500);
     } finally { log.mockRestore(); }
   });
 });

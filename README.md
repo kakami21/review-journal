@@ -124,7 +124,7 @@ npm run build:production
 | `src/lib/reviews/tabelog-review-scraper.ts` | 一覧・詳細ページの巡回、抽出と形式検証 |
 | `src/lib/reviews/cloudflare-browser-provider.ts` | Browser Runとスクレイパーの接続 |
 | `src/worker.ts` | Astroへのリクエスト委譲とCMS保守Cron |
-| `src/lib/review-api.ts` | Honoの公開APIとエラー応答 |
+| `src/lib/hono-app.ts` | Honoの公開APIとエラー応答 |
 | `seed/seed.json` | CMSコレクションの初期設定 |
 | `migrations/emdash/` | 現行D1用の追加SQL |
 | `cloudflare.d.ts` | 現行staging設定から生成したバインディング・実行環境の型 |
