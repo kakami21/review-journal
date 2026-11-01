@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Button } from "@cloudflare/kumo";
 import { apiFetch } from "emdash/plugin-utils";
-import type { ReviewImportResult } from "./import-reviews";
+import type { ReviewImportResult } from "./import-tabelog-reviews";
 
 /** 画面内の二重送信を防ぎ、収集・保存の結果を公開操作と分けて表示する。 */
 function ReviewImportPage() {

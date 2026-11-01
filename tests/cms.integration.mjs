@@ -12,24 +12,21 @@ const setup = await fetch(base+'/_emdash/api/setup/dev-bypass?content=0&token=1'
 const token = (await setup.json()).data?.token;
 assert(token, '先にnpm run devを起動してください。');
 async function api(path,method='GET',body){const r=await fetch(base+'/_emdash/api/'+path,{method,headers:{authorization:'Bearer '+token,'content-type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});return r.json();}
-const source=await readFile(new URL('../src/lib/cms/review-store.ts', import.meta.url),'utf8');
+const source=await readFile(new URL('../src/lib/cms/cms-review-store.ts', import.meta.url),'utf8');
 const temp = await mkdtemp(join(tmpdir(), 'table-notes-cms-test-'));
 const compiled=join(temp, 'store.mjs');
 const compilerOptions={module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ESNext};
-await writeFile(compiled,ts.transpileModule(source,{compilerOptions}).outputText.replaceAll('"./review-data"','"./review-data.mjs"'));
-const dataSource=await readFile(new URL('../src/lib/cms/review-data.ts', import.meta.url),'utf8');
-await writeFile(join(temp,'review-data.mjs'),ts.transpileModule(dataSource,{compilerOptions}).outputText);
+await writeFile(compiled,ts.transpileModule(source,{compilerOptions}).outputText.replaceAll('"./review-mapping"','"./review-mapping.mjs"'));
+const dataSource=await readFile(new URL('../src/lib/cms/review-mapping.ts', import.meta.url),'utf8');
+await writeFile(join(temp,'review-mapping.mjs'),ts.transpileModule(dataSource,{compilerOptions}).outputText);
 const {CmsReviewStore}=await import(pathToFileURL(compiled).href);
-let lastDate;
-const db={prepare:()=>({bind:date=>({run:async()=>{lastDate=date;}})})};
 const cms={handleContentCreate:(c,b)=>api('content/'+c,'POST',b),handleContentList:(c,p)=>api('content/'+c+'?'+new URLSearchParams(Object.entries(p).filter(([,v])=>v!==undefined))),handleContentListTrashed:(c,p)=>api('content/'+c+'/trash?'+new URLSearchParams(Object.entries(p).filter(([,v])=>v!==undefined)))};
-const store=new CmsReviewStore(cms,db);
+const store=new CmsReviewStore(cms);
 const sourceId='integration-'+Date.now();
 const review={id:sourceId,detailUrl:'https://tabelog.com/rvwr/test/'+sourceId,name:'結合テスト店舗',url:'https://tabelog.com/restaurant/test',title:null,body:'取得原文\n2行目',reviewDate:'2026-10',rating:4,likeCount:3};
 // 同じ取得元IDを同時に取り込み、DBの一意制約と競合後の照合を実CMSで確認する。
 const concurrent=await Promise.all([store.importNew([review],'2026-10-26T00:00:00.000Z'),store.importNew([review],'2026-10-26T00:00:00.000Z')]);
 assert.equal(concurrent.reduce((sum,result)=>sum+result.addedCount,0),1);
-assert.equal(lastDate,'2026-10-26T00:00:00.000Z');
 const list=await api('content/reviews');const item=list.data.items.find(i=>i.data.source_id===sourceId);assert(item);assert.equal(item.status,'draft');
 async function publicList(){const r=await fetch(base+'/api/reviews');assert.equal(r.status,200);return (await r.json()).reviews;}
 assert(!(await publicList()).some(i=>i.id===sourceId));

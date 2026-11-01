@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("emdash", () => ({ definePlugin: (plugin: unknown) => plugin,
   ContentSaveRejectedError: class extends Error {} }));
-import { createPlugin } from "../src/lib/cms/review-policy.mjs";
+import { createPlugin } from "../src/lib/cms/content-save-policy-plugin.mjs";
 const save = createPlugin().hooks["content:beforeSave"];
 const event = (content: Record<string, unknown>) => ({ collection: "entries", isNew: true, content, id: "id" });
 

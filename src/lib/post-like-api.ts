@@ -1,12 +1,13 @@
 import { Hono } from "hono";
 import type { Context } from "hono";
+import type { HonoAppEnv } from "./hono-app";
 import { getSignedCookie, setSignedCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
 import type { PostLikeStore } from "./posts/post-likes";
 
 const cookieName = "post_like_visitor";
 const lifetimeSeconds = 365 * 24 * 60 * 60;
-type Dependencies = {
+export type PostLikeDependencies = {
   store: PostLikeStore;
   resolve: (ids: string[]) => Promise<Map<string, string>>;
   secret: () => string;
@@ -14,15 +15,15 @@ type Dependencies = {
 };
 
 /** Cookie発行と票の保存を分け、同一オリジンから確認済みの閲覧者だけが操作できる。 */
-export function createPostLikeApi(dependencies: Dependencies) {
-  const app = new Hono();
-  const secret = () => {
-    const value = dependencies.secret();
+export function createPostLikeApi() {
+  const app = new Hono<HonoAppEnv>();
+  const secret = (c: Context<HonoAppEnv>) => {
+    const value = c.env.postLikes.secret();
     if (!value || value.length < 32) throw new Error("いいね用署名鍵を設定してください。");
     return value;
   };
-  const visitor = async (c: Context): Promise<string | null> => {
-    const signed = await getSignedCookie(c, secret(), cookieName);
+  const visitor = async (c: Context<HonoAppEnv>): Promise<string | null> => {
+    const signed = await getSignedCookie(c, secret(c), cookieName);
     if (signed === undefined) return null;
     // 無効なCookieは匿名の閲覧として扱い、更新には発行・確認の往復を再度要求する。
     if (signed === false) return null;
@@ -30,7 +31,7 @@ export function createPostLikeApi(dependencies: Dependencies) {
     if (!parts || Number(parts[2]) <= Date.now()) return null;
     return parts[1];
   };
-  const requireOrigin = (c: Context) => {
+  const requireOrigin = (c: Context<HonoAppEnv>) => {
     if (c.req.header("Origin") !== new URL(c.req.url).origin || c.req.header("X-Post-Likes") !== "1") {
       throw new HTTPException(403, { message: "このサイトから操作してください。" });
     }
@@ -45,7 +46,7 @@ export function createPostLikeApi(dependencies: Dependencies) {
     requireOrigin(c);
     if (await visitor(c)) return c.json({ confirmed: true });
     const value = `v1:${crypto.randomUUID()}:${Date.now() + lifetimeSeconds * 1000}`;
-    await setSignedCookie(c, cookieName, value, secret(), {
+    await setSignedCookie(c, cookieName, value, secret(c), {
       httpOnly: true, secure: new URL(c.req.url).protocol === "https:", sameSite: "Lax", path: "/", maxAge: lifetimeSeconds,
     });
     return c.json({ confirmed: false });
@@ -58,9 +59,9 @@ export function createPostLikeApi(dependencies: Dependencies) {
       throw new HTTPException(400, { message: "対象の投稿IDを1〜100件指定してください。" });
     }
     const unique = [...new Set(ids)];
-    const keys = await dependencies.resolve(unique);
+    const keys = await c.env.postLikes.resolve(unique);
     if (unique.some(id => !keys.has(id))) throw new HTTPException(404, { message: "公開投稿が見つかりません。" });
-    const states = await dependencies.store.read([...keys.values()], await visitor(c));
+    const states = await c.env.postLikes.store.read([...keys.values()], await visitor(c));
     return c.json({ states: Object.fromEntries(unique.map(id => [id, states.get(keys.get(id)!)!])) });
   });
 
@@ -69,15 +70,15 @@ export function createPostLikeApi(dependencies: Dependencies) {
     requireOrigin(c);
     const visitorId = await visitor(c);
     if (!visitorId) throw new HTTPException(403, { message: "Cookieの確認が必要です。" });
-    if (!await dependencies.allowUpdate(visitorId)) {
+    if (!await c.env.postLikes.allowUpdate(visitorId)) {
       c.header("Retry-After", "60");
       throw new HTTPException(429, { message: "しばらく待ってから操作してください。" });
     }
     const id = c.req.param("id");
     if (id.length > 200) throw new HTTPException(400, { message: "投稿IDが不正です。" });
-    const key = (await dependencies.resolve([id])).get(id);
+    const key = (await c.env.postLikes.resolve([id])).get(id);
     if (!key) throw new HTTPException(404, { message: "公開投稿が見つかりません。" });
-    return c.json(await dependencies.store.set(key, visitorId, c.req.method === "PUT"));
+    return c.json(await c.env.postLikes.store.set(key, visitorId, c.req.method === "PUT"));
   });
   app.all("/api/post-likes", c => { c.header("Allow", "GET"); return c.json({ error: "GETで取得してください。" }, 405); });
   app.all("/api/like-visitor", c => { c.header("Allow", "POST"); return c.json({ error: "POSTで操作してください。" }, 405); });

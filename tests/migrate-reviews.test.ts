@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createCmsClient, metadataSql, migrateReviews, parseSnapshot, verifyPublic } from "../scripts/migrate-reviews.mjs";
-import { publicReview, reviewData } from "../src/lib/cms/review-data";
+import { toPublicReview, toCmsReviewData } from "../src/lib/cms/review-mapping";
 
 const review = { id: "B1", name: "店舗", url: "https://tabelog.com/shop/", detailUrl: "https://tabelog.com/rvwdtl/B1/",
   title: null, body: "元の本文", reviewDate: "2026-10", rating: 4, likeCount: 2 };
@@ -27,18 +27,18 @@ function fixture(item?: Record<string, unknown>, trashed = false) {
 
 describe("既存公開口コミの一度限りの初期移行", () => {
   it("CMSが省略した任意の空欄を公開APIのnullに揃える", () => {
-    const { title, body, ...data } = reviewData(review, snapshot.lastUpdatedAt);
-    expect(publicReview(data)).toEqual({ ...review, title: null, body: null });
+    const { title, body, ...data } = toCmsReviewData(review, snapshot.lastUpdatedAt);
+    expect(toPublicReview(data)).toEqual({ ...review, title: null, body: null });
   });
   it("IDと本文を保持して下書き追加し、公開ライフサイクルを通す", async () => {
     const f = fixture();
     expect(await migrateReviews(snapshot, f.api)).toEqual({ count: 1, created: 1, published: 1 });
-    expect(f.items[0].data).toEqual(reviewData(review, snapshot.lastUpdatedAt));
+    expect(f.items[0].data).toEqual(toCmsReviewData(review, snapshot.lastUpdatedAt));
     expect(f.items[0].status).toBe("published");
     expect(await migrateReviews(snapshot, f.api)).toEqual({ count: 1, created: 0, published: 0 });
   });
   it.each(["編集済み", "ゴミ箱"])("%sとの衝突は書き込み前に停止する", async (state) => {
-    const f = fixture({ id: "cms-1", status: "draft", data: { ...reviewData(review, snapshot.lastUpdatedAt), ...(state === "編集済み" ? { body: "手動編集" } : {}) } }, state === "ゴミ箱");
+    const f = fixture({ id: "cms-1", status: "draft", data: { ...toCmsReviewData(review, snapshot.lastUpdatedAt), ...(state === "編集済み" ? { body: "手動編集" } : {}) } }, state === "ゴミ箱");
     await expect(migrateReviews(snapshot, f.api)).rejects.toThrow("競合");
     expect(f.api.mock.calls.every(([, method]) => method === undefined)).toBe(true);
   });

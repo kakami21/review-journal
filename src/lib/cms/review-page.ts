@@ -1,5 +1,5 @@
 import type { Review } from "../reviews/review";
-import { createCmsReviewApiDependencies } from "./review-api-dependencies";
+import { getPublicReviews } from "./get-public-reviews";
 import type { ReviewListProps } from "../../components/ReviewListPage";
 
 export type ReviewsResponse = { reviews: Review[]; lastUpdatedAt: string | null };
@@ -7,7 +7,7 @@ export type ReviewsResponse = { reviews: Review[]; lastUpdatedAt: string | null 
 /** 公開APIと同じクエリを使い、失敗は空一覧にせずページの500応答へ渡す。 */
 export async function loadReviewPage(bindings: AstroBindings): Promise<{ status: number; props: ReviewListProps }> {
   try {
-    const data = await createCmsReviewApiDependencies(bindings).getAll();
+    const data = await getPublicReviews(bindings.DB);
     return { status: 200, props: { data } };
   } catch (error) {
     console.error("Review page failed", error);

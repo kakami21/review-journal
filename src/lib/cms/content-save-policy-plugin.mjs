@@ -1,6 +1,6 @@
 import { ContentSaveRejectedError, definePlugin } from "emdash";
 
-/** 取得元との対応を固定し、本文の編集によって次回の取り込み対象が変わることを防ぐ。 */
+/** 口コミの取得元情報を固定し、手入力投稿は種類に応じた保存条件を検証する。 */
 export function createPlugin() {
   return definePlugin({
     id: "review-source-policy",

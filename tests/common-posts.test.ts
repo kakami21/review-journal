@@ -6,11 +6,10 @@ import { PostListPage } from "../src/components/PostListPage";
 import { setupEntries } from "../scripts/setup-entries.mjs";
 import seed from "../seed/seed.json";
 
-const mocks = vi.hoisted(() => ({ published: vi.fn(), runtime: vi.fn(), readLikes: vi.fn() }));
+const mocks = vi.hoisted(() => ({ published: vi.fn(), readLikes: vi.fn() }));
 vi.mock("../src/lib/posts/d1-post-like-store", () => ({ D1PostLikeStore: class { read = mocks.readLikes; } }));
 vi.mock("emdash", () => ({ getEmDashCollection: mocks.published }));
-vi.mock("emdash/middleware", () => ({ withEmDashRuntime: mocks.runtime }));
-import { publicPost, getPublicPosts } from "../src/lib/cms/public-posts";
+import { publicPost, getPublicPosts } from "../src/lib/cms/get-public-posts";
 
 const manual = (kind: Post["kind"] = "note", id = "01AAA"): Post => publicPost("entries", {
   id, kind, title: "手入力タイトル", body: "公開した本文", publishedAt: new Date("2026-10-31T20:00:00Z"),
@@ -20,7 +19,7 @@ const review = (): Post => publicPost("reviews", {
   source_url: "https://example.com/review", body: "既存口コミ本文", review_month: "2026-10", rating: 4, like_count: 9,
 });
 
-beforeEach(() => { vi.resetAllMocks(); mocks.runtime.mockResolvedValue(null); mocks.readLikes.mockImplementation(async (keys: string[]) => new Map(keys.map(key => [key, { likeCount: 2, liked: false }]))); });
+beforeEach(() => { vi.resetAllMocks(); mocks.readLikes.mockImplementation(async (keys: string[]) => new Map(keys.map(key => [key, { likeCount: 2, liked: false }]))); });
 
 describe("共通の公開投稿", () => {
   it("手入力3種類を取得元と分け、店舗情報なしでもノート・記事を表示できる", () => {
@@ -52,7 +51,7 @@ describe("共通の公開投稿", () => {
   it("公開クエリだけを両コレクションで全ページ読み、編集データを参照しない", async () => {
     mocks.published.mockResolvedValueOnce({ entries: [{ data: { id: "01", source_id: "old" } }], nextCursor: "p2" })
       .mockResolvedValueOnce({ entries: [] }).mockResolvedValueOnce({ entries: [{ data: { id: "02", kind: "note", body: "公開版" } }] });
-    const result = await getPublicPosts({} as AstroBindings);
+    const result = await getPublicPosts({ DB: { prepare: () => ({ first: async () => null }) } } as unknown as AstroBindings);
     expect(result.posts.map(p => p.id)).toEqual(["old", "manual-02"]);
     expect(result.posts.map(p => p.appLikeCount)).toEqual([2, 2]);
     expect(mocks.readLikes).toHaveBeenCalledWith(["reviews:01", "entries:02"], null);

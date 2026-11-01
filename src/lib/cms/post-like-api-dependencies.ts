@@ -1,6 +1,6 @@
 import { D1PostLikeStore } from "../posts/d1-post-like-store";
 import { postLikeKey } from "../posts/post-likes";
-import { readPublishedPosts } from "./public-posts";
+import { readPublishedPosts } from "./get-public-posts";
 
 /** 保存キーは公開版の不変IDから作り、リクエストで渡されたIDを直接保存に使わない。 */
 export function createCmsPostLikeDependencies(bindings: AstroBindings) {
