@@ -12,15 +12,26 @@
 | ブランチの作成・命名・改名 | [docs/rules/branch-naming.md](docs/rules/branch-naming.md) |
 | コミットメッセージの作成・修正 | [.github/instructions/commit-message.instructions.md](.github/instructions/commit-message.instructions.md) |
 | 言語を問わず、コードの編集、コードコメントの作成・修正 | [docs/rules/code-comments.md](docs/rules/code-comments.md) |
-| チケットのタイトル・本文の作成・更新（GitHub Issue、Azure DevOpsの作業項目など） | [docs/rules/ticket-writing.md](docs/rules/ticket-writing.md)、[日本語の文章](docs/rules/japanese-writing.md) |
+| チケットのタイトル・本文の作成・更新（GitHub Issue、Azure DevOpsの作業項目など） | [docs/rules/ticket-writing.md](docs/rules/ticket-writing.md) |
 | GitHub Issueの登録・完了、親子関係やラベルの設定 | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) |
-| ユーザーへの日本語の最終回答 | [日本語の文章](docs/rules/japanese-writing.md) |
 | PRタイトル・本文の作成・修正・自動生成 | [.github/instructions/pull-request.instructions.md](.github/instructions/pull-request.instructions.md) |
 | GitHub PRの作成・更新・レビュー・マージ | [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)、[.github/pull_request_template.md](.github/pull_request_template.md) |
-| リリースの準備・実行 | [共通リリース規則](docs/rules/release.md)と導入先プロジェクトのリリース手順 |
 
 複数の作業に該当する場合は、対応する参照先をすべて確認してください。チケットの登録時は、導入先の管理ツールの項目に合わせて共通の書き方を適用してください。
 
 ## GitHubの操作
 
 GitHubの参照・作成・更新には、GitHub連携ツールではなく `gh CLI` を使用する。
+
+## 日本語の文章
+
+チケットのタイトル・本文を日本語で作成・更新するときと、ユーザーへの最終回答を日本語で書くときは、`natural-japanese` スキルを必ず使用する。文章を作る前にスキルの指示を読み、生成した日本語を自然で読みやすい表現に整えてから出す。推敲で事実や確認結果を変えない。
+
+## リリース
+
+- 公開前に必要なテストとビルドの成功を確認する。
+- 公開した変更とバージョンを追跡できるようにする。
+- 公開後に主要機能が正常に動作することを確認する。
+- 失敗時の復旧手順を事前に決めておく。
+
+公開方法、認証設定、DB変更、復旧の具体的な手順は、導入先プロジェクトで管理する。
