@@ -27,7 +27,7 @@
  * @param env - D1などのCloudflareバインディング
  * @returns 口コミ一覧を格納したHTTPレスポンス
  */
-export async function getReviews(env: CloudflareBindings): Promise<Response> {
+export async function getReviews(env: AstroBindings): Promise<Response> {
   // ...
 }
 ```

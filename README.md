@@ -7,7 +7,7 @@
 - 口コミ収集：Cloudflare Browser Run
 - 保存・管理：EmDash、Cloudflare D1
 
-## Astro・EmDashへの本番切り替え
+## 実行環境
 
 Astroのルートはプロジェクト直下に統一し、画面は `src/`、静的ファイルは `public/`、型チェック設定は `tsconfig.json` に置く。EmDashの初期設定は `seed/seed.json`、DB更新用SQLは `migrations/emdash/` で管理する。
 
@@ -31,7 +31,7 @@ stagingは `wrangler.astro.jsonc` の検証用Worker・D1を使用する。`prev
 
 stagingのURL：<https://staging.pakoirileo.nokishita.app>（Workers URL：<https://table-notes-astro-staging.pandalize.workers.dev>）
 
-本番移行は [本番移行手順](docs/production-migration.md)、公開は [リリース手順](docs/releases.md) に従う。`npm run build:production` が本番Astroを生成し、タグのReleaseが公開する。`npm run dev`・`npm run build`・`npm run preview` はAstro版を実行する。旧Vite構成の実行コマンドは削除した。以下の旧構成の説明は、切り替え前の照合と復旧のために保持している。
+`npm run dev`・`npm run build`・`npm run preview` はAstroを実行する。`npm run build:production` が本番Astroを生成する。公開前に対象環境の設定と検証結果を確認する。
 
 切り替え後は公開済みCMSデータだけを表示し、新規収集は下書きに追加する。全件入れ替えは行わない。CronはCMS保守のみで口コミ収集を起動しない。
 
@@ -57,15 +57,14 @@ stagingのURL：<https://staging.pakoirileo.nokishita.app>（Workers URL：<http
 
 ```mermaid
 flowchart LR
-    C["認証付き更新API / Scheduled Handler"] --> B["CloudflareBrowserProvider"]
-    B --> S["TabelogReviewScraper"]
-    S --> R["RefreshReviews"]
-    R --> D["D1ReviewRepository"]
-    D --> V["review_list"]
-    V --> A["口コミ一覧API"]
+    A["EmDash管理画面の手動取り込み"] --> S["食べログの収集・検証"]
+    S --> C["CMSへ新規分を下書き追加"]
+    C --> P["管理画面で編集・公開"]
+    P --> Q["公開版専用のCMSクエリ"]
+    Q --> V["口コミ一覧API・画面"]
 ```
 
-ローカル開発と本番のどちらでも、口コミ一覧APIはD1の`review_list`ビューを参照する。D1は環境ごとに分離し、どちらもリモート接続を使用する。
+口コミはEmDash経由でD1へ保存し、一覧APIは公開済みのデータだけを取得する。D1は環境ごとに分離し、どちらもリモート接続を使用する。
 
 | 実行方法 | 接続先D1 |
 | --- | --- |
@@ -74,7 +73,7 @@ flowchart LR
 
 ローカルDBは使用しません。アプリをローカルで起動する場合も、開発用リモートD1 `table-notes-staging` に接続します。本番D1 `dining-archive-db` とは分離します。ローカルでの書き込みも検証サイトと同じ開発用DBに反映されます。
 
-Astro・EmDashの `npm run dev` / `npm run preview` も同じ方針です。`wrangler.astro.jsonc` のD1の `remote: true` と、Astroアダプターの `remoteBindings: true` で接続します。詳しくは[Astro開発手順](docs/astro-development.md)を参照してください。
+Astro・EmDashの `npm run dev` / `npm run preview` も同じ方針です。`wrangler.astro.jsonc` のD1の `remote: true` と、Astroアダプターの `remoteBindings: true` で接続します。
 
 stagingは `wrangler.astro.jsonc`、本番は `wrangler.astro.production.jsonc` で定義する。
 
@@ -86,7 +85,7 @@ npm install
 
 `TABELOG_USERNAME`（食べログURL上のユーザー名）はWrangler設定の `vars` で管理します。手動取り込みはEmDash管理画面のパスキー認証を使い、Basic認証の設定は不要です。
 
-Browser RunとD1は`wrangler.jsonc`でリモートバインディングとして設定されています。ローカルから利用した場合もCloudflare側の利用量に加算されます。
+Browser RunとD1は検証用の `wrangler.astro.jsonc` と本番用の `wrangler.astro.production.jsonc` で設定されています。ローカルから利用した場合もCloudflare側の利用量に加算されます。
 
 ## アプリのローカル起動
 
@@ -102,7 +101,7 @@ npm run dev
 npx wrangler d1 migrations apply table-notes-staging --config wrangler.astro.jsonc --remote
 ```
 
-旧 `POST /api/reviews/refresh` は廃止しました。手動取り込みはAstro・EmDash管理画面から行います。本番データは自動コピーしません。
+手動取り込みはEmDash管理画面から行います。本番データは自動コピーしません。
 
 ## ヘルスチェック
 
@@ -126,7 +125,7 @@ Bruno拡張またはデスクトップアプリで `bruno/` を開き、`checks`
 
 Astro・EmDashの管理画面へパスキーでログインし、「口コミの取り込み」→「口コミを取り込む」を押します。新規分だけ下書きとして追加し、登録済みの内容を保持します。取得件数・追加件数・成功日時を確認後、口コミ一覧で編集・公開してください。
 
-実行中の連打は防止します。保存途中に失敗した場合は追加済みの下書きを保持し、再実行時に重複を除外します。詳しくは[Astro開発・検証環境](docs/astro-development.md#管理画面からの手動取り込み34)を参照してください。
+実行中の連打は防止します。保存途中に失敗した場合は追加済みの下書きを保持し、再実行時に重複を除外します。
 
 ## ビルドとデプロイ
 
@@ -135,7 +134,7 @@ npm run build
 npm run build:production
 ```
 
-本番への初回移行とDB準備は [本番移行手順](docs/production-migration.md) を参照。公開はmainのCI成功後に正式タグをpushする。`npm run deploy` もAstro本番を直接公開するため、通常運用はタグのReleaseを使う。
+`npm run deploy:staging` は検証環境へ、`npm run deploy` は本番へビルドして公開する。DBの追加SQLは対象環境のWrangler設定を指定して適用する。
 
 ## ディレクトリの役割
 
@@ -159,8 +158,7 @@ src/
 │   └── cms/               # EmDashへの保存・公開参照・管理画面の拡張
 ├── worker.ts              # Cloudflareの入口とCMSの定期保守
 ├── live.config.ts         # AstroとEmDashのデータ読み込みを接続
-├── env.d.ts               # 環境・外部サービスの型を読み込む
-└── legacy/                # 移行前のWorkerとD1への全件保存
+└── env.d.ts               # 環境・外部サービスの型を読み込む
 ```
 
 `lib/cms/` はCMS本体ではなく、このアプリとEmDashをつなぐコードを置く。
@@ -177,8 +175,6 @@ src/
 
 公開画面では `pages/reviews.astro` → `components/ReviewListPage.tsx` → `/api/reviews` → `lib/cms/` の順に口コミを読み込む。手動取り込みでは、管理画面 → `lib/cms/` → `lib/reviews/` で収集し、新規分だけCMSへ下書き保存する。
 
-`legacy/` は現在のAstroの起動経路では使わない。旧 `wrangler.jsonc` からの起動と、移行前の動作を確認するテストのために保持する。旧Reactアプリの入口と重複するホーム画面は削除し、口コミ一覧とCSSはAstroで引き続き使う。ルートの `vite.config.ts` と `tsconfig.node.json` は旧Vite構成の設定であり、通常の起動・ビルドはAstroを使う。
-
 そのほかの主なディレクトリは次のとおり。
 
 | ディレクトリ | 役割 |
@@ -186,7 +182,7 @@ src/
 | `public/` | 加工せず配信する画像など |
 | `seed/` | EmDashの初期設定 |
 | `migrations/emdash/` | CMS連携で使う追加テーブルのSQL |
-| `migrations/` 直下 | 旧D1構成のテーブルとビューのSQL |
+| `migrations/` 直下 | 適用済みの旧DBスキーマの履歴。現在の起動・公開では使用しない |
 | `scripts/` | データ移行・リリースの補助処理 |
 | `tests/` | 単体テストとCMSの結合テスト |
 | `bruno/` | APIを手動確認するリクエスト集 |
@@ -198,7 +194,7 @@ src/
 - 訪問年月が`YYYY/MM 訪問`形式ではない
 - 点数またはいいね数を数値へ変換できない
 - 全投稿でいいね要素が見つからない
-- D1への一括保存が失敗する
+- CMSへの下書き保存が失敗する
 
 食べログ側のHTML構造変更を空データとして保存せず、既存データを維持するための条件です。
 
@@ -209,14 +205,14 @@ src/
 - 実行頻度、取得データの範囲、利用方法について対象サイトの利用条件を確認してください。
 - Browser Runの利用量はCloudflareダッシュボードで確認してください。
 
-## 移行設計
+## データと型定義
 
-Astro・EmDashの起動・検証・管理者登録・取り込み手順は [Astro開発・検証環境](docs/astro-development.md) を参照。Astro検証環境では新規口コミをCMSへ下書き追加し、公開済みの内容だけを表示する。本番切り替え前の準備と検証状況は [本番移行手順](docs/production-migration.md) を参照。
+CMSのコレクション定義は `seed/seed.json`、成功した収集日時のテーブルは `migrations/emdash/0001_review_sync.sql` で管理する。EmDash内部のテーブルを直接書き換えず、本文の作成・編集・公開はCMS APIを通す。
 
-Astro・EmDashへの移行後の構成は [移行設計](docs/emdash-migration.md) を参照。現在の実装仕様と区別して管理する。
+Cloudflareの型定義は `cloudflare.d.ts` に統一する。Wrangler設定を変更した場合は `npm run types` で接続先と実行環境の型を再生成する。[Cloudflare公式の型生成手順](https://developers.cloudflare.com/workers/languages/typescript/#generate-types)に従い、生成した定義を型チェックで使う。
+
+既存データをCMSへ移す補助処理は `scripts/migrate-reviews.mjs` に置く。通常の起動・口コミ取り込みでは使用しない。
 
 ## 開発とリリースの運用
 
-最新の `main` から作業ブランチを作成し、検証後に `main` 向けPRを作成する。完了するIssueはPR本文の `Closes #番号` で関連付ける。開発用Worker・D1は引き続き本番と分離する。
-
-リリースはmain上の `vMAJOR.MINOR.PATCH` タグで管理する。タグpushによるGitHub Actionsの本番デプロイの初回設定・手順・復旧方法は [リリース手順](docs/releases.md) を参照。運用方針は [運用規則](.github/CONTRIBUTING.md) に記載する。
+ブランチ・PR・公開の共通ルールは [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) に従う。検証用と本番のWorker・D1・セッション用KVを分離し、公開には対象環境の設定を使う。

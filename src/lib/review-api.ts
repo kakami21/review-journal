@@ -3,12 +3,12 @@ import { HTTPException } from "hono/http-exception";
 import type { Review } from "./reviews/review";
 
 export type ReviewApiDependencies = {
-  getAll: (env: CloudflareBindings) => Promise<{ reviews: Review[]; lastUpdatedAt: string | null }>;
+  getAll: () => Promise<{ reviews: Review[]; lastUpdatedAt: string | null }>;
 };
 
-/** 公開APIのHTTP応答を共通化し、CMSと旧D1の参照処理は呼び出し側で選ぶ。 */
+/** CMSの公開参照処理を受け取り、一覧とヘルスチェックのHTTP応答を返す。 */
 export function createReviewApi(dependencies: ReviewApiDependencies) {
-  const app = new Hono<{ Bindings: CloudflareBindings }>();
+  const app = new Hono();
 
   // GETでWorkerの稼働を確認し、キャッシュせずstatus: okを返す。
   app.get("/api/health", (c) => {
@@ -18,7 +18,7 @@ export function createReviewApi(dependencies: ReviewApiDependencies) {
 
   // GETで公開済みの口コミと成功した最終収集日時を返す。
   app.get("/api/reviews", async (c) => {
-    return c.json(await dependencies.getAll(c.env));
+    return c.json(await dependencies.getAll());
   });
 
   // 定義のないアプリAPIを404のJSONとして返す。
