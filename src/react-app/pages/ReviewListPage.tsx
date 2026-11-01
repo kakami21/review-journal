@@ -1,55 +1,17 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import type { ReviewsResponse } from "../../cms/review-page";
 
 type SortType = "reviewDate" | "rating";
 
-type Review = {
-  id: string;
-  name: string;
-  url: string;
-  title: string | null;
-  body: string | null;
-  reviewDate: string;
-  rating: number;
-  likeCount: number;
-};
+export type ReviewListProps =
+  | { data: ReviewsResponse; errorMessage?: never }
+  | { data?: never; errorMessage: string };
 
-type ReviewsResponse = {
-  reviews: Review[];
-  lastUpdatedAt: string | null;
-};
-
-export function ReviewListPage() {
-  const [reviews, setReviews] = useState<Review[]>();
-  const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>();
-  const [errorMessage, setErrorMessage] = useState("");
+/** Astroで取得した公開版を初回HTMLと並び替えに使い、ブラウザで再取得しない。 */
+export function ReviewListPage({ data, errorMessage }: ReviewListProps) {
   const [sortType, setSortType] = useState<SortType>("reviewDate");
-
-  useEffect(() => {
-    async function loadReviews() {
-      try {
-        const response = await fetch("/api/reviews");
-
-        if (!response.ok) {
-          throw new Error("口コミの取得に失敗しました。");
-        }
-
-        const data = (await response.json()) as ReviewsResponse;
-        setReviews(data.reviews);
-        setLastUpdatedAt(data.lastUpdatedAt);
-      } catch (error) {
-        setErrorMessage(
-          error instanceof Error
-            ? error.message
-            : "口コミの取得に失敗しました。",
-        );
-      }
-    }
-
-    void loadReviews();
-  }, []);
-
-  // 未取得を0件と表示せず、取得中・失敗時も共通のページ枠を保つ。
-  const loading = !reviews && !errorMessage;
+  const reviews = data?.reviews;
+  const lastUpdatedAt = data?.lastUpdatedAt;
   const sortedReviews = reviews ? [...reviews].sort((a, b) =>
     sortType === "reviewDate"
       ? b.reviewDate.localeCompare(a.reviewDate)
@@ -69,6 +31,7 @@ export function ReviewListPage() {
                 ? new Intl.DateTimeFormat("ja-JP", {
                     dateStyle: "medium",
                     timeStyle: "short",
+                    timeZone: "Asia/Tokyo",
                   }).format(new Date(lastUpdatedAt))
                 : "未実行"}
             </p>}
@@ -103,17 +66,6 @@ export function ReviewListPage() {
           </div>
         </div>
 
-        {loading && <div role="status" aria-live="polite">
-          <p className="mb-4 opacity-70">口コミを読み込んでいます…</p>
-          <div aria-hidden="true" className="space-y-4">
-            {[0, 1, 2].map(index => <div key={index} className="card bg-base-100 shadow-sm">
-              <div className="card-body gap-4">
-                <div className="h-6 w-2/3 rounded bg-base-200" />
-                <div className="h-20 rounded bg-base-200" />
-              </div>
-            </div>)}
-          </div>
-        </div>}
         {errorMessage && <p role="alert">{errorMessage}</p>}
 
         <ul className="space-y-4">
