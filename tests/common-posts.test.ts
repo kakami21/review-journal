@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { selectPosts, type Post } from "../src/posts/post";
-import { PostListPage } from "../src/react-app/pages/PostListPage";
+import { selectPosts, type Post } from "../src/lib/posts/post";
+import { PostListPage } from "../src/components/PostListPage";
 import { setupEntries } from "../scripts/setup-entries.mjs";
 import seed from "../seed/seed.json";
 
 const mocks = vi.hoisted(() => ({ published: vi.fn(), runtime: vi.fn() }));
 vi.mock("emdash", () => ({ getEmDashCollection: mocks.published }));
 vi.mock("emdash/middleware", () => ({ withEmDashRuntime: mocks.runtime }));
-import { publicPost, getPublicPosts } from "../src/cms/public-posts";
+import { publicPost, getPublicPosts } from "../src/lib/cms/public-posts";
 
 const manual = (kind: Post["kind"] = "note", id = "01AAA"): Post => publicPost("entries", {
   id, kind, title: "手入力タイトル", body: "公開した本文", publishedAt: new Date("2026-10-31T20:00:00Z"),

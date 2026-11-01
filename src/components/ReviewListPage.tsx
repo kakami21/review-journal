@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { ReviewsResponse } from "../../cms/review-page";
+import type { ReviewsResponse } from "../lib/cms/review-page";
 
 type SortType = "reviewDate" | "rating";
 

@@ -1,6 +1,6 @@
 import type { Review } from "../reviews/review";
 import { createCmsReviewApiDependencies } from "./review-api-dependencies";
-import type { ReviewListProps } from "../react-app/pages/ReviewListPage";
+import type { ReviewListProps } from "../../components/ReviewListPage";
 
 export type ReviewsResponse = { reviews: Review[]; lastUpdatedAt: string | null };
 

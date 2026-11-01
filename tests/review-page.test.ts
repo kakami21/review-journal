@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ published: vi.fn(), runtime: vi.fn(), first: vi.fn() }));
 vi.mock("emdash", () => ({ getEmDashCollection: mocks.published }));
 vi.mock("emdash/middleware", () => ({ withEmDashRuntime: mocks.runtime }));
-import { loadReviewPage } from "../src/cms/review-page";
+import { loadReviewPage } from "../src/lib/cms/review-page";
 
 const bindings = { DB: { prepare: () => ({ first: mocks.first }) } } as unknown as AstroBindings;
 beforeEach(() => {
