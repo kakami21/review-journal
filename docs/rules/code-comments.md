@@ -64,3 +64,9 @@ app.get("/api/health", async (c) => {
 // NOTE: このルートは静的ファイル用ルートより先に定義する。
 // HACK: ライブラリ側の問題が解消されるまで暫定的に回避する。
 ```
+
+## 参考資料
+
+- [Google TypeScript Style Guide — Comments & documentation](https://google.github.io/styleguide/tsguide.html#comments-documentation)：コードと重複する説明を避け、必要な情報をコメントやJSDocで補う指針。
+
+参照先はTypeScript向けのガイドであり、本書ではコメントの考え方を参考にする。日本語での記述、APIルートの説明項目、コメントタグの種類と表記は、このリポジトリの規則とする。

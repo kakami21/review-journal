@@ -1,4 +1,4 @@
-name: development
+name: staging
 variables:
   - name: baseUrl
     value: https://staging.pakoirileo.nokishita.app

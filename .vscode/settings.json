@@ -1,5 +1,14 @@
 {
-  "editor.formatOnSave": true,
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    {
+      "file": ".github/instructions/commit-message.instructions.md"
+    }
+  ],
+  "github.copilot.chat.pullRequestDescriptionGeneration.instructions": [
+    {
+      "file": ".github/instructions/pull-request.instructions.md"
+    }
+  ],
   "editor.fontFamily": "Menlo, Cascadia Code",
   "terminal.integrated.fontFamily": "Menlo, Cascadia Code",
   "editor.fontSize": 14,
@@ -22,27 +31,5 @@
   "files.insertFinalNewline": true,
 
   "explorer.compactFolders": false,
-  "githubPullRequests.defaultMergeMethod": "merge",
-  "githubPullRequests.assignCreated": "${user}",
-  "githubPullRequests.overrideDefaultBranch": "main",
-  "githubPullRequests.createDefaultBaseBranch": "repositoryDefault",
-
-  "github.copilot.enable": {
-    "*": true,
-    "plaintext": false,
-    "markdown": false,
-    "scminput": false
-  },
-
-  "chat.includeApplyingInstructions": true,
-  "github.copilot.chat.pullRequestDescriptionGeneration.instructions": [
-    {
-      "file": ".github/instructions/pull-request.instructions.md"
-    }
-  ],
-	"github.copilot.chat.commitMessageGeneration.instructions": [
-		{
-      "file": ".github/instructions/commit-message.instructions.md"
-		}
-  ],
+  "editor.formatOnSave": true
 }
