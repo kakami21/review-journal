@@ -78,6 +78,19 @@ describe("Astro・CMSのHTTP契約", () => {
     expect(mocks.run).not.toHaveBeenCalled();
   });
 
+  it("共通APIは公開口コミと手入力を返し、旧APIの応答形式を変えない", async () => {
+    mocks.published.mockImplementation(async (collection: string) => ({ entries: collection === "reviews"
+      ? [{ data: { ...entry(review.id, review.reviewDate).data, id: "cms-review" } }]
+      : [{ data: { id: "cms-manual", kind: "note", title: "ノート", body: "公開ノート" } }] }));
+    const response = await request("/api/posts");
+    expect(response.status).toBe(200);
+    const result = await response.json() as { posts: Record<string, unknown>[] };
+    expect(result.posts).toHaveLength(2);
+    expect(result.posts[0]).toMatchObject({ id: review.id, contentId: "cms-review", kind: "review", source: "tabelog" });
+    expect(result.posts[1]).toMatchObject({ id: "manual-cms-manual", contentId: "cms-manual", kind: "note", source: "manual", body: "公開ノート" });
+    expect(mocks.cms.handleContentList).not.toHaveBeenCalled();
+  });
+
   it("初回の公開一覧は空配列と未収集のnull日時を返す", async () => {
     mocks.first.mockResolvedValue(null);
     expect(await (await request("/api/reviews")).json()).toEqual({ reviews: [], lastUpdatedAt: null });
