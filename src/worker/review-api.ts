@@ -1,8 +1,10 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
+import type { Post } from "../posts/post";
 import type { Review } from "../reviews/review";
 
 export type ReviewApiDependencies = {
+  getPosts?: () => Promise<{ posts: Post[]; lastUpdatedAt: string | null }>;
   getAll: (env: CloudflareBindings) => Promise<{ reviews: Review[]; lastUpdatedAt: string | null }>;
 };
 
@@ -19,6 +21,12 @@ export function createReviewApi(dependencies: ReviewApiDependencies) {
   // GETで公開済みの口コミと成功した最終収集日時を返す。
   app.get("/api/reviews", async (c) => {
     return c.json(await dependencies.getAll(c.env));
+  });
+
+  // GETで公開版の口コミと手入力投稿を返す。旧Workerでは共通投稿を公開しない。
+  app.get("/api/posts", async (c) => {
+    if (!dependencies.getPosts) return c.json({ error: "APIが見つかりません。" }, 404);
+    return c.json(await dependencies.getPosts());
   });
 
   // 定義のないアプリAPIを404のJSONとして返す。

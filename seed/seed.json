@@ -84,6 +84,74 @@
         }
       ],
       "urlPattern": "/reviews#{slug}"
+    },
+    {
+      "slug": "entries",
+      "label": "手入力投稿",
+      "labelSingular": "手入力投稿",
+      "titleField": "title",
+      "routable": false,
+      "supports": [
+        "drafts",
+        "revisions",
+        "scheduling"
+      ],
+      "urlPattern": "/reviews#manual-{id}",
+      "fields": [
+        {
+          "slug": "kind",
+          "label": "種類",
+          "type": "select",
+          "required": true,
+          "validation": {
+            "options": [
+              "review",
+              "note",
+              "article"
+            ]
+          }
+        },
+        {
+          "slug": "title",
+          "label": "タイトル",
+          "type": "string",
+          "required": true
+        },
+        {
+          "slug": "body",
+          "label": "本文",
+          "type": "text",
+          "required": false
+        },
+        {
+          "slug": "restaurant_name",
+          "label": "店舗名（口コミ）",
+          "type": "string",
+          "required": false
+        },
+        {
+          "slug": "restaurant_url",
+          "label": "店舗URL（口コミ）",
+          "type": "url",
+          "required": false
+        },
+        {
+          "slug": "review_month",
+          "label": "訪問年月（YYYY-MM・口コミ）",
+          "type": "string",
+          "required": false
+        },
+        {
+          "slug": "rating",
+          "label": "評価（口コミ）",
+          "type": "number",
+          "required": false,
+          "validation": {
+            "min": 0,
+            "max": 5
+          }
+        }
+      ]
     }
   ]
 }
