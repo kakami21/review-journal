@@ -1,7 +1,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { ReviewListPage } from "../src/react-app/pages/ReviewListPage";
+import { ReviewListPage } from "../src/components/ReviewListPage";
 
 describe("口コミ一覧の初回HTML", () => {
   it("背景・見出し・取得中の案内を表示し、未取得を0件や未実行と表示しない", () => {

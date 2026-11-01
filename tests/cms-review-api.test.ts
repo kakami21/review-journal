@@ -16,10 +16,10 @@ const mocks = vi.hoisted(() => {
 vi.mock("cloudflare:workers", () => ({ env: mocks.env }));
 vi.mock("emdash", () => ({ getEmDashCollection: mocks.published }));
 vi.mock("emdash/middleware", () => ({ withEmDashRuntime: mocks.runtime }));
-vi.mock("../src/infrastructure/cloudflare-browser-provider", () => ({
+vi.mock("../src/lib/reviews/cloudflare-browser-provider", () => ({
   CloudflareBrowserProvider: class { constructor(binding: unknown) { mocks.browser(binding); } },
 }));
-vi.mock("../src/reviews/tabelog-review-scraper", () => ({
+vi.mock("../src/lib/reviews/tabelog-review-scraper", () => ({
   TabelogReviewScraper: class { scrape = mocks.scrape; },
 }));
 import { ALL } from "../src/pages/api/[...path]";

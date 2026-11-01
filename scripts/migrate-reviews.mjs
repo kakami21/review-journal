@@ -2,7 +2,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { z } from "zod";
-import { reviewData, publicReview } from "../src/cms/review-data.ts";
+import { reviewData, publicReview } from "../src/lib/cms/review-data.ts";
 
 const reviewSchema = z.object({
   id: z.string().min(1), name: z.string().min(1), url: z.url(), detailUrl: z.url(),
