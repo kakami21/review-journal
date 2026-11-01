@@ -12,12 +12,12 @@ const setup = await fetch(base+'/_emdash/api/setup/dev-bypass?content=0&token=1'
 const token = (await setup.json()).data?.token;
 assert(token, '先にnpm run devを起動してください。');
 async function api(path,method='GET',body){const r=await fetch(base+'/_emdash/api/'+path,{method,headers:{authorization:'Bearer '+token,'content-type':'application/json'},...(body?{body:JSON.stringify(body)}:{})});return r.json();}
-const source=await readFile(new URL('../src/cms/review-store.ts', import.meta.url),'utf8');
+const source=await readFile(new URL('../src/lib/cms/review-store.ts', import.meta.url),'utf8');
 const temp = await mkdtemp(join(tmpdir(), 'table-notes-cms-test-'));
 const compiled=join(temp, 'store.mjs');
 const compilerOptions={module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ESNext};
 await writeFile(compiled,ts.transpileModule(source,{compilerOptions}).outputText.replaceAll('"./review-data"','"./review-data.mjs"'));
-const dataSource=await readFile(new URL('../src/cms/review-data.ts', import.meta.url),'utf8');
+const dataSource=await readFile(new URL('../src/lib/cms/review-data.ts', import.meta.url),'utf8');
 await writeFile(join(temp,'review-data.mjs'),ts.transpileModule(dataSource,{compilerOptions}).outputText);
 const {CmsReviewStore}=await import(pathToFileURL(compiled).href);
 let lastDate;

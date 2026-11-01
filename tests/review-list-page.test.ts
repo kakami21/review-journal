@@ -1,7 +1,8 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import { ReviewListPage } from "../src/react-app/pages/ReviewListPage";
+import { ReviewListPage } from "../src/components/ReviewListPage";
+
 
 const review = { id: "tabelog-1", detailUrl: "https://tabelog.com/rvwdtl/1/", name: "店舗", url: "https://tabelog.com/restaurant/1/", title: "公開タイトル", body: "公開本文", reviewDate: "2026-10", rating: 4, likeCount: 3 };
 

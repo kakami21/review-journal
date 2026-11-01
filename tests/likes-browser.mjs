@@ -12,9 +12,9 @@ const server = await createServer({ configFile: false,
   plugins: [react(), tailwindcss(), { name: "likes-browser", configureServer(vite) { vite.middlewares.use(handle); } }],
   server: { host: "127.0.0.1", port: 4399, strictPort: true },
 });
-const { createPostLikeApi } = await server.ssrLoadModule("/src/worker/post-like-api.ts");
-const { createReviewApi } = await server.ssrLoadModule("/src/worker/review-api.ts");
-const { D1PostLikeStore } = await server.ssrLoadModule("/src/infrastructure/d1-post-like-store.ts");
+const { createPostLikeApi } = await server.ssrLoadModule("/src/lib/post-like-api.ts");
+const { createReviewApi } = await server.ssrLoadModule("/src/lib/review-api.ts");
+const { D1PostLikeStore } = await server.ssrLoadModule("/src/lib/posts/d1-post-like-store.ts");
 const db = { prepare: sql => ({ bind: (...values) => ({
   all: async () => ({ success: true, results: database.prepare(sql).all(...values) }),
   run: async () => { database.prepare(sql).run(...values); return { success: true }; },

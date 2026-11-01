@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createPostLikeApi } from "../src/worker/post-like-api";
-import { createReviewApi } from "../src/worker/review-api";
-import type { PostLikeState } from "../src/posts/post-likes";
+import { createPostLikeApi } from "../src/lib/post-like-api";
+import { createReviewApi } from "../src/lib/review-api";
+import type { PostLikeState } from "../src/lib/posts/post-likes";
 
 const origin = "https://example.com";
 const secret = "test-only-secret-for-post-likes-1234567890";

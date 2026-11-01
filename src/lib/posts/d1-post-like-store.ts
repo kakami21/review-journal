@@ -1,4 +1,4 @@
-import type { PostLikeState, PostLikeStore } from "../posts/post-likes";
+import type { PostLikeState, PostLikeStore } from "./post-likes";
 
 /** 件数を別カウンターへ複製せず、票の一意制約と集計だけで扱う。 */
 export class D1PostLikeStore implements PostLikeStore {

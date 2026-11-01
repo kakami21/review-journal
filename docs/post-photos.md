@@ -4,6 +4,8 @@
 
 画像欄とアップロードはEmDash標準のメディア管理を使う。写真を取り外してもメディアライブラリのファイルは残る。食べログの口コミには画像欄を追加せず、写真の自動収集も行わない。
 
+公開画像の変換は `src/lib/posts/photo.ts`、CMS公開版の読み取りは `src/lib/cms/public-posts.ts`、カードは `src/components/PostListPage.tsx` に配置する。
+
 ## 保存先と配信
 
 | 環境 | 設定 | R2バケット |

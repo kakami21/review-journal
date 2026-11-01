@@ -1,5 +1,5 @@
-import type { PostLikeState } from "../posts/post-likes";
-import { postLikeStateSchema } from "../posts/post-likes";
+import type { PostLikeState } from "./post-likes";
+import { postLikeStateSchema } from "./post-likes";
 import { z } from "zod";
 
 async function result<T>(response: Response, schema: z.ZodType<T>): Promise<T> {

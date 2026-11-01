@@ -1,8 +1,8 @@
 import { beforeEach, afterEach, describe, expect, it } from "vitest";
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync } from "node:fs";
-import { D1PostLikeStore } from "../src/infrastructure/d1-post-like-store";
-import { postLikeKey } from "../src/posts/post-likes";
+import { D1PostLikeStore } from "../src/lib/posts/d1-post-like-store";
+import { postLikeKey } from "../src/lib/posts/post-likes";
 
 let database: DatabaseSync;
 let store: D1PostLikeStore;

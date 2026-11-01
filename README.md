@@ -112,16 +112,19 @@ npm run build:production
 
 ## 主なファイルと旧データの保全
 
+[Astro公式の構成例](https://docs.astro.build/en/basics/project-structure/)に合わせ、画面部品は `src/components/`、共通CSSは `src/styles/`、サーバー側の共通処理は `src/lib/` に置きます。`src/pages/` の配置でURLが決まり、Cloudflareの入口は `src/worker.ts` です。`src/lib/cms/` はCMS本体ではなく、このアプリとEmDashをつなぐコードです。
+
 | ファイル・ディレクトリ | 役割 |
 | --- | --- |
 | `astro.config.mjs` | Astro、React、EmDash、環境別出力の設定 |
 | `src/pages/` / `src/layouts/` | ホーム・口コミ一覧・公開APIと共通レイアウト |
-| `src/react-app/pages/ReviewListPage.tsx` | 口コミ一覧の対話操作 |
-| `src/cms/` | 公開データ変換、取り込み、重複防止と管理画面 |
-| `src/reviews/tabelog-review-scraper.ts` | 一覧・詳細ページの巡回、抽出と形式検証 |
-| `src/infrastructure/cloudflare-browser-provider.ts` | Browser Runとスクレイパーの接続 |
-| `src/worker/astro.ts` | Astroへのリクエスト委譲とCMS保守Cron |
-| `src/worker/review-api.ts` | Honoの公開APIとエラー応答 |
+| `src/components/ReviewListPage.tsx` | 口コミ一覧の対話操作 |
+| `src/styles/global.css` | Tailwind CSS・daisyUIと共通スタイル |
+| `src/lib/cms/` | 公開データ変換、取り込み、重複防止と管理画面 |
+| `src/lib/reviews/tabelog-review-scraper.ts` | 一覧・詳細ページの巡回、抽出と形式検証 |
+| `src/lib/reviews/cloudflare-browser-provider.ts` | Browser Runとスクレイパーの接続 |
+| `src/worker.ts` | Astroへのリクエスト委譲とCMS保守Cron |
+| `src/lib/review-api.ts` | Honoの公開APIとエラー応答 |
 | `seed/seed.json` | CMSコレクションの初期設定 |
 | `migrations/emdash/` | 現行D1用の追加SQL |
 | `cloudflare.d.ts` | 現行staging設定から生成したバインディング・実行環境の型 |

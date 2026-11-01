@@ -1,4 +1,4 @@
-import { D1PostLikeStore } from "../infrastructure/d1-post-like-store";
+import { D1PostLikeStore } from "../posts/d1-post-like-store";
 import { postLikeKey } from "../posts/post-likes";
 import { getEmDashCollection } from "emdash";
 import { withEmDashRuntime } from "emdash/middleware";

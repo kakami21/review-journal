@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import type { Post } from "../posts/post";
-import type { PostLikeState } from "../posts/post-likes";
-import { loadLikeStates, updatePostLike } from "./post-likes-client";
+import type { Post } from "../lib/posts/post";
+import type { PostLikeState } from "../lib/posts/post-likes";
+import { loadLikeStates, updatePostLike } from "../lib/posts/post-likes-client";
 
 /** 公開本文と独立して本人の状態を読み、更新前の取得結果で成功状態を巻き戻さない。 */
 export function usePostLikes(posts: Post[] | undefined) {

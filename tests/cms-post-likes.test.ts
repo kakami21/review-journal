@@ -2,7 +2,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ published: vi.fn() }));
 vi.mock("emdash", () => ({ getEmDashCollection: mocks.published }));
 vi.mock("emdash/middleware", () => ({ withEmDashRuntime: vi.fn() }));
-import { createCmsPostLikeDependencies } from "../src/cms/post-like-api-dependencies";
+import { createCmsPostLikeDependencies } from "../src/lib/cms/post-like-api-dependencies";
 const limit = vi.fn().mockResolvedValue({ success: true });
 const dependencies = createCmsPostLikeDependencies({ DB: {}, POST_LIKE_SECRET: "not-used", POST_LIKE_LIMITER: { limit } } as unknown as AstroBindings);
 beforeEach(() => { mocks.published.mockReset(); limit.mockClear(); });

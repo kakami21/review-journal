@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { getSignedCookie, setSignedCookie } from "hono/cookie";
 import { HTTPException } from "hono/http-exception";
-import type { PostLikeStore } from "../posts/post-likes";
+import type { PostLikeStore } from "./posts/post-likes";
 
 const cookieName = "post_like_visitor";
 const lifetimeSeconds = 365 * 24 * 60 * 60;

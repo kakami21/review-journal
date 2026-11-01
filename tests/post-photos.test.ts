@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { publicPhoto } from "../src/posts/photo";
-import { PostListPage } from "../src/react-app/pages/PostListPage";
+import { publicPhoto } from "../src/lib/posts/photo";
+import { PostListPage } from "../src/components/PostListPage";
 vi.mock("emdash", () => ({ getEmDashCollection: vi.fn() }));
 vi.mock("emdash/middleware", () => ({ withEmDashRuntime: vi.fn() }));
-import { publicPost } from "../src/cms/public-posts";
+import { publicPost } from "../src/lib/cms/public-posts";
 import { setupEntries } from "../scripts/setup-entries.mjs";
 import seed from "../seed/seed.json";
 

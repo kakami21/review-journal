@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
-import { PostListPage } from "../src/react-app/pages/PostListPage";
-import "../src/react-app/styles.css";
+import { PostListPage } from "../src/components/PostListPage";
+import "../src/styles/global.css";
 
 // 写真・いいね以外の外部依存を持たない、ローカル確認専用の公開投稿。
 createRoot(document.getElementById("root")!).render(<PostListPage initialData={{ lastUpdatedAt: null, posts: [

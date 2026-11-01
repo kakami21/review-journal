@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import type { Post } from "../posts/post";
-import type { Review } from "../reviews/review";
+import type { Post } from "./posts/post";
+import type { Review } from "./reviews/review";
 
 export type ReviewApiDependencies = {
   getPosts: () => Promise<{ posts: Post[]; lastUpdatedAt: string | null }>;

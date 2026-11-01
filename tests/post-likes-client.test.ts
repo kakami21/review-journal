@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { confirmLikeVisitor, loadLikeStates, updatePostLike } from "../src/react-app/post-likes-client";
+import { confirmLikeVisitor, loadLikeStates, updatePostLike } from "../src/lib/posts/post-likes-client";
 
 let fetcher: ReturnType<typeof vi.fn>;
 beforeEach(() => {
