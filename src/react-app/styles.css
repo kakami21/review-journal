@@ -1,19 +1,41 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+/* brutal を付けた領域で、daisyUIの見た目を上書きする。
+ * 主要ボタンはHTMLに btn と btn-primary の両方を付け、共通の枠線・影と主要ボタンの色を組み合わせる。
+ */
 .brutal .btn-primary,
-.brutal .badge-primary { background: #fb923c; color: #1c1917; }
-.brutal .badge-primary { border: 2px solid #1c1917; }
+.brutal .badge-primary {
+  background: #fb923c;
+  color: #1c1917;
+}
+
+.brutal .badge-primary {
+  border: 2px solid #1c1917;
+}
 
 .brutal .btn,
 .brutal .card,
 .brutal .input,
-.brutal .textarea { border: 2px solid #1c1917; }
+.brutal .textarea {
+  border: 2px solid #1c1917;
+}
 
 .brutal .btn,
-.brutal .card { box-shadow: 4px 4px 0 #1c1917; }
+.brutal .card {
+  box-shadow: 4px 4px 0 #1c1917;
+}
 
-.brutal .join .btn { box-shadow: none; }
+/* 連結したボタンは、影や押下時の移動で隣のボタンと重ならないようにする。 */
+.brutal .join .btn {
+  box-shadow: none;
+}
 
-.brutal .btn:active { translate: 4px 4px; box-shadow: none; }
-.brutal .join .btn:active { translate: none; }
+.brutal .btn:active {
+  translate: 4px 4px;
+  box-shadow: none;
+}
+
+.brutal .join .btn:active {
+  translate: none;
+}
