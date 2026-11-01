@@ -1,12 +1,12 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import type { Review } from "../reviews/review";
+import type { Review } from "./reviews/review";
 
 export type ReviewApiDependencies = {
   getAll: (env: CloudflareBindings) => Promise<{ reviews: Review[]; lastUpdatedAt: string | null }>;
 };
 
-/** 公開APIのHTTP応答を共通化し、現行D1とCMSの保存処理は呼び出し側で選ぶ。 */
+/** 公開APIのHTTP応答を共通化し、CMSと旧D1の参照処理は呼び出し側で選ぶ。 */
 export function createReviewApi(dependencies: ReviewApiDependencies) {
   const app = new Hono<{ Bindings: CloudflareBindings }>();
 

@@ -1,5 +1,5 @@
-import type { TabelogReviewScraper } from "./tabelog-review-scraper";
-import type { Review } from "./review";
+import type { TabelogReviewScraper } from "../lib/reviews/tabelog-review-scraper";
+import type { Review } from "../lib/reviews/review";
 
 export interface ReviewRepository {
   replaceAll(reviews: Review[], scrapedAt: string): Promise<void>;

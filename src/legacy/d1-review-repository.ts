@@ -1,5 +1,5 @@
-import type { ReviewRepository } from "../reviews/refresh-reviews";
-import type { Review } from "../reviews/review";
+import type { ReviewRepository } from "./refresh-reviews";
+import type { Review } from "../lib/reviews/review";
 
 type ReviewRow = {
   id: string;

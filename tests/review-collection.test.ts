@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { TabelogReviewScraper, type ScrapingLocator, type ScrapingPage } from "../src/reviews/tabelog-review-scraper";
-import { importCollectedReviews } from "../src/reviews/import-collected-reviews";
-import { CmsReviewStore } from "../src/cms/review-store";
+import { TabelogReviewScraper, type ScrapingLocator, type ScrapingPage } from "../src/lib/reviews/tabelog-review-scraper";
+import { importCollectedReviews } from "../src/lib/reviews/import-collected-reviews";
+import { CmsReviewStore } from "../src/lib/cms/review-store";
 
 type Element = { text?: string; attributes?: Record<string, string>; children?: Record<string, Element[]> };
 

@@ -1,18 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { RefreshReviews } from "../src/reviews/refresh-reviews";
+import { RefreshReviews } from "../src/legacy/refresh-reviews";
 
 const mocks = vi.hoisted(() => ({
   scrape: vi.fn(),
   save: vi.fn(),
 }));
 
-vi.mock("../src/worker/review-refresh-factory", () => ({
+vi.mock("../src/legacy/review-refresh-factory", () => ({
   createReviewRefresh: () => new RefreshReviews({ scrape: mocks.scrape } as never, {
     replaceAll: mocks.save,
   }),
 }));
 
-import worker from "../src/worker/index";
+import worker from "../src/legacy/worker";
 
 const row = {
   id: "123", restaurant_name: "店舗", restaurant_url: "https://example.com/restaurant",

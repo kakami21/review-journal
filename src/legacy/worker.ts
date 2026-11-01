@@ -1,12 +1,12 @@
-import { D1ReviewRepository } from "../infrastructure/d1-review-repository";
+import { D1ReviewRepository } from "./d1-review-repository";
 import { createReviewRefresh } from "./review-refresh-factory";
-import { createReviewApi } from "./review-api";
+import { createReviewApi } from "../lib/review-api";
 
 const app = createReviewApi({
   getAll: (env) => new D1ReviewRepository(env.DB).getAll(),
 });
 
-// 現行Vite本番の定期収集口を維持する。Astro側のCMS保守Cronとは接続しない。
+// 旧Workerの定期収集を保持する。現在のAstro側ではCMSの保守だけを実行する。
 export default {
   fetch: app.fetch,
   async scheduled(_controller, env) {

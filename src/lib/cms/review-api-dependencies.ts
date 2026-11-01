@@ -1,7 +1,7 @@
 import { getEmDashCollection } from "emdash";
 import { withEmDashRuntime } from "emdash/middleware";
 import { CmsReviewStore, publicReview } from "./review-store";
-import type { ReviewApiDependencies } from "../worker/review-api";
+import type { ReviewApiDependencies } from "../review-api";
 
 /** CMSの公開参照を接続する。手動取り込みは管理画面のプラグインに限定する。 */
 export function createCmsReviewApiDependencies(bindings: AstroBindings): ReviewApiDependencies {

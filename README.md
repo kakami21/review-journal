@@ -2,10 +2,10 @@
 
 本人が食べログへ投稿した口コミを収集し、一覧で確認する個人用アプリです。
 
-- 画面：React、Vite、Tailwind CSS、daisyUI
-- API：TypeScript、Hono、Cloudflare Workers
+- 画面：Astro、React、Tailwind CSS、daisyUI
+- API：Astro、TypeScript、Hono、Cloudflare Workers
 - 口コミ収集：Cloudflare Browser Run
-- 保存：Cloudflare D1
+- 保存・管理：EmDash、Cloudflare D1
 
 ## Astro・EmDashへの本番切り替え
 
@@ -137,48 +137,59 @@ npm run build:production
 
 本番への初回移行とDB準備は [本番移行手順](docs/production-migration.md) を参照。公開はmainのCI成功後に正式タグをpushする。`npm run deploy` もAstro本番を直接公開するため、通常運用はタグのReleaseを使う。
 
-## 主なファイル
+## ディレクトリの役割
+
+[Astro公式の構成例](https://docs.astro.build/en/basics/project-structure/)に合わせ、画面を `components/`、共通CSSを `styles/` に配置する。サーバー側の処理は `lib/` にまとめる。`pages/` の配置でURLが決まり、それ以外は役割ごとの整理としている。
 
 ```text
-.
-├── migrations/
-│   ├── 0001_initial_schema.sql
-│   └── 0002_add_review_list_view.sql
-├── src/
-│   ├── reviews/
-│   │   ├── review.ts
-│   │   ├── refresh-reviews.ts
-│   │   └── tabelog-review-scraper.ts
-│   ├── infrastructure/
-│   │   ├── cloudflare-browser-provider.ts
-│   │   └── d1-review-repository.ts
-│   ├── react-app/
-│   └── worker/
-│       ├── review-refresh-factory.ts
-│       └── index.ts
-├── wrangler.jsonc
-└── package.json
+src/
+├── pages/                 # URLに対応するページとAPIの入口
+│   ├── index.astro
+│   ├── reviews.astro
+│   └── api/[...path].ts
+├── layouts/               # ページ共通のHTMLの枠
+│   └── SiteLayout.astro
+├── components/            # Astroページから使う画面部品
+│   └── ReviewListPage.tsx
+├── styles/                # 共通CSS
+│   └── global.css
+├── lib/                   # 画面から独立した処理
+│   ├── review-api.ts      # 公開APIの応答
+│   ├── reviews/           # 口コミの型、収集、取り込み手順
+│   └── cms/               # EmDashへの保存・公開参照・管理画面の拡張
+├── worker.ts              # Cloudflareの入口とCMSの定期保守
+├── live.config.ts         # AstroとEmDashのデータ読み込みを接続
+├── env.d.ts               # 環境・外部サービスの型を読み込む
+└── legacy/                # 移行前のWorkerとD1への全件保存
 ```
 
-### ファイルごとの役割
+`lib/cms/` はCMS本体ではなく、このアプリとEmDashをつなぐコードを置く。
 
 | ファイル | 役割 |
 | --- | --- |
-| `migrations/0001_initial_schema.sql` | `restaurants`と`reviews`のテーブル、制約、インデックスを作成する |
-| `migrations/0002_add_review_list_view.sql` | 口コミ一覧APIが参照する`review_list`ビューを作成する |
-| `src/reviews/review.ts` | アプリ内で共通して扱う口コミデータの型を定義する |
-| `src/reviews/refresh-reviews.ts` | 口コミの取得とD1への全件保存を順番に実行する |
-| `src/reviews/tabelog-review-scraper.ts` | 食べログの一覧・詳細ページを巡回し、口コミデータを抽出・検証する |
-| `src/infrastructure/cloudflare-browser-provider.ts` | Browser Runをスクレイパーから利用できる形に変換する |
-| `src/infrastructure/d1-review-repository.ts` | 口コミをD1へ保存し、`review_list`ビューから一覧を取得する |
-| `src/worker/review-refresh-factory.ts` | Browser Run、スクレイパー、D1を組み合わせて口コミ更新処理を作る |
-| `src/worker/index.ts` | APIルート、エラー処理、Scheduled Handlerを定義するWorkerの入口 |
-| `src/react-app/main.tsx` | Reactアプリを初期化し、ルーターを有効にする |
-| `src/react-app/App.tsx` | `/reviews`へのルーティングを定義する |
-| `src/react-app/pages/ReviewListPage.tsx` | APIから口コミを取得し、訪問年月順または評価順で一覧表示する |
-| `src/react-app/styles.css` | Tailwind CSSとdaisyUIを読み込み、画面全体のスタイルを定義する |
-| `wrangler.jsonc` | Worker、Browser Run、D1、静的ファイル配信の設定を管理する |
-| `package.json` | npmコマンドと利用パッケージを管理する |
+| `review-import-admin.tsx` | 管理画面の取り込みボタンと結果表示 |
+| `review-import-plugin.ts` | 管理画面の登録と、権限付きの取り込み実行口 |
+| `import-reviews.ts` | 食べログからの収集とCMS保存の組み立て |
+| `review-store.ts` | 登録済みの照合、新規口コミの下書き保存、成功日時の記録 |
+| `review-data.ts` | アプリとCMSのデータ形式の変換 |
+| `review-api-dependencies.ts` | 公開済み口コミを取得してAPIへ渡す |
+| `review-policy.mjs` | 取得元ID・URL・初回取り込み日時の変更を防ぐ |
+
+公開画面では `pages/reviews.astro` → `components/ReviewListPage.tsx` → `/api/reviews` → `lib/cms/` の順に口コミを読み込む。手動取り込みでは、管理画面 → `lib/cms/` → `lib/reviews/` で収集し、新規分だけCMSへ下書き保存する。
+
+`legacy/` は現在のAstroの起動経路では使わない。旧 `wrangler.jsonc` からの起動と、移行前の動作を確認するテストのために保持する。旧Reactアプリの入口と重複するホーム画面は削除し、口コミ一覧とCSSはAstroで引き続き使う。ルートの `vite.config.ts` と `tsconfig.node.json` は旧Vite構成の設定であり、通常の起動・ビルドはAstroを使う。
+
+そのほかの主なディレクトリは次のとおり。
+
+| ディレクトリ | 役割 |
+| --- | --- |
+| `public/` | 加工せず配信する画像など |
+| `seed/` | EmDashの初期設定 |
+| `migrations/emdash/` | CMS連携で使う追加テーブルのSQL |
+| `migrations/` 直下 | 旧D1構成のテーブルとビューのSQL |
+| `scripts/` | データ移行・リリースの補助処理 |
+| `tests/` | 単体テストとCMSの結合テスト |
+| `bruno/` | APIを手動確認するリクエスト集 |
 
 ## エラーとして停止する条件
 
