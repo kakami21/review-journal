@@ -5,12 +5,12 @@ import type { Review } from "./reviews/review";
 
 export type ReviewApiDependencies = {
   getPosts: () => Promise<{ posts: Post[]; lastUpdatedAt: string | null }>;
-  getAll: (env: AstroBindings) => Promise<{ reviews: Review[]; lastUpdatedAt: string | null }>;
+  getAll: () => Promise<{ reviews: Review[]; lastUpdatedAt: string | null }>;
 };
 
 /** CMSの公開口コミ・共通投稿をHTTPへ返し、アプリAPIの404と内部障害の応答を統一する。 */
-export function createReviewApi(dependencies: ReviewApiDependencies, postLikes?: Hono<{ Bindings: AstroBindings }>) {
-  const app = new Hono<{ Bindings: AstroBindings }>();
+export function createReviewApi(dependencies: ReviewApiDependencies, postLikes?: Hono) {
+  const app = new Hono();
 
   // GETでWorkerの稼働を確認し、キャッシュせずstatus: okを返す。
   app.get("/api/health", (c) => {
@@ -20,7 +20,7 @@ export function createReviewApi(dependencies: ReviewApiDependencies, postLikes?:
 
   // GETで公開済みの口コミと成功した最終収集日時を返す。
   app.get("/api/reviews", async (c) => {
-    return c.json(await dependencies.getAll(c.env));
+    return c.json(await dependencies.getAll());
   });
 
   // GETで公開版の口コミと手入力投稿を共通の表示モデルで返す。
