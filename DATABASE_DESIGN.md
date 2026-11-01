@@ -1,78 +1,61 @@
 # データベース設計書
 
-## 1. 文書情報
+## 保存先と定義の管理
+
+口コミはEmDashを通じてCloudflare D1へ保存する。コレクションと項目の初期定義は `seed/seed.json`、CMSとは別に管理する成功収集日時は `migrations/emdash/0001_review_sync.sql` を正本とする。
+
+EmDash内部のテーブルはCMSが管理する。本文の作成・編集・公開やゴミ箱への移動にはCMS APIを使い、内部テーブルを直接書き換えない。
+
+## 口コミコレクション
+
+`reviews` コレクションは下書き・改訂・公開予約に対応する。
 
 | 項目 | 内容 |
 | --- | --- |
-| 対象システム | Tabelog Writer |
-| データベース | Cloudflare D1 |
-| SQL互換性 | SQLite |
-| 正本 | `migrations/`配下のSQL |
+| `source_id` | 食べログ口コミID。必須・一意 |
+| `source_url` | 口コミ詳細URL。必須 |
+| `restaurant_name` | 店舗名。必須 |
+| `restaurant_url` | 店舗URL。必須 |
+| `title` | 口コミタイトル。任意 |
+| `body` | 口コミ本文。任意 |
+| `review_month` | 訪問年月。`YYYY-MM`形式 |
+| `rating` | 評価値。0以上5以下 |
+| `like_count` | いいね数。整数 |
+| `imported_at` | 初回取り込み日時。必須 |
 
-## 2. 現在使用するテーブルとビュー
+`source_id`・`source_url`・`imported_at` は新規登録後に変更できない。CMSの保存前フックで取得元との対応を保護する。
 
-| オブジェクト | 種別 | 役割 | 主キー |
-| --- | --- | --- | --- |
-| `restaurants` | テーブル | 店舗名と店舗URLを保存する | `url` |
-| `reviews` | テーブル | 食べログから取得した口コミを保存する | `id` |
-| `review_list` | ビュー | 口コミ一覧API向けの読み取り形式を提供する | なし |
+## 成功収集日時
 
-### 2.1 `restaurants`
+`app_review_sync` は口コミ本文と分けて、最後に取り込みが成功した日時を保持する。
 
-| カラム | 型 | NULL | 制約 | 内容 |
-| --- | --- | --- | --- | --- |
-| `url` | TEXT | 不可 | PRIMARY KEY | 店舗ページURL |
-| `name` | TEXT | 不可 | なし | 店舗名 |
+| カラム | 型 | 制約・用途 |
+| --- | --- | --- |
+| `id` | INTEGER | 主キー。値を1に固定 |
+| `last_updated_at` | TEXT | 必須。最後に取り込みが成功した日時 |
 
-### 2.2 `reviews`
+取得した全件の保存に成功した場合だけ日時を進める。新規追加が0件でも、収集と照合が成功すれば更新する。途中で保存に失敗した場合は更新しない。
 
-| カラム | 型 | NULL | 制約 | 内容 |
-| --- | --- | --- | --- | --- |
-| `id` | TEXT | 不可 | PRIMARY KEY | 口コミ詳細URL由来のID |
-| `restaurant_url` | TEXT | 不可 | FOREIGN KEY | `restaurants.url`を参照する店舗ページURL |
-| `detail_url` | TEXT | 不可 | UNIQUE | 口コミ詳細URL |
-| `title` | TEXT | 可 | なし | 口コミタイトル |
-| `body` | TEXT | 可 | なし | 口コミ本文 |
-| `review_date` | TEXT | 不可 | `YYYY-MM` | 訪問年月 |
-| `rating` | REAL | 不可 | 0以上5以下 | 評価値 |
-| `like_count` | INTEGER | 不可 | 0以上 | いいね数 |
-| `scraped_at` | TEXT | 不可 | なし | 取得日時 |
+## 取り込みと公開参照
 
-### 2.3 `review_list`
+1. 食べログから全件を収集・検証する。
+2. CMSの既存口コミとゴミ箱を `source_id` で照合する。
+3. 未登録の口コミだけ下書きとして作成する。既存の編集内容・公開状態は変更しない。
+4. 全件成功後に成功収集日時を記録する。
+5. 一覧APIは公開版専用のCMSクエリを使い、編集中の下書きを返さない。
 
-`reviews`と`restaurants`を結合し、口コミ一覧APIが必要とする項目を提供する。データは保持せず、一覧取得と最終取得日時の算出に使用する。書き込みは行わない。
+保存途中の失敗では追加済み下書きを保持し、再実行で重複を除外する。ゴミ箱の口コミも登録済みとして扱う。
 
-| カラム | 参照元 |
-| --- | --- |
-| `id` | `reviews.id` |
-| `restaurant_name` | `restaurants.name` |
-| `restaurant_url` | `restaurants.url` |
-| `detail_url` | `reviews.detail_url` |
-| `title` | `reviews.title` |
-| `body` | `reviews.body` |
-| `review_date` | `reviews.review_date` |
-| `rating` | `reviews.rating` |
-| `like_count` | `reviews.like_count` |
-| `scraped_at` | `reviews.scraped_at` |
+## 環境とマイグレーション
 
-## 3. 更新方法
+| 環境 | 設定 | D1 |
+| --- | --- | --- |
+| 開発・検証 | `wrangler.astro.jsonc` | `table-notes-staging` |
+| 本番 | `wrangler.astro.production.jsonc` | `dining-archive-db` |
 
-`reviews`と`restaurants`は、D1のバッチ処理でまとめて全件入れ替える。途中のSQLが失敗した場合は全体をロールバックし、更新前の口コミを維持する。口コミ一覧と最終取得日時は`review_list`から取得する。
-
-```mermaid
-flowchart LR
-    C["定期実行または手動実行"] --> B["Browser Run"]
-    B --> S["共通スクレイパー"]
-    S --> T["restaurants"]
-    S --> R["reviews"]
-    T --> V["review_list"]
-    R --> V
-    V --> A["口コミ一覧API"]
-```
-
-## 4. マイグレーション運用
+開発時も検証用リモートD1へ接続する。追加SQLは対象環境の設定を明示して適用する。
 
 - 適用済みマイグレーションは書き換えない。
-- スキーマ変更は新しい連番ファイルとして追加する。
-- 本番適用前に対象データとロールバック方法を確認する。
-- D1への適用は`wrangler d1 migrations apply`を使用する。
+- `migrations/` 直下のSQLは旧テーブル・ビューの適用履歴として残す。現在の設定は `migrations/emdash/` を使用する。
+- 旧コードの削除では、リモートDBのテーブルやデータを削除しない。
+- 本番適用前に対象データと復旧方法を確認する。
