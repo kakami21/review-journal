@@ -1,41 +1,87 @@
 # Tabelog Writer
 
-本人が食べログへ投稿した口コミを収集し、一覧で確認する個人用アプリです。
+本人が食べログへ投稿した口コミを収集し、EmDash管理画面で編集・公開する個人用アプリです。公開一覧にはCMSの公開版だけを表示し、新規収集分は下書きとして追加します。
 
-- 画面：React、Vite、Tailwind CSS、daisyUI
-- API：TypeScript、Hono、Cloudflare Workers
-- 口コミ収集：Cloudflare Browser Run
-- 保存：Cloudflare D1
+- 画面・ルーティング：Astro、React、Tailwind CSS、daisyUI
+- 公開API：TypeScript、Hono
+- CMS・認証：EmDash、パスキー
+- 実行・保存：Cloudflare Workers、D1、KV
+- 口コミ収集：Cloudflare Browser Run、Playwright
 
-## Astro・EmDashへの本番切り替え
+## 開発と確認
 
-Astroのルートはプロジェクト直下に統一し、画面は `src/`、静的ファイルは `public/`、型チェック設定は `tsconfig.json` に置く。EmDashの初期設定は `seed/seed.json`、DB更新用SQLは `migrations/emdash/` で管理する。
+`.node-version` のNode.jsを使い、依存関係をインストールします。
 
-### 実行コマンド
+```bash
+npm ci
+npm run dev
+```
+
+開発サーバーのURLは起動時の表示を確認してください。`/` がホーム、`/reviews` が口コミ一覧、`/_emdash/admin` が管理画面です。初回はEmDashの案内に従って管理者を登録し、パスキーでログインします。
 
 | コマンド | 用途 |
 | --- | --- |
 | `npm run dev` | stagingの設定で開発サーバーを起動 |
 | `npm run check` | Astro・TypeScriptの型チェック |
+| `npm test` | 外部サービスを置き換えた単体・HTTP境界テスト |
 | `npm run build` / `npm run build:staging` | staging用ビルド（`dist/astro/`） |
 | `npm run preview` | ビルド済みのstaging版をローカルで確認 |
 | `npm run build:production` | 本番用ビルド（`dist/astro-production/`） |
-| `npm run deploy` | 本番用ビルドと公開 |
+| `npm run types` | staging設定からバインディング・Worker実行環境の型を生成 |
+| `npm run test:cms` | 起動済みCMSに接続する結合テスト |
 | `npm run deploy:staging` | staging用ビルドと公開 |
-| `npm run types` | Astro用のCloudflareバインディング型を生成 |
-| `npm test` / `npm run test:cms` | 単体テスト / 起動済みCMSの結合テスト |
+| `npm run deploy` | 本番用ビルドと公開 |
 
-stagingは `wrangler.astro.jsonc` の検証用Worker・D1を使用する。`preview` の前に `npm run build` を実行する。
+`preview` の前には `npm run build` を実行します。CMS結合テストの接続先・認証情報・書き込み範囲は [tests/cms.integration.mjs](tests/cms.integration.mjs) を確認してください。
 
-検証用D1は `table-notes-staging` にデータを移行済み。旧 `table-notes-development` は移行時点の復旧用として保持しており、現在の接続先ではない。
+## 開発環境もstagingのリモートD1を使う
 
-stagingのURL：<https://staging.pakoirileo.nokishita.app>（Workers URL：<https://table-notes-astro-staging.pandalize.workers.dev>）
+| 設定 | Worker | D1 | KVセッション |
+| --- | --- | --- | --- |
+| `wrangler.astro.jsonc` | `table-notes-astro-staging` | `table-notes-staging` | staging用 |
+| `wrangler.astro.production.jsonc` | `dining-archive` | `dining-archive-db` | 本番用 |
 
-本番移行は [本番移行手順](docs/production-migration.md)、公開は [リリース手順](docs/releases.md) に従う。`npm run build:production` が本番Astroを生成し、タグのReleaseが公開する。`npm run dev`・`npm run build`・`npm run preview` はAstro版を実行する。旧Vite構成の実行コマンドは削除した。以下の旧構成の説明は、切り替え前の照合と復旧のために保持している。
+`dev`・`build`・`preview` はstaging設定を使います。`build:production` だけが本番設定を選びます。D1の `remote: true` とAstroアダプターの `remoteBindings: true` により、ローカル起動時もstagingの実データを読み書きします。ローカルDBは使いません。
 
-切り替え後は公開済みCMSデータだけを表示し、新規収集は下書きに追加する。全件入れ替えは行わない。CronはCMS保守のみで口コミ収集を起動しない。
+staging：<https://staging.pakoirileo.nokishita.app>（Workers URL：<https://table-notes-astro-staging.pandalize.workers.dev>）
 
-## 口コミの取得項目
+本番：<https://pakoirileo.nokishita.app>
+
+`TABELOG_USERNAME` は両設定の `vars` で管理します。Browser Runの利用量はローカル起動時もCloudflare側へ加算されます。
+
+staging用の追加マイグレーションは、対象DBを確認してから適用します。
+
+```bash
+npx wrangler d1 migrations apply table-notes-staging --config wrangler.astro.jsonc --remote
+```
+
+## 管理画面から新しい口コミを取り込む
+
+管理画面へログインし、「口コミの取り込み」から「口コミを取り込む」を押します。取得件数・追加件数・成功日時を確認後、口コミ一覧で下書きを編集・公開してください。EmDash標準の権限とCSRF検証を通して実行します。
+
+新規分だけを追加し、登録済みの本文・公開状態・ゴミ箱を保持します。実行中の連打は防止します。保存途中に失敗した場合は追加済みの下書きを保持し、再実行時は重複を除外します。CronはCMSの公開予約・保守専用で、口コミ収集を起動しません。
+
+```mermaid
+flowchart LR
+    A["EmDash管理画面"] --> B["認証・権限・CSRF検証"]
+    B --> C["Browser Run / スクレイパー"]
+    C --> D["CMSへ新規分を下書き追加"]
+    D --> E["編集・公開"]
+    E --> F["公開CMSクエリ"]
+    F --> G["口コミ一覧 / 公開API"]
+```
+
+収集時にHTTP異常、必須要素の欠落、日付・点数・いいね数の形式不正、全投稿のいいね要素欠落、0件を検出した場合は停止します。収集・保存の失敗を成功として扱いません。食べログのHTML構造が変わった場合は、スクレイパーのセレクターを確認してください。
+
+## 公開APIと取得項目
+
+| API | 動作 |
+| --- | --- |
+| `GET /api/health` | `{"status":"ok"}`。DBなどの外部サービスは確認しない |
+| `GET /api/reviews` | CMS公開口コミの `reviews` と最終収集日時 `lastUpdatedAt` を返す |
+| `POST /api/reviews/refresh` | 廃止済み。404を返す |
+
+Brunoでは `bruno/` の `checks` フォルダーを使って参照APIと廃止済みAPIの404を確認できます。開発サーバーのURLに合わせて環境の接続先を設定してください。
 
 | 項目 | 型 | 内容 |
 | --- | --- | --- |
@@ -43,169 +89,43 @@ stagingのURL：<https://staging.pakoirileo.nokishita.app>（Workers URL：<http
 | `name` | `string` | 店舗名 |
 | `url` | `string` | 店舗ページURL |
 | `detailUrl` | `string` | 口コミ詳細URL |
-| `title` | `string \| null` | 口コミタイトル |
-| `body` | `string \| null` | 省略されていない口コミ本文 |
-| `reviewDate` | `string` | 訪問年月。`YYYY-MM`形式 |
+| `title` / `body` | `string \| null` | 口コミタイトル・省略されていない本文 |
+| `reviewDate` | `string` | 訪問年月（`YYYY-MM`） |
 | `rating` | `number` | 投稿者が付けた点数 |
-| `likeCount` | `number` | 口コミへのいいね数 |
+| `likeCount` | `number` | 食べログ上のいいね数 |
 
 食べログが公開している日付は訪問年月までのため、存在しない日を補完しません。
 
-## スクレイピング構成
+## ビルドして公開する
 
-食べログの巡回・抽出処理はCloudflare上で実行し、取得結果をD1へ保存します。
-
-```mermaid
-flowchart LR
-    C["認証付き更新API / Scheduled Handler"] --> B["CloudflareBrowserProvider"]
-    B --> S["TabelogReviewScraper"]
-    S --> R["RefreshReviews"]
-    R --> D["D1ReviewRepository"]
-    D --> V["review_list"]
-    V --> A["口コミ一覧API"]
-```
-
-ローカル開発と本番のどちらでも、口コミ一覧APIはD1の`review_list`ビューを参照する。D1は環境ごとに分離し、どちらもリモート接続を使用する。
-
-| 実行方法 | 接続先D1 |
-| --- | --- |
-| `npm run dev` / `npm run build` / `npm run preview` | 開発用 `table-notes-staging` |
-| `npm run build:production` → `npm run deploy` | 本番用 `dining-archive-db` |
-
-ローカルDBは使用しません。アプリをローカルで起動する場合も、開発用リモートD1 `table-notes-staging` に接続します。本番D1 `dining-archive-db` とは分離します。ローカルでの書き込みも検証サイトと同じ開発用DBに反映されます。
-
-Astro・EmDashの `npm run dev` / `npm run preview` も同じ方針です。`wrangler.astro.jsonc` のD1の `remote: true` と、Astroアダプターの `remoteBindings: true` で接続します。詳しくは[Astro開発手順](docs/astro-development.md)を参照してください。
-
-stagingは `wrangler.astro.jsonc`、本番は `wrangler.astro.production.jsonc` で定義する。
-
-## セットアップ
+公開前に `main` 向けPRで差分と検証結果を確認します。
 
 ```bash
-npm install
-```
-
-`TABELOG_USERNAME`（食べログURL上のユーザー名）はWrangler設定の `vars` で管理します。手動取り込みはEmDash管理画面のパスキー認証を使い、Basic認証の設定は不要です。
-
-Browser RunとD1は`wrangler.jsonc`でリモートバインディングとして設定されています。ローカルから利用した場合もCloudflare側の利用量に加算されます。
-
-## アプリのローカル起動
-
-```bash
-npm run dev
-```
-
-表示されたURLを開く。口コミ一覧は開発用リモートD1から読み取る。初回は空の一覧となる。
-
-開発用D1のスキーマを更新する場合：
-
-```bash
-npx wrangler d1 migrations apply table-notes-staging --config wrangler.astro.jsonc --remote
-```
-
-旧 `POST /api/reviews/refresh` は廃止しました。手動取り込みはAstro・EmDash管理画面から行います。本番データは自動コピーしません。
-
-## ヘルスチェック
-
-Workerがリクエストを処理できることは、次のAPIで確認できます。
-
-```bash
-curl -i "http://localhost:5173/api/health"
-```
-
-正常時はHTTP 200と次のJSONを返します。D1などの外部依存サービスは確認しません。
-
-```json
-{"status":"ok"}
-```
-
-## BrunoでAPIを確認する
-
-Bruno拡張またはデスクトップアプリで `bruno/` を開き、`checks` フォルダーを実行します。参照APIと廃止した取り込みAPIの404を確認できます。[Brunoの利用手順](docs/bruno.md)を参照してください。
-
-## 管理画面から口コミを取り込む
-
-Astro・EmDashの管理画面へパスキーでログインし、「口コミの取り込み」→「口コミを取り込む」を押します。新規分だけ下書きとして追加し、登録済みの内容を保持します。取得件数・追加件数・成功日時を確認後、口コミ一覧で編集・公開してください。
-
-実行中の連打は防止します。保存途中に失敗した場合は追加済みの下書きを保持し、再実行時に重複を除外します。詳しくは[Astro開発・検証環境](docs/astro-development.md#管理画面からの手動取り込み34)を参照してください。
-
-## ビルドとデプロイ
-
-```bash
-npm run build
+npm test
+npm run build:staging
 npm run build:production
 ```
 
-本番への初回移行とDB準備は [本番移行手順](docs/production-migration.md) を参照。公開はmainのCI成功後に正式タグをpushする。`npm run deploy` もAstro本番を直接公開するため、通常運用はタグのReleaseを使う。
+公開する環境に応じて `npm run deploy:staging` または `npm run deploy` を実行します。各コマンドは対象環境のAstroをビルドし、生成された `server/wrangler.json` を使って公開します。`wrangler deploy` の設定省略による旧Workerへの公開は行いません。
 
-## 主なファイル
+現在、このリポジトリにCI・タグ公開ワークフローはありません。タグのpushだけでは公開されません。`scripts/release.mjs` は正式タグと本番生成設定の照合用として残していますが、自動デプロイを起動するものではありません。共通のリリース規則は [docs/rules/release.md](docs/rules/release.md) を参照してください。
 
-```text
-.
-├── migrations/
-│   ├── 0001_initial_schema.sql
-│   └── 0002_add_review_list_view.sql
-├── src/
-│   ├── reviews/
-│   │   ├── review.ts
-│   │   ├── refresh-reviews.ts
-│   │   └── tabelog-review-scraper.ts
-│   ├── infrastructure/
-│   │   ├── cloudflare-browser-provider.ts
-│   │   └── d1-review-repository.ts
-│   ├── react-app/
-│   └── worker/
-│       ├── review-refresh-factory.ts
-│       └── index.ts
-├── wrangler.jsonc
-└── package.json
-```
+## 主なファイルと旧データの保全
 
-### ファイルごとの役割
-
-| ファイル | 役割 |
+| ファイル・ディレクトリ | 役割 |
 | --- | --- |
-| `migrations/0001_initial_schema.sql` | `restaurants`と`reviews`のテーブル、制約、インデックスを作成する |
-| `migrations/0002_add_review_list_view.sql` | 口コミ一覧APIが参照する`review_list`ビューを作成する |
-| `src/reviews/review.ts` | アプリ内で共通して扱う口コミデータの型を定義する |
-| `src/reviews/refresh-reviews.ts` | 口コミの取得とD1への全件保存を順番に実行する |
-| `src/reviews/tabelog-review-scraper.ts` | 食べログの一覧・詳細ページを巡回し、口コミデータを抽出・検証する |
-| `src/infrastructure/cloudflare-browser-provider.ts` | Browser Runをスクレイパーから利用できる形に変換する |
-| `src/infrastructure/d1-review-repository.ts` | 口コミをD1へ保存し、`review_list`ビューから一覧を取得する |
-| `src/worker/review-refresh-factory.ts` | Browser Run、スクレイパー、D1を組み合わせて口コミ更新処理を作る |
-| `src/worker/index.ts` | APIルート、エラー処理、Scheduled Handlerを定義するWorkerの入口 |
-| `src/react-app/main.tsx` | Reactアプリを初期化し、ルーターを有効にする |
-| `src/react-app/App.tsx` | `/reviews`へのルーティングを定義する |
-| `src/react-app/pages/ReviewListPage.tsx` | APIから口コミを取得し、訪問年月順または評価順で一覧表示する |
-| `src/react-app/styles.css` | Tailwind CSSとdaisyUIを読み込み、画面全体のスタイルを定義する |
-| `wrangler.jsonc` | Worker、Browser Run、D1、静的ファイル配信の設定を管理する |
-| `package.json` | npmコマンドと利用パッケージを管理する |
+| `astro.config.mjs` | Astro、React、EmDash、環境別出力の設定 |
+| `src/pages/` / `src/layouts/` | ホーム・口コミ一覧・公開APIと共通レイアウト |
+| `src/react-app/pages/ReviewListPage.tsx` | 口コミ一覧の対話操作 |
+| `src/cms/` | 公開データ変換、取り込み、重複防止と管理画面 |
+| `src/reviews/tabelog-review-scraper.ts` | 一覧・詳細ページの巡回、抽出と形式検証 |
+| `src/infrastructure/cloudflare-browser-provider.ts` | Browser Runとスクレイパーの接続 |
+| `src/worker/astro.ts` | Astroへのリクエスト委譲とCMS保守Cron |
+| `src/worker/review-api.ts` | Honoの公開APIとエラー応答 |
+| `seed/seed.json` | CMSコレクションの初期設定 |
+| `migrations/emdash/` | 現行D1用の追加SQL |
+| `cloudflare.d.ts` | 現行staging設定から生成したバインディング・実行環境の型 |
 
-## エラーとして停止する条件
+旧Vite・SPA・全件置換Workerの入口、専用設定・依存は撤去しています。旧DBのテーブル・ビューと適用済みSQL（`migrations/0001_initial_schema.sql`、`migrations/0002_add_review_list_view.sql`）は、データ保全と過去の適用履歴のため残しています。旧DBは通常の一覧・取り込みでは使用しません。
 
-- ページ取得時のHTTPステータスが正常でない
-- 一覧から口コミ情報を取得できない
-- 訪問年月が`YYYY/MM 訪問`形式ではない
-- 点数またはいいね数を数値へ変換できない
-- 全投稿でいいね要素が見つからない
-- D1への一括保存が失敗する
-
-食べログ側のHTML構造変更を空データとして保存せず、既存データを維持するための条件です。
-
-## 注意事項
-
-- 食べログ側のHTML構造が変わると、CSSセレクターの修正が必要です。
-- Browser RunからのアクセスはBotとして識別されます。対象サイトの判断により取得できなくなる可能性があります。
-- 実行頻度、取得データの範囲、利用方法について対象サイトの利用条件を確認してください。
-- Browser Runの利用量はCloudflareダッシュボードで確認してください。
-
-## 移行設計
-
-Astro・EmDashの起動・検証・管理者登録・取り込み手順は [Astro開発・検証環境](docs/astro-development.md) を参照。Astro検証環境では新規口コミをCMSへ下書き追加し、公開済みの内容だけを表示する。本番切り替え前の準備と検証状況は [本番移行手順](docs/production-migration.md) を参照。
-
-Astro・EmDashへの移行後の構成は [移行設計](docs/emdash-migration.md) を参照。現在の実装仕様と区別して管理する。
-
-## 開発とリリースの運用
-
-最新の `main` から作業ブランチを作成し、検証後に `main` 向けPRを作成する。完了するIssueはPR本文の `Closes #番号` で関連付ける。開発用Worker・D1は引き続き本番と分離する。
-
-リリースはmain上の `vMAJOR.MINOR.PATCH` タグで管理する。タグpushによるGitHub Actionsの本番デプロイの初回設定・手順・復旧方法は [リリース手順](docs/releases.md) を参照。運用方針は [運用規則](.github/CONTRIBUTING.md) に記載する。
+`scripts/migrate-reviews.mjs` は初期移行の照合・再実施に必要なため保持しています。既存CMSの編集やゴミ箱との不一致を上書きせず停止します。通常運用の取り込みには使いません。復旧時は対象環境のD1バックアップとCMS公開内容を照合し、過去の構成が必要ならGit履歴から取得してください。旧全件置換処理を現行DBへ接続しないでください。
