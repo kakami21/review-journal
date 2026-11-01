@@ -209,3 +209,5 @@ Astro・EmDashへの移行後の構成は [移行設計](docs/emdash-migration.m
 最新の `main` から作業ブランチを作成し、検証後に `main` 向けPRを作成する。完了するIssueはPR本文の `Closes #番号` で関連付ける。開発用Worker・D1は引き続き本番と分離する。
 
 リリースはmain上の `vMAJOR.MINOR.PATCH` タグで管理する。タグpushによるGitHub Actionsの本番デプロイの初回設定・手順・復旧方法は [リリース手順](docs/releases.md) を参照。運用方針は [運用規則](.github/CONTRIBUTING.md) に記載する。
+
+手入力投稿の写真1枚の設定・操作・保全は [写真の導入手順](docs/post-photos.md) を参照してください。

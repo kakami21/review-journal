@@ -1,3 +1,5 @@
+import type { PostPhoto } from "./photo";
+
 export type PostKind = "review" | "note" | "article";
 
 /** 公開版だけから作る共通カード。URL用IDとCMS内の不変IDを分ける。 */
@@ -9,6 +11,7 @@ export type Post = {
   source: "tabelog" | "manual";
   title: string | null;
   body: string | null;
+  photo?: PostPhoto | null;
   publishedAt: string | null;
   name: string | null;
   url: string | null;
