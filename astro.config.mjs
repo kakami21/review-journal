@@ -9,9 +9,6 @@ import { d1 } from "@emdash-cms/cloudflare";
 // 本番は明示したビルドだけで選択し、通常の開発とstagingは検証用Worker・D1を使う。
 const production = process.env.ASTRO_ENV === "production";
 export default defineConfig({
-  root: fileURLToPath(new URL("./astro/", import.meta.url)),
-  srcDir: fileURLToPath(new URL("./src/", import.meta.url)),
-  publicDir: fileURLToPath(new URL("./public/", import.meta.url)),
   output: "server",
   outDir: fileURLToPath(new URL(production ? "./dist/astro-production/" : "./dist/astro/", import.meta.url)),
   adapter: cloudflare({

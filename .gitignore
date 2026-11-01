@@ -4,7 +4,6 @@ dist/
 .astro/
 .emdash/
 emdash-env.d.ts
-astro/emdash-env.d.ts
 .dev.vars
 .dev.vars.*
 !.dev.vars.example

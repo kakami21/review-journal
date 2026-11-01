@@ -9,6 +9,8 @@
 
 ## Astro・EmDashへの本番切り替え
 
+Astroのルートはプロジェクト直下に統一し、画面は `src/`、静的ファイルは `public/`、型チェック設定は `tsconfig.json` に置く。EmDashの初期設定は `seed/seed.json`、DB更新用SQLは `migrations/emdash/` で管理する。
+
 ### 実行コマンド
 
 | コマンド | 用途 |

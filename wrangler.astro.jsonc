@@ -37,7 +37,7 @@
       "database_name": "table-notes-staging",
       "database_id": "29d7ef4b-65b8-4a71-8820-3eaee6d9fe4a",
       "remote": true,
-      "migrations_dir": "./astro/migrations"
+      "migrations_dir": "./migrations/emdash"
     }
   ],
   "observability": {
