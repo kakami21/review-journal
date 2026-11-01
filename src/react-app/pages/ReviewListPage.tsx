@@ -48,19 +48,13 @@ export function ReviewListPage() {
     void loadReviews();
   }, []);
 
-  if (errorMessage) {
-    return <p>{errorMessage}</p>;
-  }
-
-  if (!reviews) {
-    return <p>読み込み中...</p>;
-  }
-
-  const sortedReviews = [...reviews].sort((a, b) =>
+  // 未取得を0件と表示せず、取得中・失敗時も共通のページ枠を保つ。
+  const loading = !reviews && !errorMessage;
+  const sortedReviews = reviews ? [...reviews].sort((a, b) =>
     sortType === "reviewDate"
       ? b.reviewDate.localeCompare(a.reviewDate)
       : b.rating - a.rating,
-  );
+  ) : [];
 
   return (
     <main className="brutal min-h-screen bg-amber-50 px-4 py-10">
@@ -68,8 +62,8 @@ export function ReviewListPage() {
         <header className="mb-2">
           <div>
             <h1 className="text-4xl font-bold">箱入レオのルーザー日記</h1>
-            <p className="mt-2 opacity-70">{sortedReviews.length}件の口コミ</p>
-            <p className="mt-1 text-sm opacity-60">
+            {reviews && <p className="mt-2 opacity-70">{sortedReviews.length}件の口コミ</p>}
+            {reviews && <p className="mt-1 text-sm opacity-60">
               最終取得：
               {lastUpdatedAt
                 ? new Intl.DateTimeFormat("ja-JP", {
@@ -77,7 +71,7 @@ export function ReviewListPage() {
                     timeStyle: "short",
                   }).format(new Date(lastUpdatedAt))
                 : "未実行"}
-            </p>
+            </p>}
           </div>
 
         </header>
@@ -91,6 +85,7 @@ export function ReviewListPage() {
             <button
               className={`btn btn-sm join-item ${sortType === "reviewDate" ? "btn-primary" : "btn-ghost"}`}
               type="button"
+              disabled={!reviews}
               aria-pressed={sortType === "reviewDate"}
               onClick={() => setSortType("reviewDate")}
             >
@@ -99,6 +94,7 @@ export function ReviewListPage() {
             <button
               className={`btn btn-sm join-item ${sortType === "rating" ? "btn-primary" : "btn-ghost"}`}
               type="button"
+              disabled={!reviews}
               aria-pressed={sortType === "rating"}
               onClick={() => setSortType("rating")}
             >
@@ -106,6 +102,19 @@ export function ReviewListPage() {
             </button>
           </div>
         </div>
+
+        {loading && <div role="status" aria-live="polite">
+          <p className="mb-4 opacity-70">口コミを読み込んでいます…</p>
+          <div aria-hidden="true" className="space-y-4">
+            {[0, 1, 2].map(index => <div key={index} className="card bg-base-100 shadow-sm">
+              <div className="card-body gap-4">
+                <div className="h-6 w-2/3 rounded bg-base-200" />
+                <div className="h-20 rounded bg-base-200" />
+              </div>
+            </div>)}
+          </div>
+        </div>}
+        {errorMessage && <p role="alert">{errorMessage}</p>}
 
         <ul className="space-y-4">
           {sortedReviews.map((review) => (
