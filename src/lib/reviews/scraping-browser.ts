@@ -25,4 +25,3 @@ export interface BrowserSession {
 export interface BrowserProvider {
   open(): Promise<BrowserSession>;
 }
-
