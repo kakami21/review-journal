@@ -21,38 +21,40 @@ npm run dev
 
 | コマンド | 用途 |
 | --- | --- |
-| `npm run dev` | stagingの設定で開発サーバーを起動 |
+| `npm run dev` | previewの設定で開発サーバーを起動 |
 | `npm run check` | Astro・TypeScriptの型チェック |
 | `npm test` | 外部サービスを置き換えた単体・HTTP境界テスト |
-| `npm run build` / `npm run build:staging` | staging用ビルド（`dist/astro/`） |
-| `npm run preview` | ビルド済みのstaging版をローカルで確認 |
+| `npm run build` / `npm run build:preview` | preview用ビルド（`dist/astro-preview/`） |
+| `npm run preview` | ビルド済みのpreview版をローカルで確認 |
 | `npm run build:production` | 本番用ビルド（`dist/astro-production/`） |
-| `npm run types` | staging設定からバインディング・Worker実行環境の型を生成 |
+| `npm run types` | preview設定からバインディング・Worker実行環境の型を生成 |
 | `npm run test:cms` | 起動済みCMSに接続する結合テスト |
-| `npm run deploy:staging` | staging用ビルドと公開 |
-| `npm run deploy` | 本番用ビルドと公開 |
+| `npm run deploy:preview` | preview用ビルドと公開 |
+| `npm run deploy:production` / `npm run deploy` | 本番用ビルドと公開 |
 
 `preview` の前には `npm run build` を実行します。CMS結合テストの接続先・認証情報・書き込み範囲は [tests/cms.integration.mjs](tests/cms.integration.mjs) を確認してください。
 
-## 開発環境もstagingのリモートD1を使う
+## 開発環境もpreviewのリモートD1を使う
 
-| 設定 | Worker | D1 | KVセッション |
-| --- | --- | --- | --- |
-| `wrangler.astro.jsonc` | `table-notes-astro-staging` | `table-notes-staging` | staging用 |
-| `wrangler.astro.production.jsonc` | `dining-archive` | `dining-archive-db` | 本番用 |
+| 環境 | 設定 | Worker | D1 | KV | R2 |
+| --- | --- | --- | --- | --- | --- |
+| preview | `wrangler.astro.preview.jsonc` | `table-notes-preview` | `table-notes-preview-db` | `table-notes-preview-session` | `table-notes-preview-media` |
+| production | `wrangler.astro.production.jsonc` | `table-notes-production` | `table-notes-production-db` | `table-notes-production-session` | `table-notes-production-media` |
 
-`dev`・`build`・`preview` はstaging設定を使います。`build:production` だけが本番設定を選びます。D1の `remote: true` とAstroアダプターの `remoteBindings: true` により、ローカル起動時もstagingの実データを読み書きします。ローカルDBは使いません。
+`dev`・`build`・`preview` はpreview設定を使います。`build:production` だけが本番設定を選びます。D1・KV・R2の `remote: true` とAstroアダプターの `remoteBindings: true` により、ローカル起動時もpreviewの実データを読み書きします。サーバーだけがローカルで動き、development専用資産やローカルDBは使いません。
 
-staging：<https://staging.pakoirileo.nokishita.app>（Workers URL：<https://table-notes-astro-staging.pandalize.workers.dev>）
+`npm run preview` はAstroのビルド結果をローカルで確認するコマンドです。検証環境へ公開する `npm run deploy:preview` とは異なります。
+
+preview：<https://preview.pakoirileo.nokishita.app>（Workers URL：<https://table-notes-preview.pandalize.workers.dev>）
 
 本番：<https://pakoirileo.nokishita.app>
 
 `TABELOG_USERNAME` は両設定の `vars` で管理します。Browser Runの利用量はローカル起動時もCloudflare側へ加算されます。
 
-staging用の追加マイグレーションは、対象DBを確認してから適用します。
+preview用の追加マイグレーションは、対象DBを確認してから適用します。
 
 ```bash
-npx wrangler d1 migrations apply table-notes-staging --config wrangler.astro.jsonc --remote
+npx wrangler d1 migrations apply table-notes-preview-db --config wrangler.astro.preview.jsonc --remote
 ```
 
 ## 管理画面から新しい口コミを取り込む
@@ -98,15 +100,17 @@ Brunoでは `bruno/` の `checks` フォルダーを使って参照APIと廃止�
 
 ## ビルドして公開する
 
+本番へ手動で公開する順序とDB確認コマンドは、[本番への公開手順](docs/deploy-production.md)を参照してください。
+
 公開前に `main` 向けPRで差分と検証結果を確認します。
 
 ```bash
 npm test
-npm run build:staging
+npm run build:preview
 npm run build:production
 ```
 
-公開する環境に応じて `npm run deploy:staging` または `npm run deploy` を実行します。各コマンドは対象環境のAstroをビルドし、生成された `server/wrangler.json` を使って公開します。`wrangler deploy` の設定省略による旧Workerへの公開は行いません。
+公開する環境に応じて `npm run deploy:preview` または `npm run deploy:production` を実行します。各コマンドは対象環境のAstroをビルドし、生成された `server/wrangler.json` を使って公開します。`wrangler deploy` の設定省略による旧Workerへの公開は行いません。
 
 現在、このリポジトリにCI・タグ公開ワークフローはありません。タグのpushだけでは公開されません。`scripts/release.mjs` は正式タグと本番生成設定の照合用として残していますが、自動デプロイを起動するものではありません。共通のリリース規則は [docs/rules/release.md](docs/rules/release.md) を参照してください。
 
@@ -127,7 +131,7 @@ npm run build:production
 | `src/lib/hono-app.ts` | Honoの公開APIとエラー応答 |
 | `seed/seed.json` | CMSコレクションの初期設定 |
 | `migrations/emdash/` | 現行D1用の追加SQL |
-| `cloudflare.d.ts` | 現行staging設定から生成したバインディング・実行環境の型 |
+| `cloudflare.d.ts` | 現行preview設定から生成したバインディング・実行環境の型 |
 
 旧Vite・SPA・全件置換Workerの入口、専用設定・依存は撤去しています。旧DBのテーブル・ビューと適用済みSQL（`migrations/0001_initial_schema.sql`、`migrations/0002_add_review_list_view.sql`）は、データ保全と過去の適用履歴のため残しています。旧DBは通常の一覧・取り込みでは使用しません。
 

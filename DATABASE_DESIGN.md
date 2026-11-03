@@ -50,8 +50,8 @@ EmDash内部のテーブルはCMSが管理する。本文の作成・編集・�
 
 | 環境 | 設定 | D1 |
 | --- | --- | --- |
-| 開発・検証 | `wrangler.astro.jsonc` | `table-notes-staging` |
-| 本番 | `wrangler.astro.production.jsonc` | `dining-archive-db` |
+| 開発・検証 | `wrangler.astro.preview.jsonc` | `table-notes-preview-db` |
+| 本番 | `wrangler.astro.production.jsonc` | `table-notes-production-db` |
 
 開発時も検証用リモートD1へ接続する。追加SQLは対象環境の設定を明示して適用する。
 

@@ -4,8 +4,8 @@
 
 | 環境 | Wrangler設定 | D1 | 非公開R2 |
 | --- | --- | --- | --- |
-| 検証 | `wrangler.astro.jsonc` | `table-notes-staging` | `table-notes-media-staging` |
-| 本番 | `wrangler.astro.production.jsonc` | `dining-archive-db` | `dining-archive-media` |
+| 検証 | `wrangler.astro.preview.jsonc` | `table-notes-preview-db` | `table-notes-preview-media` |
+| 本番 | `wrangler.astro.production.jsonc` | `table-notes-production-db` | `table-notes-production-media` |
 
 1. D1とR2の既存データをバックアップする。D1のバックアップには画像本体を含まない。
 2. 表のR2バケットを作成し、公開ドメイン・`r2.dev`は有効にしない。画像はEmDash標準ルートで配信する。
