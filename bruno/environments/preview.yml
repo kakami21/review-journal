@@ -1,0 +1,4 @@
+name: preview
+variables:
+  - name: baseUrl
+    value: https://preview.pakoirileo.nokishita.app

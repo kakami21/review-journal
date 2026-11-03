@@ -6,13 +6,15 @@ import tailwindcss from "@tailwindcss/vite";
 import emdash from "emdash/astro";
 import { d1, r2 } from "@emdash-cms/cloudflare";
 
-// 本番は明示したビルドだけで選択し、通常の開発とstagingは検証用Worker・D1を使う。
-const production = process.env.ASTRO_ENV === "production";
+// 通常のローカル起動はpreview資産に接続し、本番は明示したビルドだけで選ぶ。
+const environment = process.env.ASTRO_ENV ?? "preview";
+if (!["preview", "production"].includes(environment)) throw new Error("ASTRO_ENVはpreviewまたはproductionを指定してください。");
+const production = environment === "production";
 export default defineConfig({
   output: "server",
-  outDir: fileURLToPath(new URL(production ? "./dist/astro-production/" : "./dist/astro/", import.meta.url)),
+  outDir: fileURLToPath(new URL(`./dist/astro-${environment}/`, import.meta.url)),
   adapter: cloudflare({
-    configPath: new URL(production ? "./wrangler.astro.production.jsonc" : "./wrangler.astro.jsonc", import.meta.url).pathname,
+    configPath: new URL(`./wrangler.astro.${environment}.jsonc`, import.meta.url).pathname,
     imageService: "passthrough",
     remoteBindings: true,
     persistState: { path: fileURLToPath(new URL("./.wrangler/state/", import.meta.url)) },

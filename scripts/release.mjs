@@ -20,9 +20,9 @@ export function checkTag(tag, commit, cwd = process.cwd()) {
 
 /** Astro本番のWorker・DB・セッション・Cron・ドメインを照合し、検証環境との混同を拒否する。 */
 export function checkProduction(config) {
-  if (config.name !== "dining-archive" || config.account_id !== "981a5c317da0eac85b328bc8dbcd9f6a"
+  if (config.name !== "table-notes-production" || config.account_id !== "981a5c317da0eac85b328bc8dbcd9f6a"
     || config.d1_databases?.length !== 1
-    || config.d1_databases[0].database_id !== "16a07a44-0646-4227-941d-93b3c2f6d1f8"
+    || config.d1_databases[0].database_id !== "2c3e244f-ace3-4cc3-b70c-bca3f17513e4"
     || config.kv_namespaces?.length !== 1 || config.kv_namespaces[0].binding !== "SESSION"
     || config.kv_namespaces[0].id !== "d3419d12971c4d3ca72503b4d3674016"
     || config.triggers?.crons?.length !== 1 || config.triggers.crons[0] !== "* * * * *"

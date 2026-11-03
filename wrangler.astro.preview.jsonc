@@ -1,16 +1,17 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "account_id": "981a5c317da0eac85b328bc8dbcd9f6a",
-  "name": "table-notes-astro-staging",
+  "name": "table-notes-preview",
   "workers_dev": true,
   "main": "./src/worker.ts",
   "compatibility_date": "2026-07-18",
   "compatibility_flags": [
-    "nodejs_compat"
+    "nodejs_compat",
+    "global_fetch_strictly_public"
   ],
   "routes": [
     {
-      "pattern": "staging.pakoirileo.nokishita.app",
+      "pattern": "preview.pakoirileo.nokishita.app",
       "custom_domain": true
     }
   ],
@@ -22,10 +23,11 @@
   "kv_namespaces": [
     {
       "binding": "SESSION",
-      "id": "f9b3b197ea954dc9907d6dd09a6e3a28"
+      "id": "f9b3b197ea954dc9907d6dd09a6e3a28",
+      "remote": true
     }
   ],
-  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "table-notes-media-staging", "remote": true }],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "table-notes-preview-media", "remote": true }],
   "browser": {
     "binding": "BROWSER",
     "remote": true
@@ -35,13 +37,13 @@
   },
   "assets": {
     "binding": "ASSETS",
-    "directory": "./dist/astro/client"
+    "directory": "./dist/astro-preview/client"
   },
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "table-notes-staging",
-      "database_id": "29d7ef4b-65b8-4a71-8820-3eaee6d9fe4a",
+      "database_name": "table-notes-preview-db",
+      "database_id": "b033a198-5c81-4838-a955-2a6a7fbaefaa",
       "remote": true,
       "migrations_dir": "./migrations/emdash"
     }

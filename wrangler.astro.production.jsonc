@@ -1,7 +1,8 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "account_id": "981a5c317da0eac85b328bc8dbcd9f6a",
-  "name": "dining-archive",
+  "name": "table-notes-production",
+  "workers_dev": false,
   "main": "./src/worker.ts",
   "compatibility_date": "2026-07-18",
   "compatibility_flags": [
@@ -21,10 +22,11 @@
   "kv_namespaces": [
     {
       "binding": "SESSION",
-      "id": "d3419d12971c4d3ca72503b4d3674016"
+      "id": "d3419d12971c4d3ca72503b4d3674016",
+      "remote": true
     }
   ],
-  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "dining-archive-media", "remote": true }],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "table-notes-production-media", "remote": true }],
   "browser": {
     "binding": "BROWSER",
     "remote": true
@@ -39,8 +41,8 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "dining-archive-db",
-      "database_id": "16a07a44-0646-4227-941d-93b3c2f6d1f8",
+      "database_name": "table-notes-production-db",
+      "database_id": "2c3e244f-ace3-4cc3-b70c-bca3f17513e4",
       "remote": true,
       "migrations_dir": "./migrations/emdash"
     }

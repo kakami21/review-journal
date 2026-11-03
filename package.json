@@ -28,16 +28,17 @@
     "wrangler": "^4.152.0"
   },
   "scripts": {
-    "dev": "astro dev",
+    "dev": "ASTRO_ENV=preview astro dev",
     "build": "npm run check && astro build",
-    "preview": "astro preview",
-    "deploy": "npm run build:production && wrangler deploy --config dist/astro-production/server/wrangler.json",
-    "deploy:staging": "npm run build:staging && wrangler deploy --config dist/astro/server/wrangler.json",
+    "preview": "ASTRO_ENV=preview astro preview",
+    "deploy": "npm run deploy:production",
+    "deploy:production": "npm run build:production && wrangler deploy --config dist/astro-production/server/wrangler.json",
+    "deploy:preview": "npm run build:preview && wrangler deploy --config dist/astro-preview/server/wrangler.json",
     "check": "astro check",
-    "types": "wrangler types --config wrangler.astro.jsonc --env-interface AstroBindings --strict-vars=false cloudflare.d.ts",
+    "types": "wrangler types --config wrangler.astro.preview.jsonc --env-interface AstroBindings --strict-vars=false cloudflare.d.ts",
     "test": "vitest run",
     "test:cms": "node tests/cms.integration.mjs",
-    "build:staging": "ASTRO_ENV=staging npm run build",
+    "build:preview": "ASTRO_ENV=preview npm run build",
     "build:production": "ASTRO_ENV=production npm run build"
   },
   "overrides": {
