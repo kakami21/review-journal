@@ -1,0 +1,39 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { readPublishedPosts } from "../../lib/cms/get-public-posts";
+
+Astro.response.headers.set("Cache-Control", "no-store");
+
+// 公開版だけを検索し、下書きのIDを指定しても本文を表示しない。
+const posts = await readPublishedPosts();
+const post = posts.find((item) => item.id === Astro.params.id);
+
+if (!post) {
+  Astro.response.status = 404;
+}
+---
+
+<SiteLayout>
+  <main class="min-h-screen bg-amber-50 px-4 py-10">
+    <div class="mx-auto max-w-2xl">
+      <a href="/" class="link">ホームへ</a>
+
+      {
+        post ? (
+          <article class="mt-10">
+            {post.title && (
+              <h1 class="mb-8 text-3xl font-bold leading-relaxed">
+                {post.title}
+              </h1>
+            )}
+            <div class="whitespace-pre-wrap break-words leading-8">
+              {post.body}
+            </div>
+          </article>
+        ) : (
+          <h1 class="mt-10 text-2xl font-bold">投稿が見つかりません</h1>
+        )
+      }
+    </div>
+  </main>
+</SiteLayout>

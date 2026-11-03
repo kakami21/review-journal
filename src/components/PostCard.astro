@@ -1,0 +1,21 @@
+---
+import type { Post } from "../lib/posts/post";
+
+interface Props {
+  post: Pick<Post, "id" | "title" | "body">;
+  featured?: boolean;
+}
+const { post, featured = false } = Astro.props;
+---
+
+<article class="card h-full bg-base-100">
+  <div class="card-body">
+    {post.title && <h3 class:list={["card-title", featured && "text-2xl sm:text-3xl"]}>
+      <a href={`/posts/${post.id}`} class="hover:underline">{post.title}</a>
+    </h3>}
+    <p class="line-clamp-4 whitespace-pre-wrap leading-8">{post.body}</p>
+    <div class="card-actions mt-auto pt-4">
+      <a href={`/posts/${post.id}`} class="link">続きを読む</a>
+    </div>
+  </div>
+</article>

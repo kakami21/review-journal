@@ -1,15 +1,44 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
+import PostSection from "../components/PostSection.astro";
+import { readPublishedPosts } from "../lib/cms/get-public-posts";
+import { selectPosts } from "../lib/posts/post";
+
+Astro.response.headers.set("Cache-Control", "no-store");
+
+const posts = await readPublishedPosts();
+
+const sections = [
+  {
+    id: "latest-article",
+    title: "最新の記事",
+    posts: selectPosts(posts, "article", "reviewDate").slice(0, 1),
+    layout: "featured",
+  },
+  {
+    id: "recent-notes",
+    title: "最近のノート",
+    posts: selectPosts(posts, "note", "reviewDate").slice(0, 6),
+    layout: "carousel",
+  },
+  {
+    id: "recent-reviews",
+    title: "最近の口コミ",
+    posts: selectPosts(posts, "review", "reviewDate").slice(0, 3),
+    layout: "list",
+  },
+] as const;
 ---
 
 <SiteLayout>
   <main class="brutal min-h-screen bg-amber-50 px-4 py-10">
-    <div class="mx-auto max-w-3xl">
-      <header class="mb-2">
-        <h1 class="text-4xl font-bold">箱入レオのルーザー日記</h1>
+    <div class="mx-auto max-w-4xl space-y-12">
+      <header>
+        <h1 class="text-3xl font-bold sm:text-4xl">箱入レオのルーザー日記</h1>
+        <p class="mt-4">読んだ本、食べたもの、日々考えたこと。</p>
       </header>
-      <p>Welcome to the Box-in Leo's Diary</p>
-      <a href="/reviews" class="btn btn-primary mt-4">レビュー一覧へ</a>
+
+      {sections.map((section) => <PostSection {...section} />)}
     </div>
   </main>
 </SiteLayout>
