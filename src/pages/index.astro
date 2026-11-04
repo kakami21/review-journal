@@ -38,7 +38,11 @@ const sections = [
         <p class="mt-4">読んだ本、食べたもの、日々考えたこと。</p>
       </header>
 
-      {sections.map((section) => <PostSection {...section} />)}
+      {
+        sections.map(
+          (section) => section.posts.length > 0 && <PostSection {...section} />,
+        )
+      }
     </div>
   </main>
 </SiteLayout>
