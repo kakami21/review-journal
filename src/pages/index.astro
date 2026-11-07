@@ -33,11 +33,6 @@ const sections = [
 <SiteLayout>
   <main class="brutal min-h-screen bg-amber-50 px-4 py-10">
     <div class="mx-auto max-w-4xl space-y-12">
-      <header>
-        <h1 class="text-3xl font-bold sm:text-4xl">箱入レオのルーザー日記</h1>
-        <p class="mt-4">読んだ本、食べたもの、日々考えたこと。</p>
-      </header>
-
       {
         sections.map(
           (section) => section.posts.length > 0 && <PostSection {...section} />,
