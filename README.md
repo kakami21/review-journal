@@ -22,15 +22,15 @@ npm run dev
 | コマンド | 用途 |
 | --- | --- |
 | `npm run dev` | previewの設定で開発サーバーを起動 |
+| `npm run preview` | ビルド済みのpreview版をローカルで確認 |
 | `npm run check` | Astro・TypeScriptの型チェック |
 | `npm test` | 外部サービスを置き換えた単体・HTTP境界テスト |
-| `npm run build` / `npm run build:preview` | preview用ビルド（`dist/astro-preview/`） |
-| `npm run preview` | ビルド済みのpreview版をローカルで確認 |
-| `npm run build:production` | 本番用ビルド（`dist/astro-production/`） |
-| `npm run types` | preview設定からバインディング・Worker実行環境の型を生成 |
 | `npm run test:cms` | 起動済みCMSに接続する結合テスト |
+| `npm run types` | preview設定からバインディング・Worker実行環境の型を生成 |
+| `npm run build` / `npm run build:preview` | preview用ビルド（`dist/astro-preview/`） |
+| `npm run build:production` | 本番用ビルド（`dist/astro-production/`） |
 | `npm run deploy:preview` | preview用ビルドと公開 |
-| `npm run deploy:production` / `npm run deploy` | 本番用ビルドと公開 |
+| `npm run deploy:production` | 本番用ビルドと公開 |
 
 `preview` の前には `npm run build` を実行します。CMS結合テストの接続先・認証情報・書き込み範囲は [tests/cms.integration.mjs](tests/cms.integration.mjs) を確認してください。
 
