@@ -1,0 +1,31 @@
+schema: spec-driven
+
+context: |
+  Language: Japanese
+  All artifacts must be written in Japanese.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+  読み手は技術の専門用語に詳しくない。日常の言葉で、誰が何をすると何が起きるかを書く。
+  専門用語が必要な場合は、何をするものかを先に説明し、初出で短い説明を添える。
+  実装に必要なファイル名・設定名・API名は正確に残し、その役割を平易に説明する。
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always state what is out of scope
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
