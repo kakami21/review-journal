@@ -10,6 +10,6 @@ GitHub の操作には `gh` を使う。日本語のチケットや最終回答�
 - [ブランチの作成・改名](docs/rules/branch-naming.md)
 - [コミットメッセージ](.github/instructions/commit-message.instructions.md)
 - [チケットのタイトル・本文](docs/rules/ticket-writing.md)
-- [GitHub Issue・PRの運用](.github/CONTRIBUTING.md)
+- [OpenSpecの使い方・GitHub Issue・PRの運用](CONTRIBUTING.md)
 - [PRのタイトル・本文](.github/instructions/pull-request.instructions.md)
 - [本番リリース](docs/deploy-production.md)（公開前にテスト・ビルドの成功と復旧手順を確認し、公開した変更とバージョンを記録する。公開後は主要機能を確認する）

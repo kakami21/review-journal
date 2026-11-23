@@ -8,6 +8,8 @@
 - 実行・保存：Cloudflare Workers、D1、KV
 - 口コミ収集：Cloudflare Browser Run、Playwright
 
+OpenSpecでの壁打ち・仕様作成・実装の進め方と、スキルの使い分けは [開発ガイド](CONTRIBUTING.md) を参照してください。
+
 ## 開発と確認
 
 `.node-version` のNode.jsを使い、依存関係をインストールします。
