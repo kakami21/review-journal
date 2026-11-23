@@ -51,3 +51,36 @@
   justify-content: center;
   border-radius: 1rem;
 }
+
+/* EmDash標準のウィジェットが出力する要素を、トップページの自己紹介欄だけで装飾する。 */
+.home-author-profile .widget {
+  padding: 1.5rem;
+  border: 2px solid #1c1917;
+  border-radius: var(--radius-box);
+  background: var(--color-base-100);
+  box-shadow: 4px 4px 0 #1c1917;
+  overflow-wrap: anywhere;
+}
+
+.home-author-profile .widget__title {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.home-author-profile .widget__content {
+  display: grid;
+  gap: 0.75rem;
+  line-height: 2;
+}
+
+.home-author-profile .widget__content .emdash-image {
+  margin: 0;
+}
+
+.home-author-profile .widget .widget__content .emdash-image img {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
