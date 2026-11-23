@@ -6,7 +6,7 @@ import type { Post } from "../posts/post";
 import { ReviewSyncStore } from "./review-sync-store";
 import { toPublicReview } from "./review-mapping";
 
-/** CMSの公開スナップショットを変換し、編集中の管理用データを参照しない。 */
+/** CMSが閲覧者の権限に応じて選んだ公開版または編集用の下書きを表示形式へ変換する。 */
 export function publicPost(collection: "reviews" | "entries", data: Record<string, unknown>): Post {
   if (typeof data.id !== "string" || !data.id) throw new Error("公開投稿のCMS IDがありません。");
   const published = data.publishedAt;
@@ -27,7 +27,7 @@ export function publicPost(collection: "reviews" | "entries", data: Record<strin
   };
 }
 
-/** 両コレクションの公開版を全ページ読み、片方の取得失敗も空一覧へ置き換えない。 */
+/** 公開済み投稿を全ページ読む。EmDashは認証済みの編集モードだけ下書きと編集属性を返す。 */
 export async function readPublishedPosts() {
   const posts: Post[] = [];
   for (const collection of ["reviews", "entries"] as const) {
@@ -35,7 +35,14 @@ export async function readPublishedPosts() {
     do {
       const result = await getEmDashCollection(collection, { limit: 100, cursor, status: "published" });
       if (result.error) throw result.error;
-      posts.push(...result.entries.map(entry => publicPost(collection, entry.data)));
+      posts.push(...result.entries.map(entry => {
+        const post = publicPost(collection, entry.data);
+        if (entry.edit && Object.keys(entry.edit).length) {
+          // Reactのハイドレーションにも渡せるよう、EmDashのProxyを通常の属性オブジェクトにする。
+          post.edit = { entry: { ...entry.edit }, title: { ...entry.edit.title }, body: { ...entry.edit.body } };
+        }
+        return post;
+      }));
       cursor = result.nextCursor;
     } while (cursor);
   }

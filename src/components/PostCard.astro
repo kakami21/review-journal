@@ -2,18 +2,18 @@
 import type { Post } from "../lib/posts/post";
 
 interface Props {
-  post: Pick<Post, "id" | "title" | "body">;
+  post: Pick<Post, "id" | "title" | "body" | "edit">;
   featured?: boolean;
 }
 const { post, featured = false } = Astro.props;
 ---
 
-<article class="card h-full bg-base-100">
+<article {...post.edit?.entry} class="card h-full bg-base-100">
   <div class="card-body">
-    {post.title && <h3 class:list={["card-title", featured && "text-2xl sm:text-3xl"]}>
-      <a href={`/posts/${post.id}`} class="hover:underline">{post.title}</a>
+    {(post.title || post.edit) && <h3 class:list={["card-title", featured && "text-2xl sm:text-3xl"]}>
+      <a {...post.edit?.title} href={`/posts/${post.id}`} data-placeholder={post.edit && "タイトルを入力"} class="hover:underline empty:before:content-[attr(data-placeholder)] empty:before:opacity-50">{post.title}</a>
     </h3>}
-    <p class="line-clamp-4 whitespace-pre-wrap leading-8">{post.body}</p>
+    <p {...post.edit?.body} data-placeholder={post.edit && "本文を入力"} class:list={["line-clamp-4 whitespace-pre-wrap leading-8 data-[emdash-editing]:line-clamp-none empty:before:content-[attr(data-placeholder)] empty:before:opacity-50", post.edit && "min-h-8"]}>{post.body}</p>
     <div class="card-actions mt-auto pt-4">
       <a href={`/posts/${post.id}`} class="link">続きを読む</a>
     </div>

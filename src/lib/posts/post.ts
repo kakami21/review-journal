@@ -1,8 +1,9 @@
 import type { PostPhoto } from "./photo";
+import type { EditProxy, FieldAnnotation } from "emdash";
 
 export type PostKind = "review" | "note" | "article";
 
-/** 公開版だけから作る共通カード。URL用IDとCMS内の不変IDを分ける。 */
+/** 通常は公開版、認証済みの編集モードでは下書きを表示する。URL用IDとCMS内の不変IDを分ける。 */
 export type Post = {
   id: string;
   contentId: string;
@@ -19,6 +20,11 @@ export type Post = {
   rating: number | null;
   likeCount: number | null;
   appLikeCount?: number;
+  edit?: {
+    entry: EditProxy;
+    title: Partial<FieldAnnotation>;
+    body: Partial<FieldAnnotation>;
+  };
 };
 
 /** 訪問年月のない投稿は公開日時で並べ、評価順では口コミだけを比較する。 */

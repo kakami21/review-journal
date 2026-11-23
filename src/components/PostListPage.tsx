@@ -33,14 +33,14 @@ export function PostListPage({ initialData, errorMessage = "" }: { initialData?:
       {data && !posts.length && <p>表示する投稿はありません。</p>}
       {likes.error && <p role="alert" className="mb-4">{likes.error}</p>}
       <ul className="space-y-4">{posts.map(post => <li key={post.id} id={post.id}>
-        <article className="card bg-base-100 shadow-sm"><div className="card-body min-w-0 break-words">
+        <article {...post.edit?.entry} className="card bg-base-100 shadow-sm"><div className="card-body min-w-0 break-words">
           <div className="flex items-start justify-between gap-4">
-            <h2 className="text-xl font-bold">{post.kind === "review" && post.name ? (post.url ? <a className="link" href={post.url} target="_blank" rel="noreferrer">{post.name}</a> : post.name) : post.title}</h2>
+            <h2 {...(post.kind === "review" ? undefined : post.edit?.title)} data-placeholder={post.edit && post.kind !== "review" ? "タイトルを入力" : undefined} className="text-xl font-bold empty:before:content-[attr(data-placeholder)] empty:before:opacity-50">{post.kind === "review" && post.name ? (post.url ? <a className="link" href={post.url} target="_blank" rel="noreferrer">{post.name}</a> : post.name) : post.title}</h2>
             {post.kind === "review" && post.rating !== null && <span className="badge badge-primary shrink-0">{post.rating.toFixed(1)}</span>}
           </div>
           <p className="text-sm opacity-60">{kinds[post.kind]} · {post.source === "tabelog" ? "食べログ" : "手入力"}</p>
-          {post.kind === "review" && post.title && <h3 className="font-bold">{post.title}</h3>}
-          {post.body && <p className="whitespace-pre-wrap leading-relaxed">{post.body}</p>}
+          {post.kind === "review" && (post.title || post.edit) && <h3 {...post.edit?.title} data-placeholder={post.edit && "タイトルを入力"} className="font-bold empty:before:content-[attr(data-placeholder)] empty:before:opacity-50">{post.title}</h3>}
+          {(post.body || post.edit) && <p {...post.edit?.body} data-placeholder={post.edit && "本文を入力"} className={`whitespace-pre-wrap leading-relaxed empty:before:content-[attr(data-placeholder)] empty:before:opacity-50${post.edit ? " min-h-8" : ""}`}>{post.body}</p>}
           {post.source === "manual" && post.photo && <img src={post.photo.url} alt={post.photo.alt} width={post.photo.width} height={post.photo.height} loading="lazy" decoding="async" className="h-auto max-w-full rounded" />}
           <div className="flex flex-wrap justify-between gap-4 text-sm opacity-60">
             {post.kind === "review" && post.reviewDate ? <p>{post.reviewDate.replace("-", "/")} 訪問</p> : post.publishedAt && <p>{new Intl.DateTimeFormat("ja-JP", { timeZone: "Asia/Tokyo" }).format(new Date(post.publishedAt))} 公開</p>}

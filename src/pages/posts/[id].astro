@@ -4,7 +4,7 @@ import { readPublishedPosts } from "../../lib/cms/get-public-posts";
 
 Astro.response.headers.set("Cache-Control", "no-store");
 
-// 公開版だけを検索し、下書きのIDを指定しても本文を表示しない。
+// 公開済み投稿だけを対象とし、認証済みの編集モードではEmDashが選んだ下書きを表示する。
 const posts = await readPublishedPosts();
 const post = posts.find((item) => item.id === Astro.params.id);
 
@@ -20,15 +20,11 @@ if (!post) {
 
       {
         post ? (
-          <article class="mt-10">
-            {post.title && (
-              <h1 class="mb-8 text-3xl font-bold leading-relaxed">
-                {post.title}
-              </h1>
+          <article {...post.edit?.entry} class="mt-10">
+            {(post.title || post.edit) && (
+              <h1 {...post.edit?.title} data-placeholder={post.edit && "タイトルを入力"} class="mb-8 text-3xl font-bold leading-relaxed empty:before:content-[attr(data-placeholder)] empty:before:opacity-50">{post.title}</h1>
             )}
-            <div class="whitespace-pre-wrap wrap-break-word leading-8">
-              {post.body}
-            </div>
+            <div {...post.edit?.body} data-placeholder={post.edit && "本文を入力"} class:list={["whitespace-pre-wrap wrap-break-word leading-8 empty:before:content-[attr(data-placeholder)] empty:before:opacity-50", post.edit && "min-h-8"]}>{post.body}</div>
           </article>
         ) : (
           <h1 class="mt-10 text-2xl font-bold">投稿が見つかりません</h1>

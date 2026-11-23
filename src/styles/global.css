@@ -39,3 +39,15 @@
 .brutal .join .btn:active {
   translate: none;
 }
+
+/* 保存状態が増えても、狭い画面でEmDashの公開ボタンが画面外へはみ出さないようにする。 */
+#emdash-toolbar {
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+}
+
+#emdash-toolbar .emdash-tb-inner {
+  flex-wrap: wrap;
+  justify-content: center;
+  border-radius: 1rem;
+}

@@ -1,0 +1,24 @@
+diff --git a/node_modules/emdash/src/visual-editing/toolbar.ts b/node_modules/emdash/src/visual-editing/toolbar.ts
+--- a/node_modules/emdash/src/visual-editing/toolbar.ts
++++ b/node_modules/emdash/src/visual-editing/toolbar.ts
+@@ -1065,7 +1065,7 @@
+     .then(function(body) {
+       var item = body && body.data && body.data.item;
+       var stored = item && item.data ? item.data[annotation.field] : null;
+-      if (typeof stored === "string" && stored.trim() === (element.textContent || "").trim()) {
++      if (item && item.data && (typeof stored === "string" || stored == null) && (stored || "").trim() === (element.textContent || "").trim()) {
+         startTextEdit(element, annotation, caret, true);
+       } else {
+         openAdmin(annotation);
+diff --git a/node_modules/emdash/dist/astro/middleware/request-context.mjs b/node_modules/emdash/dist/astro/middleware/request-context.mjs
+--- a/node_modules/emdash/dist/astro/middleware/request-context.mjs
++++ b/node_modules/emdash/dist/astro/middleware/request-context.mjs
+@@ -1164,7 +1164,7 @@
+     .then(function(body) {
+       var item = body && body.data && body.data.item;
+       var stored = item && item.data ? item.data[annotation.field] : null;
+-      if (typeof stored === "string" && stored.trim() === (element.textContent || "").trim()) {
++      if (item && item.data && (typeof stored === "string" || stored == null) && (stored || "").trim() === (element.textContent || "").trim()) {
+         startTextEdit(element, annotation, caret, true);
+       } else {
+         openAdmin(annotation);
