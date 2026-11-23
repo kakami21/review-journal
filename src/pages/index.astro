@@ -1,6 +1,7 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
 import PostSection from "../components/PostSection.astro";
+import { WidgetArea } from "emdash/ui";
 import { readPublishedPosts } from "../lib/cms/get-public-posts";
 import { selectPosts } from "../lib/posts/post";
 
@@ -33,6 +34,7 @@ const sections = [
 <SiteLayout>
   <main class="brutal min-h-screen bg-amber-50 px-4 py-10">
     <div class="mx-auto max-w-4xl space-y-12">
+      <WidgetArea name="home-author-profile" class="home-author-profile" />
       {
         sections.map(
           (section) => section.posts.length > 0 && <PostSection {...section} />,
