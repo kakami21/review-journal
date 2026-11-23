@@ -1,4 +1,7 @@
 {
+  "workbench.editorAssociations": {
+    "*.md": "vscode.markdown.preview.editor"
+  },
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {
       "file": ".github/instructions/commit-message.instructions.md"
