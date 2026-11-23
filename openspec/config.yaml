@@ -7,25 +7,15 @@ context: |
   読み手は技術の専門用語に詳しくない。日常の言葉で、誰が何をすると何が起きるかを書く。
   専門用語が必要な場合は、何をするものかを先に説明し、初出で短い説明を添える。
   実装に必要なファイル名・設定名・API名は正確に残し、その役割を平易に説明する。
+  作業前にCONTRIBUTING.mdを読み、OpenSpecの進め方とGitHub・Gitの運用に従う。
+  exploreの相談だけではブランチを作らない。新しい変更のproposeでは、openspec new changeや文書作成の前に最新のmainから作業ブランチを作り、同じ変更の再開時はそのブランチを使う。
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always state what is out of scope
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
-
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+operations:
+  apply:
+    guidance:
+      - CONTRIBUTING.mdに従い、仕様作成時と同じ作業ブランチで実装・検証する。依頼外の差分は保持する。
+  archive:
+    guidance:
+      - archiveの依頼は、CONTRIBUTING.mdに定める完了記録、コミット、push、PR作成・更新、レビュー、マージ、作業ブランチの削除までの事前合意として扱う。ユーザーが範囲を限定した場合は、その指示に従う。
+      - 完了記録を対象の作業ブランチに含め、今回の変更だけをコミットする。GitHubの操作にはghを使い、必要な検証と必須チェック・承認を満たしてからマージする。
+      - 進められない場合は完了した工程と残りの操作、その理由を報告する。本番公開は含めない。
